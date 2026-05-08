@@ -18,7 +18,7 @@
     gap: 1rem;
     padding: 1rem;
     border: 1px solid var(--border-color);
-    border-radius: 8px;
+    border-radius: var(--border-radius);
     background: #fff;
     transition: all 0.3s;
 }
