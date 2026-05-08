@@ -1,5 +1,10 @@
 const API_BASE_URL = '/api';
 
+const ATTENDANCE_CONFIG = {
+    WORK_START: '09:00',
+    WORK_END: '18:00'
+};
+
 const mockData = {
     employees: [
         { id: 1, name: '张三', employeeNo: 'E001', department: '技术部', departmentId: 1, position: '前端工程师', positionId: 1, phone: '13800138001', email: 'zhangsan@company.com', entryDate: '2023-01-15', status: 1, probationEnd: '2023-04-15', birthday: '1995-03-15' },
@@ -647,7 +652,17 @@ const API = {
                 return { code: 200, data: mockData.employees, message: 'success' };
             }
             if (method === 'POST') {
-                const newEmployee = { ...body, id: Date.now() };
+                const dept = mockData.departments.find(d => d.name === body.department);
+                const pos = mockData.positions.find(p => p.name === body.position);
+                
+                const newEmployee = { 
+                    ...body, 
+                    id: Date.now(),
+                    departmentId: dept?.id || 1,
+                    positionId: pos?.id || 1,
+                    email: body.email || `${body.employeeNo}@company.com`,
+                    potentialTag: body.potentialTag || '中坚'
+                };
                 mockData.employees.push(newEmployee);
                 return { code: 200, data: newEmployee, message: 'success' };
             }
@@ -840,16 +855,16 @@ const API = {
                 if (existingRecord) {
                     if (body.type === 'in' && !existingRecord.checkIn) {
                         existingRecord.checkIn = now;
-                        existingRecord.status = existingRecord.checkIn > '09:00' ? '迟到' : '正常';
+                        existingRecord.status = existingRecord.checkIn > ATTENDANCE_CONFIG.WORK_START ? '迟到' : '正常';
                     } else if (body.type === 'out' && !existingRecord.checkOut) {
                         existingRecord.checkOut = now;
-                        if (existingRecord.status === '正常' && existingRecord.checkOut < '18:00') {
+                        if (existingRecord.status === '正常' && existingRecord.checkOut < ATTENDANCE_CONFIG.WORK_END) {
                             existingRecord.status = '早退';
                         }
                     }
                 } else {
                     const emp = mockData.employees.find(e => e.id === body.employeeId);
-                    const status = body.type === 'in' && now > '09:00' ? '迟到' : '正常';
+                    const status = body.type === 'in' && now > ATTENDANCE_CONFIG.WORK_START ? '迟到' : '正常';
                     const newRecord = {
                         id: Date.now(),
                         employeeId: body.employeeId,

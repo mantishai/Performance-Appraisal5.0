@@ -151,7 +151,7 @@ const dashboardModule = {
             </div>
 
             <div class="stats-grid">
-                <div class="stat-card" data-module="employee">
+                <div class="stat-card card-interactive" data-module="employee">
                     <div class="stat-icon blue">👥</div>
                     <div class="stat-info">
                         <div class="stat-label">员工总数</div>
@@ -159,7 +159,7 @@ const dashboardModule = {
                         <div class="stat-trend up">↑ 12% 较上月</div>
                     </div>
                 </div>
-                <div class="stat-card">
+                <div class="stat-card card-interactive">
                     <div class="stat-icon green">📥</div>
                     <div class="stat-info">
                         <div class="stat-label">本月入职</div>
@@ -167,7 +167,7 @@ const dashboardModule = {
                         <div class="stat-trend up">↑ 2人</div>
                     </div>
                 </div>
-                <div class="stat-card">
+                <div class="stat-card card-interactive">
                     <div class="stat-icon orange">📤</div>
                     <div class="stat-info">
                         <div class="stat-label">本月离职</div>
@@ -175,7 +175,7 @@ const dashboardModule = {
                         <div class="stat-trend down">↓ 1人</div>
                     </div>
                 </div>
-                <div class="stat-card" data-module="alert">
+                <div class="stat-card card-interactive" data-module="alert">
                     <div class="stat-icon red">🚨</div>
                     <div class="stat-info">
                         <div class="stat-label">待处理预警</div>

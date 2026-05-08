@@ -365,3 +365,61 @@
     padding: 16px 32px;
     font-size: 16px;
 }
+
+@media (max-width: 768px) {
+    .setup-container {
+        padding: 20px 12px;
+    }
+    
+    .setup-title {
+        font-size: 24px;
+    }
+    
+    .setup-subtitle {
+        font-size: 16px;
+    }
+    
+    .setup-progress {
+        padding: 0 12px;
+        flex-wrap: wrap;
+    }
+    
+    .progress-step {
+        flex: 0 0 calc(50% - 8px);
+    }
+    
+    .progress-step::after {
+        display: none;
+    }
+    
+    .setup-content {
+        padding: 20px;
+    }
+    
+    .setup-step-content h2 {
+        font-size: 20px;
+    }
+    
+    .form-row {
+        flex-direction: column;
+    }
+    
+    .theme-options {
+        flex-direction: column;
+    }
+    
+    .setup-footer {
+        padding: 0 12px;
+        flex-direction: column;
+        gap: 12px;
+    }
+    
+    .logo-upload {
+        flex-direction: column;
+        text-align: center;
+    }
+    
+    .complete-summary {
+        padding: 16px;
+    }
+}

@@ -1023,17 +1023,39 @@ const employeeModule = {
         Modal.confirm(
             `确定要删除选中的 ${state.selectedIds.length} 名员工吗？此操作不可恢复。`,
             async () => {
-                try {
-                    for (const id of state.selectedIds) {
-                        await API.deleteEmployee(id);
-                    }
-                    Toast.success(`成功删除 ${state.selectedIds.length} 名员工`);
-                    state.selectedIds = [];
-                    await this.loadData();
-                    this.renderContent(document.getElementById('content'));
-                } catch (error) {
-                    console.error('Batch delete failed:', error);
-                    Toast.error('批量删除失败');
+                const total = state.selectedIds.length;
+                let successCount = 0;
+                let failCount = 0;
+                const batchSize = 5;
+
+                for (let i = 0; i < total; i += batchSize) {
+                    const batch = state.selectedIds.slice(i, i + batchSize);
+                    const currentStart = i + 1;
+                    const currentEnd = Math.min(i + batchSize, total);
+                    
+                    Toast.info(`正在删除 ${currentStart}/${total}...`);
+
+                    const results = await Promise.allSettled(
+                        batch.map(id => API.deleteEmployee(id))
+                    );
+
+                    results.forEach(result => {
+                        if (result.status === 'fulfilled') {
+                            successCount++;
+                        } else {
+                            failCount++;
+                        }
+                    });
+                }
+
+                state.selectedIds = [];
+                await this.loadData();
+                this.renderContent(document.getElementById('content'));
+
+                if (failCount === 0) {
+                    Toast.success(`成功删除 ${successCount} 名员工`);
+                } else {
+                    Toast.info(`删除完成：成功 ${successCount} 人，失败 ${failCount} 人`);
                 }
             }
         );

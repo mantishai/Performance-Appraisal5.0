@@ -2,7 +2,7 @@
     display: flex;
     gap: 8px;
     margin-bottom: 24px;
-    border-bottom: 1px solid rgba(24, 144, 255, 0.1);
+    border-bottom: 1px solid var(--border-color);
     padding-bottom: 16px;
 }
 
@@ -11,7 +11,7 @@
     background: rgba(24, 144, 255, 0.05);
     border: 1px solid rgba(24, 144, 255, 0.15);
     border-radius: 8px;
-    color: #8ba9c4;
+    color: var(--text-secondary);
     cursor: pointer;
     font-size: 14px;
     display: flex;
@@ -22,11 +22,11 @@
 
 .audit-tab-btn:hover {
     background: rgba(24, 144, 255, 0.1);
-    color: #1890ff;
+    color: var(--primary-color);
 }
 
 .audit-tab-btn.active {
-    background: linear-gradient(135deg, #1890ff, #722ed1);
+    background: linear-gradient(135deg, var(--primary-color), #722ed1);
     color: white;
     border-color: transparent;
 }
@@ -80,7 +80,7 @@
 
 .audit-chart-card {
     background: rgba(24, 144, 255, 0.03);
-    border: 1px solid rgba(24, 144, 255, 0.1);
+    border: 1px solid var(--border-color);
     border-radius: 12px;
     padding: 20px;
 }
@@ -105,13 +105,13 @@
 
 .pie-label {
     font-size: 14px;
-    color: #1a3a5c;
+    color: var(--text-primary);
     font-weight: 500;
 }
 
 .pie-value {
     margin-left: auto;
-    color: #8ba9c4;
+    color: var(--text-secondary);
 }
 
 .user-ranking-list {
@@ -132,7 +132,7 @@
 .rank-number {
     width: 32px;
     height: 32px;
-    background: linear-gradient(135deg, #1890ff, #722ed1);
+    background: linear-gradient(135deg, var(--primary-color), #722ed1);
     color: white;
     border-radius: 50%;
     display: flex;
@@ -147,12 +147,12 @@
 
 .rank-username {
     font-weight: 600;
-    color: #1a3a5c;
+    color: var(--text-primary);
 }
 
 .rank-count {
     font-size: 12px;
-    color: #8ba9c4;
+    color: var(--text-secondary);
 }
 
 .rank-bar {
@@ -165,7 +165,7 @@
 
 .rank-bar-fill {
     height: 100%;
-    background: linear-gradient(90deg, #1890ff, #722ed1);
+    background: linear-gradient(90deg, var(--primary-color), #722ed1);
     border-radius: 4px;
 }
 
@@ -176,7 +176,7 @@
 .recent-audits h3 {
     margin: 0 0 16px 0;
     font-size: 18px;
-    color: #1a3a5c;
+    color: var(--text-primary);
 }
 
 .recent-audits-list {
@@ -247,20 +247,20 @@
 
 .log-action {
     font-weight: 600;
-    color: #1890ff;
+    color: var(--primary-color);
     font-size: 13px;
 }
 
 .log-username {
-    color: #1a3a5c;
+    color: var(--text-primary);
 }
 
 .log-module {
-    color: #8ba9c4;
+    color: var(--text-secondary);
 }
 
 .log-detail {
-    color: #1a3a5c;
+    color: var(--text-primary);
     margin-bottom: 8px;
 }
 
@@ -268,7 +268,7 @@
     display: flex;
     gap: 16px;
     font-size: 12px;
-    color: #8ba9c4;
+    color: var(--text-secondary);
 }
 
 .log-result {
@@ -276,11 +276,11 @@
 }
 
 .log-result.success {
-    color: #52c41a;
+    color: var(--success);
 }
 
 .log-result.failed {
-    color: #ff4d4f;
+    color: var(--error);
 }
 
 .audit-filter {
@@ -297,12 +297,12 @@
 .sensitive-header h3 {
     margin: 0 0 8px 0;
     font-size: 18px;
-    color: #1a3a5c;
+    color: var(--text-primary);
 }
 
 .header-desc {
     margin: 0;
-    color: #8ba9c4;
+    color: var(--text-secondary);
 }
 
 .sensitive-list {
@@ -338,12 +338,12 @@
 .sensitive-title {
     font-weight: 600;
     font-size: 16px;
-    color: #1a3a5c;
+    color: var(--text-primary);
     margin-bottom: 8px;
 }
 
 .sensitive-detail {
-    color: #8ba9c4;
+    color: var(--text-secondary);
     margin-bottom: 8px;
 }
 
@@ -351,7 +351,7 @@
     display: flex;
     gap: 16px;
     font-size: 12px;
-    color: #8ba9c4;
+    color: var(--text-secondary);
 }
 
 .reports-header {
@@ -387,13 +387,13 @@
 .report-title {
     font-size: 18px;
     font-weight: 600;
-    color: #1a3a5c;
+    color: var(--text-primary);
     margin-bottom: 8px;
 }
 
 .report-desc {
     font-size: 13px;
-    color: #8ba9c4;
+    color: var(--text-secondary);
     margin-bottom: 16px;
 }
 
@@ -405,7 +405,7 @@
 
 .report-config {
     background: rgba(24, 144, 255, 0.03);
-    border: 1px solid rgba(24, 144, 255, 0.1);
+    border: 1px solid var(--border-color);
     border-radius: 12px;
     padding: 20px;
 }
@@ -413,7 +413,7 @@
 .report-config h4 {
     margin: 0 0 16px 0;
     font-size: 16px;
-    color: #1a3a5c;
+    color: var(--text-primary);
 }
 
 .config-form {
@@ -432,18 +432,18 @@
     display: flex;
     gap: 12px;
     padding: 8px 0;
-    border-bottom: 1px solid rgba(24, 144, 255, 0.1);
+    border-bottom: 1px solid var(--border-color);
 }
 
 .detail-label {
     width: 100px;
-    color: #8ba9c4;
+    color: var(--text-secondary);
     flex-shrink: 0;
 }
 
 .detail-value {
     flex: 1;
-    color: #1a3a5c;
+    color: var(--text-primary);
 }
 
 @media (max-width: 768px) {
