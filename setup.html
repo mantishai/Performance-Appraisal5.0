@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>系统初始化 - 人力资源管理系统</title>
+    <link rel="stylesheet" href="css/common.css">
+    <link rel="stylesheet" href="css/setup.css">
+</head>
+<body>
+    <div id="app"></div>
+    <script type="module">
+        import Setup from './js/modules/setup.js';
+        
+        const container = document.getElementById('app');
+        Setup.render(container);
+    </script>
+</body>
+</html>

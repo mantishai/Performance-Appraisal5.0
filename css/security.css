@@ -1,0 +1,327 @@
+.security-tabs {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 24px;
+    border-bottom: 1px solid rgba(24, 144, 255, 0.1);
+    padding-bottom: 16px;
+}
+
+.security-tab-btn {
+    padding: 10px 20px;
+    background: rgba(24, 144, 255, 0.05);
+    border: 1px solid rgba(24, 144, 255, 0.15);
+    border-radius: 8px;
+    color: #8ba9c4;
+    cursor: pointer;
+    font-size: 14px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    transition: all 0.3s;
+}
+
+.security-tab-btn:hover {
+    background: rgba(24, 144, 255, 0.1);
+    color: #1890ff;
+}
+
+.security-tab-btn.active {
+    background: linear-gradient(135deg, #1890ff, #722ed1);
+    color: white;
+    border-color: transparent;
+}
+
+.security-stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 20px;
+    margin-bottom: 24px;
+}
+
+.security-stat-card {
+    background: linear-gradient(135deg, rgba(24, 144, 255, 0.08), rgba(114, 46, 209, 0.05));
+    border: 1px solid rgba(24, 144, 255, 0.15);
+    border-radius: 16px;
+    padding: 24px;
+    text-align: center;
+    transition: all 0.3s;
+}
+
+.security-stat-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 24px rgba(24, 144, 255, 0.15);
+}
+
+.security-stat-card.success {
+    background: linear-gradient(135deg, rgba(82, 196, 26, 0.08), rgba(24, 144, 255, 0.03));
+    border-color: rgba(82, 196, 26, 0.2);
+}
+
+.security-stat-card.warning {
+    background: linear-gradient(135deg, rgba(250, 173, 20, 0.08), rgba(24, 144, 255, 0.03));
+    border-color: rgba(250, 173, 20, 0.2);
+}
+
+.security-stat-card.danger {
+    background: linear-gradient(135deg, rgba(255, 77, 79, 0.08), rgba(24, 144, 255, 0.03));
+    border-color: rgba(255, 77, 79, 0.2);
+}
+
+.security-stat-card.info {
+    background: linear-gradient(135deg, rgba(24, 144, 255, 0.08), rgba(82, 196, 26, 0.03));
+    border-color: rgba(24, 144, 255, 0.2);
+}
+
+.stat-icon {
+    font-size: 40px;
+    margin-bottom: 12px;
+}
+
+.stat-value {
+    font-size: 32px;
+    font-weight: 700;
+    color: #1a3a5c;
+    margin-bottom: 4px;
+}
+
+.stat-label {
+    font-size: 14px;
+    color: #8ba9c4;
+}
+
+.stat-trend {
+    font-size: 12px;
+    color: #8ba9c4;
+    margin-top: 4px;
+}
+
+.security-charts {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+    margin-bottom: 24px;
+}
+
+.security-chart-card {
+    background: rgba(24, 144, 255, 0.03);
+    border: 1px solid rgba(24, 144, 255, 0.1);
+    border-radius: 12px;
+    padding: 20px;
+}
+
+.chart-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+}
+
+.chart-header h3 {
+    margin: 0;
+    font-size: 16px;
+    color: #1a3a5c;
+}
+
+.chart-container {
+    min-height: 200px;
+}
+
+.simple-chart {
+    display: flex;
+    align-items: flex-end;
+    gap: 12px;
+    height: 180px;
+    padding-bottom: 20px;
+}
+
+.chart-bar {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-end;
+}
+
+.chart-bar-inner {
+    width: 100%;
+    background: linear-gradient(180deg, #1890ff, #722ed1);
+    border-radius: 8px 8px 0 0;
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    color: white;
+    font-size: 12px;
+    font-weight: 600;
+    padding-bottom: 4px;
+    transition: all 0.3s;
+}
+
+.chart-bar-inner:hover {
+    filter: brightness(1.1);
+}
+
+.chart-bar-label {
+    margin-top: 8px;
+    font-size: 12px;
+    color: #8ba9c4;
+}
+
+.recent-events-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.event-item {
+    display: flex;
+    gap: 12px;
+    padding: 16px;
+    background: rgba(24, 144, 255, 0.03);
+    border-radius: 10px;
+    align-items: flex-start;
+    transition: all 0.3s;
+}
+
+.event-item:hover {
+    background: rgba(24, 144, 255, 0.08);
+}
+
+.event-item.critical {
+    border-left: 4px solid #ff4d4f;
+}
+
+.event-item.high {
+    border-left: 4px solid #faad14;
+}
+
+.event-item.medium {
+    border-left: 4px solid #1890ff;
+}
+
+.event-item.low {
+    border-left: 4px solid #52c41a;
+}
+
+.event-icon {
+    font-size: 24px;
+}
+
+.event-info {
+    flex: 1;
+}
+
+.event-title {
+    font-weight: 600;
+    color: #1a3a5c;
+    margin-bottom: 4px;
+}
+
+.event-detail {
+    font-size: 13px;
+    color: #8ba9c4;
+    margin-bottom: 4px;
+}
+
+.event-time {
+    font-size: 12px;
+    color: #8ba9c4;
+}
+
+.whitelist-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+}
+
+.policy-sections {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    gap: 20px;
+    margin-bottom: 24px;
+}
+
+.policy-section {
+    background: rgba(24, 144, 255, 0.03);
+    border: 1px solid rgba(24, 144, 255, 0.1);
+    border-radius: 12px;
+    padding: 20px;
+}
+
+.policy-header h3 {
+    margin: 0 0 16px 0;
+    font-size: 16px;
+    color: #1a3a5c;
+}
+
+.policy-form .form-group {
+    margin-bottom: 16px;
+}
+
+.toggle-switch {
+    width: 52px;
+    height: 28px;
+    background: rgba(24, 144, 255, 0.1);
+    border-radius: 14px;
+    position: relative;
+    cursor: pointer;
+    transition: all 0.3s;
+    border: 2px solid rgba(24, 144, 255, 0.2);
+}
+
+.toggle-switch:hover {
+    border-color: rgba(24, 144, 255, 0.3);
+}
+
+.toggle-switch.active {
+    background: linear-gradient(90deg, #1890ff, #722ed1);
+    border-color: transparent;
+}
+
+.toggle-handle {
+    width: 20px;
+    height: 20px;
+    background: white;
+    border-radius: 50%;
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    transition: all 0.3s;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+.toggle-switch.active .toggle-handle {
+    left: 26px;
+}
+
+.policy-actions {
+    display: flex;
+    justify-content: flex-end;
+}
+
+.events-filter {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+}
+
+.filter-group {
+    flex: 1;
+    min-width: 150px;
+}
+
+@media (max-width: 768px) {
+    .security-tabs {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+    
+    .security-charts {
+        grid-template-columns: 1fr;
+    }
+    
+    .policy-sections {
+        grid-template-columns: 1fr;
+    }
+}

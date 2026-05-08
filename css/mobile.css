@@ -1,0 +1,689 @@
+/* ============================================
+   Mobile Styles - 移动端样式
+   Responsive Breakpoint: 768px
+   ============================================ */
+
+@media (max-width: 768px) {
+    /* ===== 全局样式 ===== */
+    :root {
+        --sidebar-width: 0;
+        --header-height: 56px;
+        --bottom-tab-height: 64px;
+    }
+
+    html {
+        font-size: 14px;
+    }
+
+    body {
+        touch-action: manipulation;
+        -webkit-tap-highlight-color: transparent;
+    }
+
+    /* ===== 应用容器 ===== */
+    #app {
+        flex-direction: column;
+    }
+
+    /* ===== 侧边栏 - 移动端隐藏，改为底部Tab ===== */
+    .sidebar {
+        position: fixed;
+        left: -100%;
+        width: 80%;
+        max-width: 300px;
+        height: calc(100vh - var(--bottom-tab-height));
+        top: 0;
+        z-index: 1000;
+        transition: left 0.3s ease;
+        box-shadow: 2px 0 8px rgba(0, 0, 0, 0.15);
+    }
+
+    .sidebar.show {
+        left: 0;
+    }
+
+    .sidebar-header {
+        padding: 12px 16px;
+    }
+
+    .sidebar-header h1 {
+        font-size: 1.25rem;
+    }
+
+    .sidebar-nav {
+        padding: 8px;
+    }
+
+    .nav-item {
+        padding: 12px 16px;
+        margin-bottom: 4px;
+        min-height: 44px;
+    }
+
+    .sidebar-footer {
+        display: none;
+    }
+
+    /* ===== 主内容区域 ===== */
+    .main-content {
+        width: 100%;
+        padding-bottom: var(--bottom-tab-height);
+    }
+
+    /* ===== 顶部导航栏 ===== */
+    .header {
+        height: var(--header-height);
+        padding: 0 12px;
+        position: sticky;
+        top: 0;
+        z-index: 100;
+        backdrop-filter: blur(10px);
+    }
+
+    .header-title h2 {
+        font-size: 1.1rem;
+    }
+
+    .breadcrumb {
+        display: none;
+    }
+
+    /* ===== 移动端菜单按钮 ===== */
+    .header-left {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+
+    .mobile-menu-btn {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 44px;
+        height: 44px;
+        background: none;
+        border: none;
+        font-size: 1.5rem;
+        cursor: pointer;
+        padding: 0;
+        border-radius: 8px;
+        transition: background 0.2s;
+    }
+
+    .mobile-menu-btn:active {
+        background: rgba(0, 0, 0, 0.05);
+    }
+
+    /* ===== 遮罩层 ===== */
+    .overlay {
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.5);
+        z-index: 999;
+        opacity: 0;
+        visibility: hidden;
+        transition: opacity 0.3s, visibility 0.3s;
+    }
+
+    .overlay.show {
+        opacity: 1;
+        visibility: visible;
+    }
+
+    /* ===== 底部Tab栏 ===== */
+    .bottom-tab-bar {
+        display: flex;
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        height: var(--bottom-tab-height);
+        background: var(--bg-primary);
+        border-top: 1px solid var(--border-color);
+        z-index: 100;
+        box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.08);
+    }
+
+    .bottom-tab-item {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 4px;
+        padding: 8px 4px;
+        min-height: 44px;
+        cursor: pointer;
+        color: var(--text-secondary);
+        transition: all 0.2s;
+        text-decoration: none;
+        border: none;
+        background: none;
+    }
+
+    .bottom-tab-item:active {
+        background: var(--bg-hover);
+    }
+
+    .bottom-tab-item.active {
+        color: var(--primary-color);
+    }
+
+    .bottom-tab-item .icon {
+        font-size: 1.5rem;
+        line-height: 1;
+    }
+
+    .bottom-tab-item .text {
+        font-size: 0.75rem;
+        font-weight: 500;
+    }
+
+    /* ===== 内容区域 ===== */
+    .content {
+        padding: 12px;
+    }
+
+    .page-header {
+        margin-bottom: 16px;
+    }
+
+    .page-title {
+        font-size: 1.25rem;
+    }
+
+    /* ===== 统计卡片 ===== */
+    .stats-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 12px;
+    }
+
+    .stat-card {
+        padding: 16px;
+    }
+
+    .stat-value {
+        font-size: 1.5rem;
+    }
+
+    .stat-label {
+        font-size: 0.875rem;
+    }
+
+    /* ===== 卡片 ===== */
+    .card {
+        border-radius: 12px;
+        padding: 16px;
+        margin-bottom: 16px;
+    }
+
+    .card-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 8px;
+        margin-bottom: 12px;
+    }
+
+    /* ===== 表格 ===== */
+    .table-container {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        border-radius: 8px;
+    }
+
+    .table {
+        min-width: 600px;
+        font-size: 0.875rem;
+    }
+
+    .table th,
+    .table td {
+        padding: 10px 8px;
+        white-space: nowrap;
+    }
+
+    /* ===== 表格卡片式替代 ===== */
+    .table-cards {
+        display: none;
+    }
+
+    .table-cards.show {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+    }
+
+    .table-card {
+        background: var(--bg-primary);
+        border-radius: 12px;
+        padding: 16px;
+        border: 1px solid var(--border-color);
+    }
+
+    .table-card-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        margin-bottom: 12px;
+    }
+
+    .table-card-title {
+        font-size: 1rem;
+        font-weight: 600;
+        color: var(--text-primary);
+    }
+
+    .table-card-badge {
+        display: inline-flex;
+        align-items: center;
+        padding: 4px 10px;
+        border-radius: 12px;
+        font-size: 0.75rem;
+        font-weight: 500;
+    }
+
+    .table-card-content {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 12px;
+    }
+
+    .table-card-item {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+    }
+
+    .table-card-label {
+        font-size: 0.75rem;
+        color: var(--text-secondary);
+    }
+
+    .table-card-value {
+        font-size: 0.9rem;
+        color: var(--text-primary);
+        font-weight: 500;
+    }
+
+    .table-card-actions {
+        display: flex;
+        gap: 8px;
+        margin-top: 12px;
+        padding-top: 12px;
+        border-top: 1px solid var(--border-color);
+    }
+
+    /* ===== 按钮 ===== */
+    .btn {
+        min-height: 44px;
+        min-width: 44px;
+        padding: 10px 20px;
+        font-size: 0.95rem;
+        border-radius: 10px;
+    }
+
+    .btn-sm {
+        min-height: 36px;
+        min-width: 36px;
+        padding: 6px 12px;
+        font-size: 0.85rem;
+    }
+
+    .btn-text {
+        min-width: auto;
+        padding: 8px 12px;
+    }
+
+    /* ===== 表单 ===== */
+    .form-control {
+        min-height: 44px;
+        padding: 10px 14px;
+        font-size: 1rem;
+        border-radius: 10px;
+    }
+
+    textarea.form-control {
+        min-height: 100px;
+    }
+
+    .form-group {
+        margin-bottom: 16px;
+    }
+
+    .form-label {
+        margin-bottom: 6px;
+        font-size: 0.9rem;
+    }
+
+    .form-row {
+        grid-template-columns: 1fr;
+        gap: 12px;
+    }
+
+    /* ===== 弹窗 - 全屏模式 ===== */
+    .modal-overlay {
+        align-items: flex-end;
+    }
+
+    .modal {
+        width: 100%;
+        max-width: 100%;
+        border-radius: 16px 16px 0 0;
+        max-height: 90vh;
+        animation: slideUp 0.3s ease;
+    }
+
+    .modal.fullscreen {
+        height: 100vh;
+        border-radius: 0;
+        animation: none;
+    }
+
+    @keyframes slideUp {
+        from {
+            transform: translateY(100%);
+        }
+        to {
+            transform: translateY(0);
+        }
+    }
+
+    .modal-header {
+        padding: 16px;
+        min-height: 56px;
+    }
+
+    .modal-title {
+        font-size: 1.1rem;
+    }
+
+    .modal-close {
+        width: 44px;
+        height: 44px;
+        font-size: 1.5rem;
+    }
+
+    .modal-body {
+        padding: 16px;
+    }
+
+    .modal-footer {
+        padding: 12px 16px 16px;
+        gap: 10px;
+    }
+
+    .modal-footer .btn {
+        flex: 1;
+    }
+
+    /* ===== 搜索框 ===== */
+    .search-box {
+        gap: 10px;
+    }
+
+    .search-input {
+        min-height: 44px;
+        padding: 10px 16px;
+        font-size: 1rem;
+        border-radius: 10px;
+    }
+
+    /* ===== 筛选和操作区域 ===== */
+    .table-actions {
+        flex-wrap: wrap;
+        gap: 8px;
+    }
+
+    .filter-group {
+        flex: 1;
+        min-width: 140px;
+    }
+
+    /* ===== 待办区域 ===== */
+    .todo-section {
+        flex-direction: column;
+        gap: 16px;
+    }
+
+    .todo-card {
+        flex: none;
+        width: 100%;
+    }
+
+    /* ===== 图表容器 ===== */
+    .chart-container {
+        padding: 16px;
+    }
+
+    /* ===== 仪表盘欢迎区域 ===== */
+    .welcome-section {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 12px;
+    }
+
+    .welcome-title {
+        font-size: 1.5rem;
+    }
+
+    .welcome-subtitle {
+        font-size: 0.95rem;
+    }
+
+    /* ===== 公告和日程 ===== */
+    .announcement-list,
+    .schedule-list {
+        max-height: 200px;
+    }
+
+    .announcement-item,
+    .schedule-item {
+        padding: 12px;
+    }
+
+    /* ===== 系统管理Tab ===== */
+    .system-tabs {
+        flex-wrap: nowrap;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        gap: 8px;
+        padding-bottom: 4px;
+    }
+
+    .system-tabs .btn {
+        flex-shrink: 0;
+        white-space: nowrap;
+    }
+
+    /* ===== 角色权限布局 ===== */
+    .roles-permissions-layout {
+        grid-template-columns: 1fr;
+        gap: 16px;
+    }
+
+    .role-list {
+        max-height: 180px;
+        overflow-y: auto;
+    }
+
+    .role-item {
+        padding: 12px;
+    }
+
+    /* ===== 下拉菜单 ===== */
+    .user-dropdown-menu {
+        position: fixed;
+        right: 12px;
+        left: 12px;
+        top: auto;
+        bottom: var(--bottom-tab-height);
+        width: auto;
+        min-width: auto;
+        border-radius: 12px;
+        box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.15);
+    }
+
+    .user-dropdown-item {
+        min-height: 48px;
+        padding: 12px 16px;
+    }
+
+    /* ===== Toast ===== */
+    .toast-container {
+        left: 50%;
+        transform: translateX(-50%);
+        right: auto;
+        width: 90%;
+        max-width: 400px;
+    }
+
+    .toast {
+        border-radius: 10px;
+        padding: 14px 16px;
+    }
+
+    /* ===== 进度条 ===== */
+    .progress-bar {
+        height: 8px;
+        border-radius: 4px;
+    }
+
+    .progress-fill {
+        border-radius: 4px;
+    }
+
+    /* ===== 空状态 ===== */
+    .empty-state {
+        padding: 60px 20px;
+    }
+
+    .empty-icon {
+        font-size: 4rem;
+    }
+
+    /* ===== 加载状态 ===== */
+    .loading-overlay {
+        align-items: center;
+        justify-content: center;
+    }
+
+    .loading-spinner {
+        width: 40px;
+        height: 40px;
+    }
+
+    .loading-text {
+        font-size: 1rem;
+    }
+
+    /* ===== 快捷方式 ===== */
+    .shortcuts-grid {
+        grid-template-columns: repeat(4, 1fr);
+        gap: 12px;
+    }
+
+    .shortcut-item {
+        padding: 16px 8px;
+        min-height: 44px;
+    }
+
+    .shortcut-icon {
+        font-size: 1.75rem;
+    }
+
+    .shortcut-label {
+        font-size: 0.8rem;
+    }
+
+    /* ===== 用户头像 ===== */
+    .user-avatar {
+        width: 40px;
+        height: 40px;
+        font-size: 1rem;
+    }
+
+    /* ===== 通知中心 ===== */
+    .notification-center {
+        position: fixed;
+        inset: 0;
+        top: var(--header-height);
+        bottom: var(--bottom-tab-height);
+        border-radius: 0;
+        box-shadow: none;
+    }
+
+    /* ===== 分页 ===== */
+    .pagination {
+        gap: 6px;
+    }
+
+    .pagination-btn {
+        min-width: 40px;
+        min-height: 40px;
+        font-size: 0.9rem;
+    }
+}
+
+/* ===== 超小屏幕优化 ===== */
+@media (max-width: 480px) {
+    :root {
+        --bottom-tab-height: 60px;
+    }
+
+    html {
+        font-size: 13px;
+    }
+
+    .stats-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .shortcuts-grid {
+        grid-template-columns: repeat(3, 1fr);
+    }
+
+    .bottom-tab-item .text {
+        font-size: 0.7rem;
+    }
+}
+
+/* ===== 平板横屏优化 ===== */
+@media (min-width: 769px) and (max-width: 1024px) {
+    .bottom-tab-bar {
+        display: none;
+    }
+}
+
+/* ===== 禁用选择和缩放优化 ===== */
+@media (max-width: 768px) {
+    * {
+        -webkit-user-select: none;
+        user-select: none;
+    }
+
+    input,
+    textarea {
+        -webkit-user-select: text;
+        user-select: text;
+    }
+
+    img {
+        pointer-events: none;
+    }
+}
+
+/* ===== 横屏模式优化 ===== */
+@media (max-width: 768px) and (orientation: landscape) {
+    :root {
+        --header-height: 48px;
+        --bottom-tab-height: 52px;
+    }
+
+    .content {
+        padding: 10px;
+    }
+
+    .stats-grid {
+        grid-template-columns: repeat(4, 1fr);
+    }
+}

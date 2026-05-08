@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="theme-color" content="#1890ff">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="HRMS">
+    <meta name="description" content="人力资源管理系统">
+    
+    <title>人力资源管理系统</title>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/mobile.css">
+    
+    <link rel="manifest" href="manifest.json">
+    
+    <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192x192.png">
+    <link rel="icon" type="image/png" sizes="512x512" href="icons/icon-512x512.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="icons/icon-180x180.png">
+    
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+</head>
+<body>
+    <div id="app">
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <h1>HRMS</h1>
+                <div class="subtitle">人力资源管理系统</div>
+            </div>
+            <nav class="sidebar-nav">
+                <div class="nav-section">
+                    <div class="nav-section-title">工作台</div>
+                    <div class="nav-item active" data-module="dashboard">
+                        <span class="icon">📊</span>
+                        <span class="text">个人看板</span>
+                    </div>
+                </div>
+                <div class="nav-section">
+                    <div class="nav-section-title">人力资源</div>
+                    <div class="nav-item" data-module="employee">
+                        <span class="icon">👤</span>
+                        <span class="text">员工管理</span>
+                    </div>
+                    <div class="nav-item" data-module="hr">
+                        <span class="icon">👥</span>
+                        <span class="text">人事管理</span>
+                    </div>
+                    <div class="nav-item" data-module="org">
+                        <span class="icon">🏢</span>
+                        <span class="text">组织架构</span>
+                    </div>
+                    <div class="nav-item" data-module="position">
+                        <span class="icon">📋</span>
+                        <span class="text">岗位说明书</span>
+                    </div>
+                </div>
+                <div class="nav-section">
+                    <div class="nav-section-title">考勤与绩效</div>
+                    <div class="nav-item" data-module="daily">
+                        <span class="icon">⏰</span>
+                        <span class="text">考勤打卡</span>
+                    </div>
+                    <div class="nav-item" data-module="attendance">
+                        <span class="icon">📅</span>
+                        <span class="text">考勤管理</span>
+                    </div>
+                    <div class="nav-item" data-module="performance">
+                        <span class="icon">📈</span>
+                        <span class="text">绩效考核</span>
+                    </div>
+                </div>
+                <div class="nav-section">
+                    <div class="nav-section-title">人才与发展</div>
+                    <div class="nav-item" data-module="recruitment">
+                        <span class="icon">📝</span>
+                        <span class="text">招聘管理</span>
+                    </div>
+                    <div class="nav-item" data-module="training">
+                        <span class="icon">📚</span>
+                        <span class="text">培训管理</span>
+                    </div>
+                    <div class="nav-item" data-module="talent">
+                        <span class="icon">🎯</span>
+                        <span class="text">人才盘点</span>
+                    </div>
+                    <div class="nav-item" data-module="alert">
+                        <span class="icon">🔔</span>
+                        <span class="text">智能预警</span>
+                    </div>
+                </div>
+                <div class="nav-section">
+                    <div class="nav-section-title">数据与分析</div>
+                    <div class="nav-item" data-module="datav">
+                        <span class="icon">📺</span>
+                        <span class="text">数据大屏</span>
+                    </div>
+                    <div class="nav-item" data-module="export">
+                        <span class="icon">📤</span>
+                        <span class="text">导出中心</span>
+                    </div>
+                </div>
+                <div class="nav-section">
+                    <div class="nav-section-title">系统</div>
+                    <div class="nav-item" data-module="import">
+                        <span class="icon">📥</span>
+                        <span class="text">数据管理</span>
+                    </div>
+                    <div class="nav-item" data-module="openapi">
+                        <span class="icon">🚀</span>
+                        <span class="text">API开放平台</span>
+                    </div>
+                    <div class="nav-item" data-module="security">
+                        <span class="icon">🛡️</span>
+                        <span class="text">安全中心</span>
+                    </div>
+                    <div class="nav-item" data-module="audit">
+                        <span class="icon">📜</span>
+                        <span class="text">审计日志</span>
+                    </div>
+                    <div class="nav-item" data-module="system">
+                        <span class="icon">⚙️</span>
+                        <span class="text">系统管理</span>
+                    </div>
+                </div>
+            </nav>
+            <div class="sidebar-footer">
+                <div class="user-info">
+                    <div class="user-avatar">张</div>
+                    <div class="user-details">
+                        <div class="user-name">管理员</div>
+                        <div class="user-role">
+                            <span class="online-status"></span>
+                            系统管理员
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </aside>
+        <div class="main-content">
+            <header class="header">
+                <div class="header-left">
+                    <div class="header-title">
+                        <h2 id="pageTitle">个人看板</h2>
+                    </div>
+                    <nav class="breadcrumb">
+                        <a href="#" class="breadcrumb-item">首页</a>
+                        <span class="breadcrumb-separator">/</span>
+                        <span class="breadcrumb-current" id="breadcrumbCurrent">个人看板</span>
+                    </nav>
+                </div>
+                <div class="header-actions"></div>
+            </header>
+            <main class="content" id="content"></main>
+        </div>
+    </div>
+    <script type="module" src="js/app.js?v=2"></script>
+    <script>
+        // PWA Service Worker 注册
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', async () => {
+                try {
+                    const registration = await navigator.serviceWorker.register('/sw.js');
+                    console.log('[PWA] Service Worker 注册成功:', registration.scope);
+                    
+                    // 检查更新
+                    registration.addEventListener('updatefound', () => {
+                        const installingWorker = registration.installing;
+                        installingWorker.addEventListener('statechange', () => {
+                            if (installingWorker.state === 'installed') {
+                                if (navigator.serviceWorker.controller) {
+                                    console.log('[PWA] 发现新版本，刷新页面更新');
+                                    if (confirm('发现新版本，是否立即更新？')) {
+                                        window.location.reload();
+                                    }
+                                }
+                            }
+                        });
+                    });
+                } catch (error) {
+                    console.error('[PWA] Service Worker 注册失败:', error);
+                }
+            });
+        }
+    </script>
+</body>
+</html>

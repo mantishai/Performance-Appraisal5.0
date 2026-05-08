@@ -1,0 +1,367 @@
+.setup-container {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 40px 20px;
+}
+
+.setup-header {
+    text-align: center;
+    margin-bottom: 40px;
+}
+
+.setup-title {
+    font-size: 32px;
+    font-weight: 700;
+    color: #1a3a5c;
+    margin-bottom: 8px;
+}
+
+.setup-subtitle {
+    font-size: 18px;
+    color: #8ba9c4;
+}
+
+.setup-progress {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 40px;
+    padding: 0 40px;
+}
+
+.progress-step {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    flex: 1;
+    position: relative;
+}
+
+.progress-step::after {
+    content: '';
+    position: absolute;
+    top: 16px;
+    left: calc(50% + 20px);
+    width: calc(100% - 40px);
+    height: 2px;
+    background: rgba(24, 144, 255, 0.1);
+}
+
+.progress-step:last-child::after {
+    display: none;
+}
+
+.progress-step.active::after {
+    background: linear-gradient(90deg, #1890ff, #722ed1);
+}
+
+.step-circle {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: rgba(24, 144, 255, 0.1);
+    color: #8ba9c4;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 600;
+    margin-bottom: 8px;
+    position: relative;
+    z-index: 1;
+}
+
+.progress-step.active .step-circle {
+    background: linear-gradient(135deg, #1890ff, #722ed1);
+    color: white;
+}
+
+.progress-step.current .step-circle {
+    width: 40px;
+    height: 40px;
+    font-size: 18px;
+    box-shadow: 0 0 20px rgba(24, 144, 255, 0.4);
+}
+
+.step-name {
+    font-size: 14px;
+    color: #8ba9c4;
+}
+
+.progress-step.active .step-name {
+    color: #1a3a5c;
+    font-weight: 500;
+}
+
+.setup-content {
+    background: white;
+    border-radius: 16px;
+    padding: 40px;
+    box-shadow: 0 4px 30px rgba(24, 144, 255, 0.1);
+    margin-bottom: 24px;
+}
+
+.setup-step-content {
+    text-align: center;
+}
+
+.setup-step-content h2 {
+    font-size: 24px;
+    color: #1a3a5c;
+    margin-bottom: 8px;
+}
+
+.step-desc {
+    color: #8ba9c4;
+    margin-bottom: 24px;
+}
+
+.welcome-icon {
+    font-size: 80px;
+    margin-bottom: 24px;
+}
+
+.welcome-desc {
+    font-size: 16px;
+    color: #8ba9c4;
+    margin-bottom: 32px;
+}
+
+.requirements-check {
+    background: rgba(24, 144, 255, 0.03);
+    border-radius: 12px;
+    padding: 24px;
+    text-align: left;
+    margin-bottom: 24px;
+}
+
+.requirements-check h3 {
+    font-size: 16px;
+    color: #1a3a5c;
+    margin-bottom: 16px;
+}
+
+.requirement-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 8px 0;
+    color: #1a3a5c;
+}
+
+.requirement-icon {
+    font-size: 18px;
+}
+
+.setup-notice {
+    background: rgba(250, 173, 20, 0.1);
+    border: 1px solid rgba(250, 173, 20, 0.3);
+    border-radius: 8px;
+    padding: 16px;
+    text-align: left;
+    margin-top: 24px;
+}
+
+.setup-notice p {
+    margin: 0;
+    color: #1a3a5c;
+    font-size: 14px;
+}
+
+.setup-notice.success {
+    background: rgba(82, 196, 26, 0.1);
+    border-color: rgba(82, 196, 26, 0.3);
+}
+
+.form-section {
+    text-align: left;
+    margin-bottom: 24px;
+}
+
+.form-section h3 {
+    font-size: 16px;
+    color: #1a3a5c;
+    margin-bottom: 16px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid rgba(24, 144, 255, 0.1);
+}
+
+.form-row {
+    display: flex;
+    gap: 16px;
+    margin-bottom: 16px;
+}
+
+.form-row .form-group {
+    flex: 1;
+}
+
+.form-group {
+    margin-bottom: 16px;
+}
+
+.form-group label {
+    display: block;
+    font-size: 14px;
+    color: #1a3a5c;
+    margin-bottom: 8px;
+}
+
+.required {
+    color: #ff4d4f;
+}
+
+.form-actions {
+    text-align: center;
+    margin-top: 24px;
+}
+
+.test-result {
+    margin-top: 16px;
+    padding: 12px;
+    border-radius: 8px;
+    text-align: center;
+}
+
+.test-result .testing {
+    color: #1890ff;
+}
+
+.test-result .success {
+    color: #52c41a;
+    font-weight: 500;
+}
+
+.test-result .error {
+    color: #ff4d4f;
+    font-weight: 500;
+}
+
+.baseline-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-bottom: 16px;
+}
+
+.baseline-item {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+}
+
+.baseline-item .form-control {
+    flex: 1;
+}
+
+.role-info {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex: 1;
+}
+
+.role-name {
+    font-weight: 500;
+    color: #1a3a5c;
+}
+
+.role-code {
+    font-size: 12px;
+    color: #8ba9c4;
+    background: rgba(24, 144, 255, 0.1);
+    padding: 2px 8px;
+    border-radius: 4px;
+}
+
+.role-desc {
+    font-size: 13px;
+    color: #8ba9c4;
+}
+
+.logo-upload {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.logo-preview {
+    width: 80px;
+    height: 80px;
+    background: rgba(24, 144, 255, 0.1);
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 40px;
+}
+
+.theme-options {
+    display: flex;
+    gap: 16px;
+}
+
+.theme-option {
+    flex: 1;
+    padding: 16px;
+    background: rgba(24, 144, 255, 0.03);
+    border: 2px solid transparent;
+    border-radius: 12px;
+    cursor: pointer;
+    text-align: center;
+    transition: all 0.3s;
+}
+
+.theme-option:hover {
+    border-color: rgba(24, 144, 255, 0.3);
+}
+
+.theme-option.selected {
+    border-color: #1890ff;
+    background: rgba(24, 144, 255, 0.1);
+}
+
+.theme-preview {
+    height: 40px;
+    border-radius: 8px;
+    margin-bottom: 8px;
+}
+
+.theme-option span {
+    font-size: 14px;
+    color: #1a3a5c;
+}
+
+.setup-footer {
+    display: flex;
+    justify-content: space-between;
+    padding: 0 40px;
+}
+
+.complete-icon {
+    font-size: 80px;
+    margin-bottom: 24px;
+}
+
+.complete-summary {
+    background: rgba(82, 196, 26, 0.05);
+    border-radius: 12px;
+    padding: 24px;
+    margin: 24px 0;
+    text-align: left;
+}
+
+.summary-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 8px 0;
+    color: #1a3a5c;
+}
+
+.summary-icon {
+    font-size: 20px;
+}
+
+.setup-container.btn-lg {
+    padding: 16px 32px;
+    font-size: 16px;
+}

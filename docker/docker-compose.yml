@@ -1,0 +1,61 @@
+version: '3.8'
+
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: hrms-mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: ${DB_PASSWORD}
+      MYSQL_DATABASE: hrms
+      MYSQL_USER: hrms
+      MYSQL_PASSWORD: ${DB_PASSWORD}
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql-data:/var/lib/mysql
+      - ./sql:/docker-entrypoint-initdb.d
+    networks:
+      - hrms-network
+
+  redis:
+    image: redis:7-alpine
+    container_name: hrms-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    networks:
+      - hrms-network
+
+  nginx:
+    build: .
+    container_name: hrms-nginx
+    ports:
+      - "80:80"
+    depends_on:
+      - mysql
+      - redis
+    networks:
+      - hrms-network
+
+  backup:
+    image: alpine:latest
+    container_name: hrms-backup
+    volumes:
+      - mysql-data:/data
+      - ./backups:/backups
+    command: |
+      sh -c "while true; do
+        tar -czf /backups/backup-$(date +%Y%m%d-%H%M%S).tar.gz /data
+        sleep 86400
+      done"
+    networks:
+      - hrms-network
+
+volumes:
+  mysql-data:
+  redis-data:
+
+networks:
+  hrms-network:
+    driver: bridge

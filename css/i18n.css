@@ -1,0 +1,146 @@
+.language-switcher {
+    display: flex;
+    gap: 2px;
+    background: rgba(24, 144, 255, 0.05);
+    border-radius: 20px;
+    padding: 3px;
+    margin-right: 16px;
+}
+
+.lang-btn {
+    padding: 6px 12px;
+    border: none;
+    background: transparent;
+    border-radius: 16px;
+    cursor: pointer;
+    font-size: 12px;
+    font-weight: 500;
+    color: #8ba9c4;
+    transition: all 0.3s;
+}
+
+.lang-btn:hover {
+    color: #1890ff;
+    background: rgba(24, 144, 255, 0.1);
+}
+
+.lang-btn.active {
+    background: linear-gradient(135deg, #1890ff, #722ed1);
+    color: white;
+}
+
+.language-dropdown {
+    position: relative;
+}
+
+.language-dropdown-btn {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 12px;
+    background: rgba(24, 144, 255, 0.05);
+    border: 1px solid rgba(24, 144, 255, 0.2);
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 13px;
+    color: #1a3a5c;
+    transition: all 0.3s;
+}
+
+.language-dropdown-btn:hover {
+    border-color: #1890ff;
+    background: rgba(24, 144, 255, 0.1);
+}
+
+.language-dropdown-menu {
+    position: absolute;
+    top: 100%;
+    right: 0;
+    margin-top: 4px;
+    min-width: 150px;
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(-10px);
+    transition: all 0.3s;
+    z-index: 1000;
+}
+
+.language-dropdown:hover .language-dropdown-menu {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+}
+
+.language-dropdown-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 16px;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.language-dropdown-item:first-child {
+    border-radius: 8px 8px 0 0;
+}
+
+.language-dropdown-item:last-child {
+    border-radius: 0 0 8px 8px;
+}
+
+.language-dropdown-item:hover {
+    background: rgba(24, 144, 255, 0.1);
+}
+
+.language-dropdown-item.active {
+    background: rgba(24, 144, 255, 0.1);
+    color: #1890ff;
+    font-weight: 500;
+}
+
+.language-dropdown-divider {
+    height: 1px;
+    background: rgba(24, 144, 255, 0.1);
+    margin: 4px 0;
+}
+
+[data-i18n] {
+    cursor: default;
+}
+
+.switch-language-btn {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    padding: 6px 10px;
+    background: transparent;
+    border: 1px solid rgba(24, 144, 255, 0.2);
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 12px;
+    color: #8ba9c4;
+    transition: all 0.3s;
+}
+
+.switch-language-btn:hover {
+    border-color: #1890ff;
+    color: #1890ff;
+}
+
+.switch-language-btn .icon {
+    font-size: 14px;
+}
+
+.i18n-indicator {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 2px 8px;
+    background: rgba(24, 144, 255, 0.1);
+    border-radius: 10px;
+    font-size: 11px;
+    color: #1890ff;
+}
