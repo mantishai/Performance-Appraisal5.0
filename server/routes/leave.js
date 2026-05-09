@@ -24,7 +24,7 @@ router.get('/leave/list', async (req, res) => {
         const { employee_id, status } = req.query;
         
         let query = `
-            SELECT l.*, e.name as employee_name, e.department_id, d.name as department_name
+            SELECT l.*, e.name as employee_name, e.department_id, d.dept_name as department_name
             FROM leave_application l
             LEFT JOIN employee e ON l.employee_id = e.id
             LEFT JOIN department d ON e.department_id = d.id

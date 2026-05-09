@@ -34,7 +34,7 @@ router.get('/performance/evaluations', async (req, res) => {
         const { plan_id, employee_id } = req.query;
         
         let query = `
-            SELECT e.*, p.name as plan_name, emp.name as employee_name
+            SELECT e.*, p.plan_name as plan_name, emp.name as employee_name
             FROM performance_evaluation e
             LEFT JOIN performance_plan p ON e.plan_id = p.id
             LEFT JOIN employee emp ON e.employee_id = emp.id

@@ -6,7 +6,7 @@ const router = Router();
 router.get('/talent/key-positions', async (req, res) => {
     try {
         const [rows] = await pool.execute(`
-            SELECT kp.*, p.name as position_name, d.name as department_name
+            SELECT kp.*, p.position_name as position_name, d.dept_name as department_name
             FROM key_position kp
             LEFT JOIN position p ON kp.position_id = p.id
             LEFT JOIN department d ON p.department_id = d.id
@@ -39,7 +39,7 @@ router.get('/talent/successors', async (req, res) => {
         const { key_position_id } = req.query;
         
         let query = `
-            SELECT s.*, e.name as employee_name, e.position_id, p.name as position_name
+            SELECT s.*, e.name as employee_name, e.position_id, p.position_name as position_name
             FROM successor s
             LEFT JOIN employee e ON s.employee_id = e.id
             LEFT JOIN position p ON e.position_id = p.id
@@ -81,7 +81,7 @@ router.get('/talent/nine-grid', async (req, res) => {
         const [rows] = await pool.execute(`
             SELECT e.id, e.name, e.employee_no, e.department_id, e.position_id,
                    pe.performance_score, pe.potential_score,
-                   d.name as department_name, p.name as position_name
+                   d.dept_name as department_name, p.position_name as position_name
             FROM employee e
             LEFT JOIN performance_evaluation pe ON e.id = pe.employee_id
             LEFT JOIN department d ON e.department_id = d.id
