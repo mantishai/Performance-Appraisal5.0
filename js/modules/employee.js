@@ -136,17 +136,17 @@ const employeeModule = {
                                     <td class="checkbox-col">
                                         <input type="checkbox" data-id="${emp.id}" ${state.selectedIds.includes(emp.id) ? 'checked' : ''}>
                                     </td>
-                                    <td>${escapeHtml(emp.employeeNo)}</td>
+                                    <td>${escapeHtml(emp.employee_no || emp.employeeNo)}</td>
                                     <td><strong>${escapeHtml(emp.name)}</strong></td>
-                                    <td>${escapeHtml(emp.department)}</td>
-                                    <td>${escapeHtml(emp.position)}</td>
+                                    <td>${escapeHtml(emp.department_name || emp.department)}</td>
+                                    <td>${escapeHtml(emp.position_name || emp.position)}</td>
                                     <td>
-                                        <span class="status-tag ${emp.potentialTag === '高潜' ? 'active' : emp.potentialTag === '待提升' ? 'inactive' : 'info'}">
-                                            ${escapeHtml(emp.potentialTag)}
+                                        <span class="status-tag ${emp.potential_tag === '高潜' || emp.potentialTag === '高潜' ? 'active' : emp.potential_tag === '待提升' || emp.potentialTag === '待提升' ? 'inactive' : 'info'}">
+                                            ${escapeHtml(emp.potential_tag || emp.potentialTag || '中坚')}
                                         </span>
                                     </td>
                                     <td>${escapeHtml(emp.phone || '-')}</td>
-                                    <td>${escapeHtml(emp.entryDate || '-')}</td>
+                                    <td>${escapeHtml(emp.hire_date || emp.entryDate || '-')}</td>
                                     <td>
                                         <span class="status-tag ${emp.status === 1 ? 'active' : emp.status === 2 ? 'warning' : 'inactive'}">
                                             ${emp.status === 1 ? '在职' : emp.status === 2 ? '试用期' : '离职'}
@@ -607,15 +607,21 @@ const employeeModule = {
     },
 
     async handleSaveForm(editId = null) {
+        const departmentName = document.getElementById('empDept').value;
+        const positionName = document.getElementById('empPosition').value;
+        
+        const department = state.departments.find(d => d.name === departmentName);
+        const position = state.positions.find(p => p.name === positionName);
+        
         const formData = {
             name: document.getElementById('empName').value.trim(),
-            employeeNo: document.getElementById('empNo').value.trim() || `E${Date.now().toString().slice(-6)}`,
-            department: document.getElementById('empDept').value,
-            position: document.getElementById('empPosition').value,
+            employee_no: document.getElementById('empNo').value.trim() || `E${Date.now().toString().slice(-6)}`,
+            department_id: department?.id || null,
+            position_id: position?.id || null,
             phone: document.getElementById('empPhone').value.trim(),
-            email: document.getElementById('empEmail').value.trim(),
-            entryDate: document.getElementById('empEntryDate').value,
-            potentialTag: document.getElementById('empPotentialTag').value,
+            email: document.getElementById('empEmail').value.trim() || `${document.getElementById('empNo').value.trim()}@company.com`,
+            hire_date: document.getElementById('empEntryDate').value,
+            potential_tag: document.getElementById('empPotentialTag').value || '中坚',
             status: editId ? parseInt(document.getElementById('empStatus').value) : 1
         };
 

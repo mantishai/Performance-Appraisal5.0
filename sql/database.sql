@@ -72,6 +72,7 @@ CREATE TABLE IF NOT EXISTS employee (
     entry_date DATE NOT NULL COMMENT '入职日期',
     regular_date DATE COMMENT '转正日期',
     status TINYINT DEFAULT 2 COMMENT '状态：0离职1在职2试用3待入职',
+    potential_tag VARCHAR(20) DEFAULT '中坚' COMMENT '潜力标签：高潜/中坚/待提升',
     employment_type TINYINT DEFAULT 1 COMMENT '用工类型：1全职2兼职3实习4外包',
     candidate_id BIGINT COMMENT '来源候选人ID',
     create_time DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',

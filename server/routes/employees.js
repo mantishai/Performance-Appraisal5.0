@@ -46,7 +46,7 @@ router.post('/employees', async (req, res) => {
         const { name, employee_no, phone, email, department_id, position_id, status = 1, hire_date, potential_tag = '中坚' } = req.body;
         
         const [result] = await pool.execute(
-            'INSERT INTO employee (name, employee_no, phone, email, department_id, position_id, status, hire_date, potential_tag, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())',
+            'INSERT INTO employee (name, employee_no, phone, email, department_id, position_id, status, entry_date, potential_tag, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())',
             [name, employee_no, phone, email, department_id, position_id, status, hire_date, potential_tag]
         );
         
@@ -60,11 +60,11 @@ router.post('/employees', async (req, res) => {
 router.put('/employees/:id', async (req, res) => {
     try {
         const { id } = req.params;
-        const { name, phone, email, department_id, position_id, status } = req.body;
+        const { name, employee_no, phone, email, department_id, position_id, status, hire_date, potential_tag } = req.body;
         
         const [result] = await pool.execute(
-            'UPDATE employee SET name = ?, phone = ?, email = ?, department_id = ?, position_id = ?, status = ? WHERE id = ?',
-            [name, phone, email, department_id, position_id, status, id]
+            'UPDATE employee SET name = ?, employee_no = ?, phone = ?, email = ?, department_id = ?, position_id = ?, status = ?, entry_date = ?, potential_tag = ? WHERE id = ?',
+            [name, employee_no, phone, email, department_id, position_id, status, hire_date, potential_tag, id]
         );
         
         res.json({ code: 200, data: { affectedRows: result.affectedRows }, message: '更新成功' });
