@@ -1,6 +1,7 @@
 import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
+import pool from './db.js';
 
 import authRoutes from './routes/auth.js';
 import employeeRoutes from './routes/employees.js';
@@ -24,6 +25,7 @@ import archiveRoutes from './routes/archive.js';
 import openapiRoutes from './routes/openapi.js';
 import securityRoutes from './routes/security.js';
 import auditRoutes from './routes/audit.js';
+import todosRoutes from './routes/todos.js';
 
 dotenv.config();
 
@@ -55,6 +57,48 @@ app.use('/api', archiveRoutes);
 app.use('/api', openapiRoutes);
 app.use('/api', securityRoutes);
 app.use('/api', auditRoutes);
+app.use('/api', todosRoutes);
+
+// 使用 /api/system/todos 路由 - 直接调用 todos 路由的相同逻辑
+app.get('/api/system/todos', async (req, res) => {
+    try {
+        const { userId } = req.query;
+        
+        let query = `
+            SELECT * FROM todo_task 
+            WHERE 1=1
+        `;
+        const params = [];
+        
+        if (userId) {
+            query += ' AND user_id = ?';
+            params.push(userId);
+        }
+        
+        query += ' ORDER BY priority DESC, deadline ASC, create_time DESC';
+        
+        const [rows] = await pool.execute(query, params);
+        
+        // 转换字段名以匹配前端期望
+        const todos = rows.map(row => ({
+            id: row.id,
+            title: row.task_title,
+            content: row.task_content,
+            type: row.task_type,
+            priority: row.priority === 3 ? 'high' : row.priority === 2 ? 'medium' : 'low',
+            status: row.status === 0 ? 'pending' : row.status === 1 ? 'completed' : 'ignored',
+            completed: row.status === 1,
+            createTime: row.create_time,
+            dueTime: row.deadline,
+            targetId: row.target_id
+        }));
+        
+        res.json({ code: 200, data: todos, message: 'success' });
+    } catch (error) {
+        console.error('Get todos error:', error);
+        res.json({ code: 500, message: '服务器错误' });
+    }
+});
 
 app.get('/api/alert/risk-prediction', (req, res) => {
     res.json({
@@ -92,18 +136,6 @@ app.get('/api/system/announcements', (req, res) => {
     });
 });
 
-app.get('/api/system/todos', (req, res) => {
-    res.json({
-        code: 200,
-        data: [
-            { id: 1, title: '审批张三的请假申请', status: 'pending', type: 'leave', createTime: '2026-05-09', dueTime: '2026-05-10' },
-            { id: 2, title: '完成绩效评估', status: 'pending', type: 'performance', createTime: '2026-05-08', dueTime: '2026-05-15' },
-            { id: 3, title: '参加部门会议', status: 'completed', type: 'meeting', createTime: '2026-05-07', dueTime: '2026-05-08' }
-        ],
-        message: 'success'
-    });
-});
-
 app.get('/api/system/schedule', (req, res) => {
     res.json({
         code: 200,
@@ -115,31 +147,7 @@ app.get('/api/system/schedule', (req, res) => {
     });
 });
 
-app.get('/api/alert/list', (req, res) => {
-    res.json({ code: 200, data: [
-        { id: 1, type: 'contract', title: '合同到期提醒', content: '王五的合同将在30天内到期', level: 'high', status: 'pending', createTime: '2024-02-09 09:00:00' }
-    ], message: 'success' });
-});
 
-app.get('/api/training/courses', (req, res) => {
-    res.json({ code: 200, data: [
-        { id: 1, name: 'React高级开发', category: '技术', lecturer: '张老师', hours: 12, capacity: 50, enrolledCount: 32, startDate: '2026-05-20', endDate: '2026-05-22', status: 'open' }
-    ], message: 'success' });
-});
-
-app.get('/api/training/my-courses', (req, res) => {
-    res.json({ code: 200, data: [], message: 'success' });
-});
-
-app.get('/api/training/records', (req, res) => {
-    res.json({ code: 200, data: [], message: 'success' });
-});
-
-app.get('/api/performance/evaluations', (req, res) => {
-    res.json({ code: 200, data: [
-        { id: 1, employeeId: 1, employeeName: '张三', planId: 1, planName: '2026年Q1考核', department: '技术部', position: '前端工程师', selfScore: null, selfComment: null, selfStatus: 'pending', leaderScore: null, leaderComment: null, leaderStatus: 'pending', finalScore: null, grade: null, status: 'pending' }
-    ], message: 'success' });
-});
 
 app.get('/api/health', (req, res) => {
     res.json({ code: 200, message: 'HRMS Backend Service is running' });

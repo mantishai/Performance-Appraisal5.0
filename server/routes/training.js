@@ -110,7 +110,7 @@ router.get('/training/my-courses', async (req, res) => {
         }
         
         const [rows] = await pool.execute(`
-            SELECT r.*, c.course_name, c.description, c.start_date, c.end_date
+            SELECT r.*, c.course_name, c.course_outline as description, c.start_date, c.end_date
             FROM training_registration r
             LEFT JOIN training_course c ON r.course_id = c.id
             WHERE r.employee_id = ?

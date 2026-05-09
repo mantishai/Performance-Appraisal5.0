@@ -97,7 +97,7 @@ const dashboardModule = {
 
     renderContent(container) {
         const pendingLeaves = state.leaves.filter(l => l.status === 'pending');
-        const pendingInterviews = state.interviews.filter(i => i.status === 'scheduled' || i.status === 'pending');
+        const pendingInterviews = state.interviews.filter(i => i.status === 'completed');
         const pendingSelfEvals = state.evaluations.filter(e => e.selfStatus !== 'completed');
         const pendingLeaderEvals = state.evaluations.filter(e => e.selfStatus === 'completed' && e.leaderStatus !== 'completed');
 

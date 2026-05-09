@@ -285,7 +285,7 @@ const API = {
     },
 
     getMyCourses(employeeId) {
-        return this.request(`/training/my-courses?employeeId=${employeeId}`);
+        return this.request(`/training/my-courses?employee_id=${employeeId}`);
     },
 
     getTrainingRecords(params = {}) {

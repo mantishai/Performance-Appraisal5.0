@@ -6,9 +6,11 @@ const router = Router();
 router.get('/hr/contracts', async (req, res) => {
     try {
         const [rows] = await pool.execute(`
-            SELECT c.*, e.name as employee_name, e.department, e.position
+            SELECT c.*, e.name as employee_name, d.dept_name as department, p.position_name as position
             FROM labor_contract c
             LEFT JOIN employee e ON c.employee_id = e.id
+            LEFT JOIN department d ON e.department_id = d.id
+            LEFT JOIN position p ON e.position_id = p.id
         `);
         const contracts = rows.map(row => ({
             id: row.id,
@@ -19,7 +21,9 @@ router.get('/hr/contracts', async (req, res) => {
             startDate: row.start_date,
             endDate: row.end_date,
             salary: row.salary,
-            status: row.status
+            status: row.status,
+            department: row.department,
+            position: row.position
         }));
         res.json({ code: 200, data: contracts, message: 'success' });
     } catch (error) {
@@ -81,9 +85,11 @@ router.put('/hr/contract/:id/terminate', async (req, res) => {
 router.get('/hr/transfers', async (req, res) => {
     try {
         const [rows] = await pool.execute(`
-            SELECT t.*, e.name as employee_name, e.department, e.position
+            SELECT t.*, e.name as employee_name, d.dept_name as department, p.position_name as position
             FROM transfer_record t
             LEFT JOIN employee e ON t.employee_id = e.id
+            LEFT JOIN department d ON e.department_id = d.id
+            LEFT JOIN position p ON e.position_id = p.id
             ORDER BY t.create_time DESC
         `);
         const transfers = rows.map(row => ({
@@ -96,7 +102,9 @@ router.get('/hr/transfers', async (req, res) => {
             reason: row.reason,
             applyDate: row.create_time ? row.create_time.split(' ')[0] : '',
             status: row.status,
-            approver: row.approver
+            approver: row.approver,
+            department: row.department,
+            position: row.position
         }));
         res.json({ code: 200, data: transfers, message: 'success' });
     } catch (error) {
@@ -159,7 +167,13 @@ router.get('/hr/archive/:employeeId', async (req, res) => {
     try {
         const { employeeId } = req.params;
         
-        const [empRows] = await pool.execute('SELECT name, department, position FROM employee WHERE id = ?', [employeeId]);
+        const [empRows] = await pool.execute(`
+            SELECT e.name, d.dept_name as department, p.position_name as position
+            FROM employee e
+            LEFT JOIN department d ON e.department_id = d.id
+            LEFT JOIN position p ON e.position_id = p.id
+            WHERE e.id = ?
+        `, [employeeId]);
         const employee = empRows[0];
         
         const archiveItems = [
