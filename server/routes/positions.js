@@ -11,7 +11,7 @@ router.get('/org/positions', async (req, res) => {
         const params = [];
         
         if (department_id) {
-            query += ' AND department_id = ?';
+            query += ' AND dept_id = ?';
             params.push(department_id);
         }
         
@@ -28,7 +28,7 @@ router.post('/org/position', async (req, res) => {
         const { name, department_id, sort_order = 0 } = req.body;
         
         const [result] = await pool.execute(
-            'INSERT INTO position (name, department_id, sort_order, created_at) VALUES (?, ?, ?, NOW())',
+            'INSERT INTO position (position_name, dept_id, sort_order, create_time) VALUES (?, ?, ?, NOW())',
             [name, department_id, sort_order]
         );
         
@@ -45,7 +45,7 @@ router.put('/org/position/:id', async (req, res) => {
         const { name, department_id, sort_order } = req.body;
         
         const [result] = await pool.execute(
-            'UPDATE position SET name = ?, department_id = ?, sort_order = ? WHERE id = ?',
+            'UPDATE position SET position_name = ?, dept_id = ?, sort_order = ? WHERE id = ?',
             [name, department_id, sort_order, id]
         );
         

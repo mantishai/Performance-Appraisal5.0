@@ -8,8 +8,8 @@ router.post('/leave', async (req, res) => {
         const { employee_id, type, start_date, end_date, days, reason } = req.body;
         
         const [result] = await pool.execute(
-            'INSERT INTO leave_application (employee_id, type, start_date, end_date, days, reason, status, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, NOW())',
-            [employee_id, type, start_date, end_date, days, reason, 'pending']
+            'INSERT INTO leave_request (employee_id, leave_type, start_time, end_time, leave_days, reason, approve_status, create_time) VALUES (?, ?, ?, ?, ?, ?, ?, NOW())',
+            [employee_id, type, start_date, end_date, days, reason, 0]
         );
         
         res.json({ code: 200, data: { id: result.insertId }, message: '请假申请提交成功' });
@@ -25,7 +25,7 @@ router.get('/leave/list', async (req, res) => {
         
         let query = `
             SELECT l.*, e.name as employee_name, e.department_id, d.dept_name as department_name
-            FROM leave_application l
+            FROM leave_request l
             LEFT JOIN employee e ON l.employee_id = e.id
             LEFT JOIN department d ON e.department_id = d.id
             WHERE 1=1
@@ -37,7 +37,7 @@ router.get('/leave/list', async (req, res) => {
             params.push(employee_id);
         }
         if (status) {
-            query += ' AND l.status = ?';
+            query += ' AND l.approve_status = ?';
             params.push(status);
         }
         
@@ -54,8 +54,8 @@ router.put('/leave/:id/approve', async (req, res) => {
         const { id } = req.params;
         
         const [result] = await pool.execute(
-            'UPDATE leave_application SET status = ?, approved_at = NOW() WHERE id = ?',
-            ['approved', id]
+            'UPDATE leave_request SET approve_status = ?, approve_time = NOW() WHERE id = ?',
+            [1, id]
         );
         
         res.json({ code: 200, data: { affectedRows: result.affectedRows }, message: '审批通过' });
@@ -70,8 +70,8 @@ router.put('/leave/:id/reject', async (req, res) => {
         const { id } = req.params;
         
         const [result] = await pool.execute(
-            'UPDATE leave_application SET status = ?, rejected_at = NOW() WHERE id = ?',
-            ['rejected', id]
+            'UPDATE leave_request SET approve_status = ?, approve_time = NOW() WHERE id = ?',
+            [2, id]
         );
         
         res.json({ code: 200, data: { affectedRows: result.affectedRows }, message: '审批拒绝' });

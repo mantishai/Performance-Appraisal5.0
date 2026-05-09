@@ -1,5 +1,5 @@
-const CACHE_NAME = `hrms-cache-v1.0.0-${new Date().toISOString().split('T')[0]}`;
-const APP_VERSION = '1.0.0';
+const CACHE_NAME = `hrms-cache-v1.0.1-${new Date().toISOString().split('T')[0]}`;
+const APP_VERSION = '1.0.1';
 
 const CDN_ASSETS = [
   'https://fonts.googleapis.com',
@@ -112,15 +112,22 @@ self.addEventListener('fetch', (event) => {
   if (request.method === 'POST' || request.method === 'PUT' || request.method === 'DELETE') {
     event.respondWith(
       fetch(request).catch(async (error) => {
+        if (error.name === 'AbortError') {
+          return new Response(JSON.stringify({ code: 408, message: '请求被中止' }), { status: 408 });
+        }
         console.log('[ServiceWorker] 网络失败，存储离线数据');
-        await storeOfflineData({
-          id: Date.now().toString(),
-          url: request.url,
-          method: request.method,
-          headers: Object.fromEntries(request.headers.entries()),
-          body: await request.clone().text(),
-          timestamp: Date.now()
-        });
+        try {
+          await storeOfflineData({
+            id: Date.now().toString(),
+            url: request.url,
+            method: request.method,
+            headers: Object.fromEntries(request.headers.entries()),
+            body: await request.clone().text(),
+            timestamp: Date.now()
+          });
+        } catch (e) {
+          console.error('[ServiceWorker] 存储离线数据失败:', e);
+        }
         
         return new Response(JSON.stringify({ 
           code: 202, 
@@ -132,7 +139,9 @@ self.addEventListener('fetch', (event) => {
   }
   
   if (url.pathname.startsWith('/api/')) {
-    event.respondWith(CACHE_STRATEGIES.networkFirst(request));
+    event.respondWith(CACHE_STRATEGIES.networkFirst(request).catch(() => {
+      return new Response(JSON.stringify({ code: 503, message: '服务暂时不可用' }), { status: 503 });
+    }));
     return;
   }
   
@@ -152,7 +161,7 @@ self.addEventListener('fetch', (event) => {
   }
   
   if (['style', 'image', 'font'].includes(request.destination)) {
-    event.respondWith(CACHE_STRATEGIES.networkFirst(request));
+    event.respondWith(CACHE_STRATEGIES.cacheFirst(request));
     return;
   }
   

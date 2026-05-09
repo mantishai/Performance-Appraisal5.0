@@ -98,6 +98,10 @@ router.get('/training/my-courses', async (req, res) => {
     try {
         const { employee_id } = req.query;
         
+        if (!employee_id) {
+            return res.json({ code: 200, data: [], message: 'success' });
+        }
+        
         const [rows] = await pool.execute(`
             SELECT r.*, c.title, c.description, c.start_date, c.end_date
             FROM training_registration r
@@ -125,6 +129,120 @@ router.post('/training/signin', async (req, res) => {
     } catch (error) {
         console.error('Signin error:', error);
         res.json({ code: 500, message: '服务器错误' });
+    }
+});
+
+router.get('/training/registrations/:courseId', async (req, res) => {
+    try {
+        const { courseId } = req.params;
+        
+        const [rows] = await pool.execute(`
+            SELECT r.*, e.name as employee_name, e.department, e.position
+            FROM training_registration r
+            LEFT JOIN employee e ON r.employee_id = e.id
+            WHERE r.course_id = ?
+        `, [courseId]);
+        
+        const registrations = rows.map(row => ({
+            id: row.id,
+            courseId: row.course_id,
+            employeeId: row.employee_id,
+            employeeName: row.employee_name,
+            department: row.department,
+            position: row.position,
+            status: row.status,
+            createTime: row.created_at,
+            signTime: row.signed_at
+        }));
+        
+        res.json({ code: 200, data: registrations, message: 'success' });
+    } catch (error) {
+        console.error('Get registrations error:', error);
+        res.json({ code: 500, message: '服务器错误' });
+    }
+});
+
+router.get('/training/records', async (req, res) => {
+    try {
+        const { employeeId } = req.query;
+        
+        let query = `
+            SELECT r.*, c.title, c.category, c.start_date, c.end_date, e.name as employee_name
+            FROM training_record r
+            LEFT JOIN training_course c ON r.course_id = c.id
+            LEFT JOIN employee e ON r.employee_id = e.id
+            WHERE 1=1
+        `;
+        const params = [];
+        
+        if (employeeId) {
+            query += ' AND r.employee_id = ?';
+            params.push(employeeId);
+        }
+        
+        const [rows] = await pool.execute(query, params);
+        
+        const records = rows.map(row => ({
+            id: row.id,
+            courseId: row.course_id,
+            courseTitle: row.title,
+            category: row.category,
+            employeeId: row.employee_id,
+            employeeName: row.employee_name,
+            attendance: row.attendance,
+            score: row.score,
+            evaluation: row.evaluation,
+            hours: row.hours,
+            recordTime: row.record_time
+        }));
+        
+        res.json({ code: 200, data: records, message: 'success' });
+    } catch (error) {
+        console.error('Get training records error:', error);
+        res.json({ code: 500, message: '服务器错误' });
+    }
+});
+
+router.post('/training/record', async (req, res) => {
+    try {
+        const { courseId, employeeId, attendance, score, evaluation, hours } = req.body;
+        
+        const [result] = await pool.execute(
+            'INSERT INTO training_record (course_id, employee_id, attendance, score, evaluation, hours, record_time) VALUES (?, ?, ?, ?, ?, ?, NOW())',
+            [courseId, employeeId, attendance, score, evaluation, hours]
+        );
+        
+        res.json({ code: 200, data: { id: result.insertId }, message: '记录创建成功' });
+    } catch (error) {
+        console.error('Create training record error:', error);
+        res.json({ code: 500, message: '服务器错误' });
+    }
+});
+
+router.get('/training/statistics', async (req, res) => {
+    try {
+        const [courseRows] = await pool.execute('SELECT COUNT(*) as count FROM training_course');
+        const [regRows] = await pool.execute('SELECT COUNT(*) as count FROM training_registration');
+        const [recordRows] = await pool.execute('SELECT SUM(hours) as total FROM training_record');
+        const [evalRows] = await pool.execute('SELECT AVG(score) as avg FROM training_record WHERE score IS NOT NULL');
+        
+        res.json({ 
+            code: 200, 
+            data: {
+                totalSessions: parseInt(courseRows[0]?.count) || 0,
+                totalParticipants: parseInt(regRows[0]?.count) || 0,
+                totalHours: parseFloat(recordRows[0]?.total) || 0,
+                avgSatisfaction: parseFloat(evalRows[0]?.avg) || 0
+            }, 
+            message: 'success' 
+        });
+    } catch (error) {
+        console.error('Get training statistics error:', error);
+        res.json({ 
+            code: 200, 
+            data: { totalSessions: 0, totalParticipants: 0, totalHours: 0, avgSatisfaction: 0 }, 
+            message: 'success' 
+        });
     }
 });
 

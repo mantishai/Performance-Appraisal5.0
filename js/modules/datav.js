@@ -7,16 +7,16 @@ const DataVModule = {
     name: 'datav',
     title: '数据大屏',
     
-    async init() {
+    async render(container) {
+        this.container = container;
         console.log('[DataV] 初始化数据大屏模块');
-        this.render();
+        this.renderContent();
         this.initCharts();
         this.startAutoRefresh();
     },
     
-    render() {
-        const content = document.getElementById('content');
-        content.innerHTML = `
+    renderContent() {
+        this.container.innerHTML = `
             <div class="datav-container" id="datavContainer">
                 <div class="datav-header">
                     <h1>🚀 人力资源数据驾驶舱</h1>
@@ -254,8 +254,5 @@ const DataVModule = {
     }
 };
 
-if (typeof window !== 'undefined') {
-    window.DataVModule = DataVModule;
-}
-
+export default DataVModule;
 console.log('[Module] 数据大屏模块已加载');

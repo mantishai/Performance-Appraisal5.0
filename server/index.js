@@ -17,6 +17,13 @@ import systemRoutes from './routes/system.js';
 import dashboardRoutes from './routes/dashboard.js';
 import commonRoutes from './routes/common.js';
 import interviewsRoutes from './routes/interviews.js';
+import hrRoutes from './routes/hr.js';
+import importRoutes from './routes/import.js';
+import reportRoutes from './routes/report.js';
+import archiveRoutes from './routes/archive.js';
+import openapiRoutes from './routes/openapi.js';
+import securityRoutes from './routes/security.js';
+import auditRoutes from './routes/audit.js';
 
 dotenv.config();
 
@@ -41,6 +48,13 @@ app.use('/api', systemRoutes);
 app.use('/api', dashboardRoutes);
 app.use('/api', commonRoutes);
 app.use('/api', interviewsRoutes);
+app.use('/api', hrRoutes);
+app.use('/api', importRoutes);
+app.use('/api', reportRoutes);
+app.use('/api', archiveRoutes);
+app.use('/api', openapiRoutes);
+app.use('/api', securityRoutes);
+app.use('/api', auditRoutes);
 
 app.get('/api/training/records', (req, res) => {
     res.json({ code: 200, data: [], message: 'success' });

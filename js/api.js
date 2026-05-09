@@ -2423,6 +2423,13 @@ const API = {
     testOpenapiAPI(data) { return this.request('/openapi/test', { method: 'POST', body: JSON.stringify(data) }); },
     getOpenapiDoc() { return this.request('/openapi/doc'); },
     
+    getSecurityEvents() { return this.request('/security/events'); },
+    getIpWhitelist() { return this.request('/security/ip-whitelist'); },
+    getSecurityPolicy() { return this.request('/security/policy'); },
+    updateSecurityPolicy(data) { return this.request('/security/policy', { method: 'PUT', body: JSON.stringify(data) }); },
+    addIpWhitelist(data) { return this.request('/security/ip-whitelist', { method: 'POST', body: JSON.stringify(data) }); },
+    deleteIpWhitelist(id) { return this.request(`/security/ip-whitelist/${id}`, { method: 'DELETE' }); },
+    
     getSystemUsers() { return this.request('/system/users'); },
     createSystemUser(data) { return this.request('/system/users', { method: 'POST', body: JSON.stringify(data) }); },
     updateSystemUser(id, data) { return this.request(`/system/user/${id}`, { method: 'PUT', body: JSON.stringify(data) }); },
@@ -2442,6 +2449,12 @@ const API = {
         const query = new URLSearchParams(params || {}).toString();
         return this.request(`/system/logs?${query}`);
     },
+    getAuditLogs(params) { 
+        const query = new URLSearchParams(params || {}).toString();
+        return this.request(`/audit/logs?${query}`); 
+    },
+    getAuditStatistics() { return this.request('/audit/statistics'); },
+    getSensitiveOperations() { return this.request('/audit/sensitive'); },
     clearSystemLogs() { return this.request('/system/logs', { method: 'DELETE' }); },
     
     getSystemStatistics() { return this.request('/system/statistics'); },

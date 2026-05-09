@@ -18,7 +18,7 @@ router.post('/org/department', async (req, res) => {
         const { name, parent_id = 0, sort_order = 0 } = req.body;
         
         const [result] = await pool.execute(
-            'INSERT INTO department (name, parent_id, sort_order, created_at) VALUES (?, ?, ?, NOW())',
+            'INSERT INTO department (dept_name, parent_id, sort_order, create_time) VALUES (?, ?, ?, NOW())',
             [name, parent_id, sort_order]
         );
         
@@ -35,7 +35,7 @@ router.put('/org/department/:id', async (req, res) => {
         const { name, parent_id, sort_order } = req.body;
         
         const [result] = await pool.execute(
-            'UPDATE department SET name = ?, parent_id = ?, sort_order = ? WHERE id = ?',
+            'UPDATE department SET dept_name = ?, parent_id = ?, sort_order = ? WHERE id = ?',
             [name, parent_id, sort_order, id]
         );
         

@@ -8,7 +8,7 @@ router.post('/login', async (req, res) => {
         const { username, password } = req.body;
         
         const [rows] = await pool.execute(
-            'SELECT id, username, name, role, permissions FROM system_user WHERE username = ? AND password = ?',
+            'SELECT id, username, real_name as name, role, permissions FROM user WHERE username = ? AND password = ?',
             [username, password]
         );
         
@@ -17,7 +17,9 @@ router.post('/login', async (req, res) => {
         }
         
         const user = rows[0];
-        user.permissions = user.permissions ? JSON.parse(user.permissions) : [];
+        user.permissions = user.permissions && typeof user.permissions === 'string' 
+            ? JSON.parse(user.permissions) 
+            : (user.permissions || []);
         
         res.json({ 
             code: 200, 
@@ -33,7 +35,7 @@ router.post('/login', async (req, res) => {
 router.get('/system/current-user', async (req, res) => {
     try {
         const [rows] = await pool.execute(
-            'SELECT id, username, name, role, permissions FROM system_user WHERE id = 1'
+            'SELECT id, username, real_name as name, role, permissions FROM user WHERE id = 1'
         );
         
         if (rows.length === 0) {
@@ -41,7 +43,9 @@ router.get('/system/current-user', async (req, res) => {
         }
         
         const user = rows[0];
-        user.permissions = user.permissions ? JSON.parse(user.permissions) : [];
+        user.permissions = user.permissions && typeof user.permissions === 'string' 
+            ? JSON.parse(user.permissions) 
+            : (user.permissions || []);
         
         res.json({ code: 200, data: user, message: 'success' });
     } catch (error) {
