@@ -5,7 +5,7 @@ const router = Router();
 
 router.get('/departments', async (req, res) => {
     try {
-        const [rows] = await pool.execute('SELECT * FROM department ORDER BY parent_id, sort_order');
+        const [rows] = await pool.execute('SELECT *, dept_name as name FROM department ORDER BY parent_id, sort_order');
         res.json({ code: 200, data: rows, message: 'success' });
     } catch (error) {
         console.error('Get departments error:', error);

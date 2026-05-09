@@ -6,8 +6,8 @@ const router = Router();
 router.get('/dashboard', async (req, res) => {
     try {
         const [empResult] = await pool.execute('SELECT COUNT(*) as total FROM employee WHERE status = 1');
-        const [leaveResult] = await pool.execute('SELECT COUNT(*) as pending FROM leave_application WHERE status = "pending"');
-        const [taskResult] = await pool.execute('SELECT COUNT(*) as count FROM system_todo WHERE status = "pending"');
+        const [leaveResult] = await pool.execute('SELECT COUNT(*) as pending FROM leave_request WHERE status = "pending"');
+        const [taskResult] = await pool.execute('SELECT COUNT(*) as count FROM todo_task WHERE status = "pending"');
         
         res.json({
             code: 200,
