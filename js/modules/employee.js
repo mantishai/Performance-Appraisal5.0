@@ -474,6 +474,7 @@ const employeeModule = {
                             <label>状态</label>
                             <select id="empStatus">
                                 <option value="1" ${employee?.status === 1 ? 'selected' : ''}>在职</option>
+                                <option value="2" ${employee?.status === 2 ? 'selected' : ''}>试用期</option>
                                 <option value="0" ${employee?.status === 0 ? 'selected' : ''}>离职</option>
                             </select>
                         </div>

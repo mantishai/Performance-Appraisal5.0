@@ -10,6 +10,8 @@
     --text-secondary: #8ba9c4;
     --bg-light: #f0f9ff;
     --bg-white: #ffffff;
+    --bg-primary: #ffffff;
+    --bg-hover: rgba(24, 144, 255, 0.05);
     --shadow: 0 2px 12px rgba(24, 144, 255, 0.08);
     --shadow-hover: 0 8px 24px rgba(24, 144, 255, 0.12);
     --border-radius: 12px;
@@ -1917,6 +1919,8 @@ body {
 [data-theme="dark"] {
     --bg-light: #141414;
     --bg-white: #1f1f1f;
+    --bg-primary: #1f1f1f;
+    --bg-hover: rgba(255, 255, 255, 0.05);
     --text-primary: #ffffff;
     --text-secondary: #a6a6a6;
     --shadow: 0 2px 12px rgba(0, 0, 0, 0.3);
@@ -1960,6 +1964,20 @@ body {
 
 [data-theme="dark"] .data-table th {
     background: linear-gradient(135deg, #1a1a1a, #222);
+}
+
+.btn-text {
+    background: transparent;
+    border: none;
+    color: var(--primary-color);
+    cursor: pointer;
+    padding: 4px 8px;
+    font-size: 13px;
+}
+
+.btn-text:hover {
+    background: var(--bg-hover);
+    border-radius: 6px;
 }
 
 .bottom-tab-bar {

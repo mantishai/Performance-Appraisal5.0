@@ -3,6 +3,7 @@
     "version": "1.0.0",
     "description": "人力资源管理系统",
     "type": "module",
+    "private": true,
     "scripts": {
         "dev": "vite",
         "build": "vite build",
@@ -11,9 +12,9 @@
         "test:coverage": "vitest --coverage",
         "lint": "eslint src --ext js",
         "format": "prettier --write src",
-        "deploy": "sh ./deploy.sh",
-        "backup": "sh ./backup.sh",
-        "monitor": "sh ./monitor.sh"
+        "deploy": "sh ./scripts/deploy.sh",
+        "backup": "sh ./scripts/backup.sh",
+        "monitor": "sh ./scripts/monitor.sh"
     },
     "dependencies": {
         "chart.js": "^4.4.0",

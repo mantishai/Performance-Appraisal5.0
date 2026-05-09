@@ -15,18 +15,18 @@
     cursor: pointer;
     font-size: 12px;
     font-weight: 500;
-    color: #8ba9c4;
+    color: var(--text-secondary);
     transition: all 0.3s;
 }
 
 .lang-btn:hover {
-    color: #1890ff;
+    color: var(--primary-color);
     background: rgba(24, 144, 255, 0.1);
 }
 
 .lang-btn.active {
-    background: linear-gradient(135deg, #1890ff, #722ed1);
-    color: white;
+    background: linear-gradient(135deg, var(--primary-color), #722ed1);
+    color: var(--bg-white);
 }
 
 .language-dropdown {
@@ -43,12 +43,12 @@
     border-radius: 8px;
     cursor: pointer;
     font-size: 13px;
-    color: #1a3a5c;
+    color: var(--text-primary);
     transition: all 0.3s;
 }
 
 .language-dropdown-btn:hover {
-    border-color: #1890ff;
+    border-color: var(--primary-color);
     background: rgba(24, 144, 255, 0.1);
 }
 
@@ -58,7 +58,7 @@
     right: 0;
     margin-top: 4px;
     min-width: 150px;
-    background: white;
+    background: var(--bg-white);
     border-radius: 8px;
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
     opacity: 0;
@@ -97,7 +97,7 @@
 
 .language-dropdown-item.active {
     background: rgba(24, 144, 255, 0.1);
-    color: #1890ff;
+    color: var(--primary-color);
     font-weight: 500;
 }
 
@@ -121,13 +121,13 @@
     border-radius: 6px;
     cursor: pointer;
     font-size: 12px;
-    color: #8ba9c4;
+    color: var(--text-secondary);
     transition: all 0.3s;
 }
 
 .switch-language-btn:hover {
-    border-color: #1890ff;
-    color: #1890ff;
+    border-color: var(--primary-color);
+    color: var(--primary-color);
 }
 
 .switch-language-btn .icon {
@@ -142,5 +142,5 @@
     background: rgba(24, 144, 255, 0.1);
     border-radius: 10px;
     font-size: 11px;
-    color: #1890ff;
+    color: var(--primary-color);
 }

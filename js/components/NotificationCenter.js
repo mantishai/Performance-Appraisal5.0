@@ -2,19 +2,38 @@ const NotificationCenter = {
     container: null,
     dropdown: null,
     badge: null,
+    notifications: [],
 
-    notifications: [
-        { id: 1, type: 'info', icon: '📋', title: '新员工入职', message: '张三已入职，请准备相关资料', time: '5分钟前', read: false },
-        { id: 2, type: 'success', icon: '✅', title: '审批通过', message: '您的请假申请已通过', time: '1小时前', read: false },
-        { id: 3, type: 'warning', icon: '⚠️', title: '合同到期提醒', message: '李四的合同将在30天后到期', time: '2小时前', read: false },
-        { id: 4, type: 'error', icon: '❌', title: '考勤异常', message: '王五今日未打卡', time: '3小时前', read: true },
-        { id: 5, type: 'info', icon: '📅', title: '绩效考核', message: '2024年Q1考核已开始', time: '1天前', read: true }
-    ],
-
-    init() {
+    async init() {
+        await this.loadNotifications();
         this.createNotificationButton();
         this.createDropdown();
         this.updateBadge();
+    },
+
+    async loadNotifications() {
+        try {
+            const { default: API } = await import('../api.js');
+            const res = await API.getNotifications();
+            if (res.code === 200 && res.data) {
+                this.notifications = res.data;
+            } else {
+                this.notifications = this.getMockNotifications();
+            }
+        } catch (error) {
+            console.warn('Failed to fetch notifications, using mock data:', error);
+            this.notifications = this.getMockNotifications();
+        }
+    },
+
+    getMockNotifications() {
+        return [
+            { id: 1, type: 'info', icon: '📋', title: '新员工入职', message: '张三已入职，请准备相关资料', time: '5分钟前', read: false },
+            { id: 2, type: 'success', icon: '✅', title: '审批通过', message: '您的请假申请已通过', time: '1小时前', read: false },
+            { id: 3, type: 'warning', icon: '⚠️', title: '合同到期提醒', message: '李四的合同将在30天后到期', time: '2小时前', read: false },
+            { id: 4, type: 'error', icon: '❌', title: '考勤异常', message: '王五今日未打卡', time: '3小时前', read: true },
+            { id: 5, type: 'info', icon: '📅', title: '绩效考核', message: '2024年Q1考核已开始', time: '1天前', read: true }
+        ];
     },
 
     createNotificationButton() {

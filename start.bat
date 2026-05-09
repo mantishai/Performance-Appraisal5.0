@@ -53,6 +53,6 @@ echo.
 echo Starting server...
 echo Access URL: http://localhost:3000
 echo.
-npx vite
+npx vite --host
 
 pause

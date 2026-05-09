@@ -27,7 +27,7 @@
 ### 安装
 
 ```bash
-git clone https://github.com/your/hrms.git
+git clone https://github.com/mantishai/Performance-Appraisal5.0
 cd hrms
 npm install
 ```

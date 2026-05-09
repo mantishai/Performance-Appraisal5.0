@@ -65,7 +65,19 @@ const GlobalSearch = {
     },
 
     async search(query) {
-        const mockResults = {
+        let results;
+        try {
+            const { default: API } = await import('../api.js');
+            results = await API.search(query);
+        } catch (error) {
+            console.warn('Failed to fetch search results, using mock data:', error);
+            results = this.getMockResults();
+        }
+        this.showResults(results);
+    },
+
+    getMockResults() {
+        return {
             employees: [
                 { id: 1, name: '张三', department: '技术部', position: '前端工程师', icon: '👤' },
                 { id: 2, name: '李四', department: '产品部', position: '产品经理', icon: '👤' },
@@ -76,9 +88,6 @@ const GlobalSearch = {
                 { id: 5, name: '钱七', position: '产品经理', status: '已录用', icon: '👥' }
             ]
         };
-
-        const results = mockResults;
-        this.showResults(results);
     },
 
     showResults(results) {
