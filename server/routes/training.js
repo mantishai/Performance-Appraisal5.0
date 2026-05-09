@@ -11,7 +11,7 @@ router.get('/training/courses', async (req, res) => {
         const params = [];
         
         if (category) {
-            query += ' AND category = ?';
+            query += ' AND course_category = ?';
             params.push(category);
         }
         
@@ -28,7 +28,7 @@ router.post('/training/course', async (req, res) => {
         const { title, description, category, start_date, end_date, capacity } = req.body;
         
         const [result] = await pool.execute(
-            'INSERT INTO training_course (title, description, category, start_date, end_date, capacity, created_at) VALUES (?, ?, ?, ?, ?, ?, NOW())',
+            'INSERT INTO training_course (course_name, description, course_category, start_date, end_date, capacity, created_at) VALUES (?, ?, ?, ?, ?, ?, NOW())',
             [title, description, category, start_date, end_date, capacity]
         );
         
@@ -45,7 +45,7 @@ router.put('/training/course/:id', async (req, res) => {
         const { title, description, category, start_date, end_date, capacity } = req.body;
         
         const [result] = await pool.execute(
-            'UPDATE training_course SET title = ?, description = ?, category = ?, start_date = ?, end_date = ?, capacity = ? WHERE id = ?',
+            'UPDATE training_course SET course_name = ?, description = ?, course_category = ?, start_date = ?, end_date = ?, capacity = ? WHERE id = ?',
             [title, description, category, start_date, end_date, capacity, id]
         );
         
@@ -103,7 +103,7 @@ router.get('/training/my-courses', async (req, res) => {
         }
         
         const [rows] = await pool.execute(`
-            SELECT r.*, c.title, c.description, c.start_date, c.end_date
+            SELECT r.*, c.course_name, c.description, c.start_date, c.end_date
             FROM training_registration r
             LEFT JOIN training_course c ON r.course_id = c.id
             WHERE r.employee_id = ?
@@ -167,7 +167,7 @@ router.get('/training/records', async (req, res) => {
         const { employeeId } = req.query;
         
         let query = `
-            SELECT r.*, c.title, c.category, c.start_date, c.end_date, e.name as employee_name
+            SELECT r.*, c.course_name, c.course_category, c.start_date, c.end_date, e.name as employee_name
             FROM training_record r
             LEFT JOIN training_course c ON r.course_id = c.id
             LEFT JOIN employee e ON r.employee_id = e.id
@@ -185,8 +185,8 @@ router.get('/training/records', async (req, res) => {
         const records = rows.map(row => ({
             id: row.id,
             courseId: row.course_id,
-            courseTitle: row.title,
-            category: row.category,
+            courseTitle: row.course_name,
+            category: row.course_category,
             employeeId: row.employee_id,
             employeeName: row.employee_name,
             attendance: row.attendance,

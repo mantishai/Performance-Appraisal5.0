@@ -162,9 +162,9 @@ router.get('/alert/risk-prediction', async (req, res) => {
             'SELECT COUNT(*) as count FROM alert_record WHERE alert_type = "contract" AND status = 0'
         );
         const [expiringEmployees] = await pool.execute(`
-            SELECT COUNT(*) as count FROM employee 
-            WHERE contract_end_date IS NOT NULL 
-            AND contract_end_date BETWEEN NOW() AND DATE_ADD(NOW(), INTERVAL 30 DAY)
+            SELECT COUNT(*) as count FROM labor_contract 
+            WHERE expiry_date IS NOT NULL 
+            AND expiry_date BETWEEN NOW() AND DATE_ADD(NOW(), INTERVAL 30 DAY)
         `);
         const [overtimeAlerts] = await pool.execute(
             'SELECT COUNT(*) as count FROM alert_record WHERE alert_type = "overtime" AND status = 0'
@@ -177,7 +177,7 @@ router.get('/alert/risk-prediction', async (req, res) => {
                    COUNT(CASE WHEN ar.alert_type = "performance" THEN 1 END) as performanceRisk
             FROM department d
             LEFT JOIN employee e ON d.id = e.department_id
-            LEFT JOIN alert_record ar ON e.id = ar.related_id AND ar.status = 0
+            LEFT JOIN alert_record ar ON e.id = ar.target_id AND ar.status = 0
             GROUP BY d.id, d.dept_name
         `);
         
