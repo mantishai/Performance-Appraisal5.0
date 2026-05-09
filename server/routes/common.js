@@ -5,8 +5,25 @@ const router = Router();
 
 router.get('/departments', async (req, res) => {
     try {
-        const [rows] = await pool.execute('SELECT *, dept_name as name FROM department ORDER BY parent_id, sort_order');
-        res.json({ code: 200, data: rows, message: 'success' });
+        const [rows] = await pool.execute(`
+            SELECT d.*, d.dept_name as name, d.parent_id as parentId, 
+                   e.real_name as manager, 
+                   (SELECT COUNT(*) FROM employee WHERE department_id = d.id) as employeeCount 
+            FROM department d 
+            LEFT JOIN user e ON d.leader_id = e.employee_id 
+            ORDER BY d.parent_id, d.sort_order
+        `);
+        
+        const departments = rows.map(row => ({
+            id: row.id,
+            name: row.name,
+            parentId: row.parentId,
+            manager: row.manager || '',
+            employeeCount: row.employeeCount || 0,
+            children: []
+        }));
+        
+        res.json({ code: 200, data: departments, message: 'success' });
     } catch (error) {
         console.error('Get departments error:', error);
         res.json({ code: 200, data: [], message: 'success' });

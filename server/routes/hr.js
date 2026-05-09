@@ -7,7 +7,7 @@ router.get('/hr/contracts', async (req, res) => {
     try {
         const [rows] = await pool.execute(`
             SELECT c.*, e.name as employee_name, e.department, e.position
-            FROM contract c
+            FROM labor_contract c
             LEFT JOIN employee e ON c.employee_id = e.id
         `);
         const contracts = rows.map(row => ({
@@ -33,7 +33,7 @@ router.post('/hr/contract', async (req, res) => {
         const { employeeId, employeeName, contractNo, type, startDate, endDate, salary } = req.body;
         
         const [result] = await pool.execute(
-            'INSERT INTO contract (employee_id, contract_no, type, start_date, end_date, salary, status, create_time) VALUES (?, ?, ?, ?, ?, ?, 1, NOW())',
+            'INSERT INTO labor_contract (employee_id, contract_no, type, start_date, end_date, salary, status, create_time) VALUES (?, ?, ?, ?, ?, ?, 1, NOW())',
             [employeeId, contractNo, type, startDate, endDate, salary]
         );
         
@@ -50,7 +50,7 @@ router.put('/hr/contract/:id/renew', async (req, res) => {
         const { endDate } = req.body;
         
         const [result] = await pool.execute(
-            'UPDATE contract SET end_date = ? WHERE id = ?',
+            'UPDATE labor_contract SET end_date = ? WHERE id = ?',
             [endDate, id]
         );
         
@@ -67,7 +67,7 @@ router.put('/hr/contract/:id/terminate', async (req, res) => {
         const { terminateDate } = req.body;
         
         const [result] = await pool.execute(
-            'UPDATE contract SET status = 0, end_date = ? WHERE id = ?',
+            'UPDATE labor_contract SET status = 0, end_date = ? WHERE id = ?',
             [terminateDate, id]
         );
         
@@ -82,7 +82,7 @@ router.get('/hr/transfers', async (req, res) => {
     try {
         const [rows] = await pool.execute(`
             SELECT t.*, e.name as employee_name, e.department, e.position
-            FROM personnel_transfer t
+            FROM transfer_record t
             LEFT JOIN employee e ON t.employee_id = e.id
             ORDER BY t.create_time DESC
         `);
@@ -110,7 +110,7 @@ router.post('/hr/transfer', async (req, res) => {
         const { employeeId, employeeName, type, oldValue, newValue, reason } = req.body;
         
         const [result] = await pool.execute(
-            'INSERT INTO personnel_transfer (employee_id, type, old_value, new_value, reason, status, create_time) VALUES (?, ?, ?, ?, ?, "pending", NOW())',
+            'INSERT INTO transfer_record (employee_id, type, old_value, new_value, reason, status, create_time) VALUES (?, ?, ?, ?, ?, "pending", NOW())',
             [employeeId, type, oldValue, newValue, reason]
         );
         
@@ -127,7 +127,7 @@ router.put('/hr/transfer/:id/approve', async (req, res) => {
         const { approver } = req.body;
         
         const [result] = await pool.execute(
-            'UPDATE personnel_transfer SET status = "approved", approver = ?, approve_time = NOW() WHERE id = ?',
+            'UPDATE transfer_record SET status = "approved", approver = ?, approve_time = NOW() WHERE id = ?',
             [approver, id]
         );
         
@@ -144,7 +144,7 @@ router.put('/hr/transfer/:id/reject', async (req, res) => {
         const { approver } = req.body;
         
         const [result] = await pool.execute(
-            'UPDATE personnel_transfer SET status = "rejected", approver = ?, approve_time = NOW() WHERE id = ?',
+            'UPDATE transfer_record SET status = "rejected", approver = ?, approve_time = NOW() WHERE id = ?',
             [approver, id]
         );
         

@@ -178,7 +178,7 @@ router.get('/recruitment/offers', async (req, res) => {
     try {
         const [rows] = await pool.execute(`
             SELECT o.*, c.name as candidate_name, j.title as job_title
-            FROM job_offer o
+            FROM offer o
             LEFT JOIN candidate c ON o.candidate_id = c.id
             LEFT JOIN job_position j ON o.job_position_id = j.id
             ORDER BY o.create_time DESC
@@ -210,7 +210,7 @@ router.post('/recruitment/offer', async (req, res) => {
         const { candidateId, jobId, salary, position, startDate } = req.body;
         
         const [result] = await pool.execute(
-            'INSERT INTO job_offer (candidate_id, job_position_id, salary, position, start_date, status, create_time) VALUES (?, ?, ?, ?, ?, "pending", NOW())',
+            'INSERT INTO offer (candidate_id, job_position_id, salary, position, start_date, status, create_time) VALUES (?, ?, ?, ?, ?, "pending", NOW())',
             [candidateId, jobId, salary, position, startDate]
         );
         
@@ -226,7 +226,7 @@ router.put('/recruitment/offer/:id/send', async (req, res) => {
         const { id } = req.params;
         
         const [result] = await pool.execute(
-            'UPDATE job_offer SET status = "sent", send_time = NOW() WHERE id = ?',
+            'UPDATE offer SET status = "sent", send_time = NOW() WHERE id = ?',
             [id]
         );
         

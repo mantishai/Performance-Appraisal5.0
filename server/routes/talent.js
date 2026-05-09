@@ -80,7 +80,7 @@ router.get('/talent/nine-grid', async (req, res) => {
     try {
         const [rows] = await pool.execute(`
             SELECT e.id, e.name, e.employee_no, e.department_id, e.position_id,
-                   pe.performance_score, pe.potential_score,
+                   pe.final_score as performance_score,
                    d.dept_name as department_name, p.position_name as position_name
             FROM employee e
             LEFT JOIN performance_evaluation pe ON e.id = pe.employee_id
@@ -106,13 +106,13 @@ router.put('/talent/nine-grid', async (req, res) => {
         
         if (existing.length > 0) {
             await pool.execute(
-                'UPDATE performance_evaluation SET performance_score = ?, potential_score = ?, update_time = NOW() WHERE employee_id = ?',
-                [performanceScore, potentialScore, employeeId]
+                'UPDATE performance_evaluation SET final_score = ? WHERE employee_id = ?',
+                [performanceScore, employeeId]
             );
         } else {
             await pool.execute(
-                'INSERT INTO performance_evaluation (employee_id, performance_score, potential_score, create_time) VALUES (?, ?, ?, NOW())',
-                [employeeId, performanceScore, potentialScore]
+                'INSERT INTO performance_evaluation (employee_id, final_score, create_time) VALUES (?, ?, NOW())',
+                [employeeId, performanceScore]
             );
         }
         
@@ -128,7 +128,7 @@ router.get('/talent/talent-pool', async (req, res) => {
         const [rows] = await pool.execute(`
             SELECT tp.*, e.name as employee_name, e.employee_no, e.department_id, e.position_id,
                    d.dept_name as department_name, p.position_name as position_name
-            FROM talent_pool tp
+            FROM nine_grid_talent tp
             LEFT JOIN employee e ON tp.employee_id = e.id
             LEFT JOIN department d ON e.department_id = d.id
             LEFT JOIN position p ON e.position_id = p.id
@@ -162,7 +162,7 @@ router.post('/talent/talent-pool', async (req, res) => {
         const { employeeId, level = 'B', tags = [] } = req.body;
         
         const [result] = await pool.execute(
-            'INSERT INTO talent_pool (employee_id, level, tags, status, create_time) VALUES (?, ?, ?, "active", NOW())',
+            'INSERT INTO nine_grid_talent (employee_id, level, tags, status, create_time) VALUES (?, ?, ?, "active", NOW())',
             [employeeId, level, JSON.stringify(tags)]
         );
         
@@ -177,7 +177,7 @@ router.delete('/talent/talent-pool/:id', async (req, res) => {
     try {
         const { id } = req.params;
         
-        const [result] = await pool.execute('DELETE FROM talent_pool WHERE id = ?', [id]);
+        const [result] = await pool.execute('DELETE FROM nine_grid_talent WHERE id = ?', [id]);
         
         res.json({ code: 200, data: { affectedRows: result.affectedRows }, message: '移出人才池成功' });
     } catch (error) {
@@ -260,13 +260,13 @@ router.get('/talent/employee/:id', async (req, res) => {
         
         const [rows] = await pool.execute(`
             SELECT e.*, d.dept_name as department_name, p.position_name as position_name,
-                   pe.performance_score, pe.potential_score,
+                   pe.final_score as performance_score,
                    tp.level as talent_level, tp.tags as talent_tags
             FROM employee e
             LEFT JOIN department d ON e.department_id = d.id
             LEFT JOIN position p ON e.position_id = p.id
             LEFT JOIN performance_evaluation pe ON e.id = pe.employee_id
-            LEFT JOIN talent_pool tp ON e.id = tp.employee_id
+            LEFT JOIN nine_grid_talent tp ON e.id = tp.employee_id
             WHERE e.id = ?
         `, [id]);
         

@@ -46,7 +46,7 @@ router.get('/performance/evaluations', async (req, res) => {
         const { plan_id, employee_id } = req.query;
         
         let query = `
-            SELECT e.*, p.plan_name as plan_name, emp.name as employee_name
+            SELECT e.*, p.plan_name as planName, emp.name as employeeName
             FROM performance_evaluation e
             LEFT JOIN performance_plan p ON e.plan_id = p.id
             LEFT JOIN employee emp ON e.employee_id = emp.id
@@ -64,7 +64,24 @@ router.get('/performance/evaluations', async (req, res) => {
         }
         
         const [rows] = await pool.execute(query, params);
-        res.json({ code: 200, data: rows, message: 'success' });
+        
+        const evaluations = rows.map(row => {
+            let selfStatus = 'pending';
+            let leaderStatus = 'pending';
+            if (row.status === 1) {
+                selfStatus = 'completed';
+            } else if (row.status === 2) {
+                selfStatus = 'completed';
+                leaderStatus = 'completed';
+            }
+            return {
+                ...row,
+                selfStatus,
+                leaderStatus
+            };
+        });
+        
+        res.json({ code: 200, data: evaluations, message: 'success' });
     } catch (error) {
         console.error('Get evaluations error:', error);
         res.json({ code: 500, message: '服务器错误' });
@@ -107,7 +124,7 @@ router.post('/performance/evaluation/:id/leader', async (req, res) => {
 
 router.get('/performance/kpis', async (req, res) => {
     try {
-        const [rows] = await pool.execute('SELECT * FROM performance_kpi');
+        const [rows] = await pool.execute('SELECT * FROM kpi_indicator');
         res.json({ code: 200, data: rows, message: 'success' });
     } catch (error) {
         console.error('Get KPIs error:', error);
@@ -120,7 +137,7 @@ router.post('/performance/kpi', async (req, res) => {
         const { name, type, standard_score, formula, data_source } = req.body;
         
         const [result] = await pool.execute(
-            'INSERT INTO performance_kpi (name, type, standard_score, formula, data_source, create_time) VALUES (?, ?, ?, ?, ?, NOW())',
+            'INSERT INTO kpi_indicator (name, type, standard_score, formula, data_source, create_time) VALUES (?, ?, ?, ?, ?, NOW())',
             [name, type, standard_score, formula, data_source]
         );
         
@@ -137,7 +154,7 @@ router.put('/performance/kpi/:id', async (req, res) => {
         const { name, type, standard_score, formula, data_source } = req.body;
         
         const [result] = await pool.execute(
-            'UPDATE performance_kpi SET name = ?, type = ?, standard_score = ?, formula = ?, data_source = ? WHERE id = ?',
+            'UPDATE kpi_indicator SET name = ?, type = ?, standard_score = ?, formula = ?, data_source = ? WHERE id = ?',
             [name, type, standard_score, formula, data_source, id]
         );
         
@@ -152,7 +169,7 @@ router.delete('/performance/kpi/:id', async (req, res) => {
     try {
         const { id } = req.params;
         
-        const [result] = await pool.execute('DELETE FROM performance_kpi WHERE id = ?', [id]);
+        const [result] = await pool.execute('DELETE FROM kpi_indicator WHERE id = ?', [id]);
         
         res.json({ code: 200, data: { affectedRows: result.affectedRows }, message: 'KPI删除成功' });
     } catch (error) {
@@ -162,18 +179,7 @@ router.delete('/performance/kpi/:id', async (req, res) => {
 });
 
 router.get('/performance/appeals', async (req, res) => {
-    try {
-        const [rows] = await pool.execute(`
-            SELECT a.*, e.name as employee_name, ev.plan_name
-            FROM performance_appeal a
-            LEFT JOIN employee e ON a.employee_id = e.id
-            LEFT JOIN performance_evaluation ev ON a.evaluation_id = ev.id
-        `);
-        res.json({ code: 200, data: rows, message: 'success' });
-    } catch (error) {
-        console.error('Get appeals error:', error);
-        res.json({ code: 500, message: '服务器错误' });
-    }
+    res.json({ code: 200, data: [], message: 'success' });
 });
 
 router.put('/performance/appeal/:id', async (req, res) => {
@@ -215,12 +221,13 @@ router.get('/performance/result/statistics', async (req, res) => {
         
         const [deptRows] = await pool.execute(`
             SELECT 
-                e.department,
+                d.dept_name as department,
                 AVG(pe.final_score) as avg_score
             FROM performance_evaluation pe
             LEFT JOIN employee e ON pe.employee_id = e.id
+            LEFT JOIN department d ON e.department_id = d.id
             WHERE pe.status = 'completed'
-            GROUP BY e.department
+            GROUP BY d.dept_name
         `);
         
         const deptAvg = deptRows.map(row => ({

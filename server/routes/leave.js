@@ -24,7 +24,7 @@ router.get('/leave/list', async (req, res) => {
         const { employee_id, status } = req.query;
         
         let query = `
-            SELECT l.*, e.name as employee_name, e.department_id, d.dept_name as department_name
+            SELECT l.id, l.employee_id, COALESCE(e.name, '') as employeeName, d.dept_name as department, l.leave_type as type, l.start_time as startDate, l.end_time as endDate, l.leave_days as leaveDays, CASE l.approve_status WHEN 0 THEN 'pending' WHEN 1 THEN 'approved' WHEN 2 THEN 'rejected' ELSE 'pending' END as status, l.reason, l.create_time as applyDate
             FROM leave_request l
             LEFT JOIN employee e ON l.employee_id = e.id
             LEFT JOIN department d ON e.department_id = d.id

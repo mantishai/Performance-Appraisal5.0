@@ -97,7 +97,7 @@ router.put('/alert/:id/ignore', async (req, res) => {
 
 router.get('/alert/rules', async (req, res) => {
     try {
-        const [rows] = await pool.execute('SELECT * FROM alert_rule ORDER BY sort_order');
+        const [rows] = await pool.execute('SELECT * FROM alert_rule ORDER BY id');
         
         const rules = rows.map(row => ({
             id: row.id,

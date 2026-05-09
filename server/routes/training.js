@@ -7,7 +7,7 @@ router.get('/training/courses', async (req, res) => {
     try {
         const { category } = req.query;
         
-        let query = 'SELECT * FROM training_course WHERE 1=1';
+        let query = 'SELECT id, course_name as name, course_category as category, course_hours as hours, start_date as startDate, end_date as endDate, capacity, lecturer, status, course_outline as outline, target_audience as target FROM training_course WHERE 1=1';
         const params = [];
         
         if (category) {
@@ -16,7 +16,14 @@ router.get('/training/courses', async (req, res) => {
         }
         
         const [rows] = await pool.execute(query, params);
-        res.json({ code: 200, data: rows, message: 'success' });
+        
+        const courses = rows.map(row => ({
+            ...row,
+            status: row.status === 1 ? 'open' : row.status === 2 ? 'ongoing' : 'closed',
+            enrolledCount: 0
+        }));
+        
+        res.json({ code: 200, data: courses, message: 'success' });
     } catch (error) {
         console.error('Get courses error:', error);
         res.json({ code: 500, message: '服务器错误' });
@@ -167,10 +174,13 @@ router.get('/training/records', async (req, res) => {
         const { employeeId } = req.query;
         
         let query = `
-            SELECT r.*, c.course_name, c.course_category, c.start_date, c.end_date, e.name as employee_name
+            SELECT r.*, c.course_name, c.course_category, c.start_date, c.end_date, e.name as employee_name,
+                   d.dept_name as department, p.position_name as position
             FROM training_record r
             LEFT JOIN training_course c ON r.course_id = c.id
             LEFT JOIN employee e ON r.employee_id = e.id
+            LEFT JOIN department d ON e.department_id = d.id
+            LEFT JOIN position p ON e.position_id = p.id
             WHERE 1=1
         `;
         const params = [];
@@ -192,7 +202,7 @@ router.get('/training/records', async (req, res) => {
             attendance: row.attendance,
             score: row.score,
             evaluation: row.evaluation,
-            hours: row.hours,
+            hours: row.actual_hours,
             recordTime: row.record_time
         }));
         
