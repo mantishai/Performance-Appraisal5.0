@@ -14,6 +14,9 @@ import trainingRoutes from './routes/training.js';
 import talentRoutes from './routes/talent.js';
 import alertRoutes from './routes/alert.js';
 import systemRoutes from './routes/system.js';
+import dashboardRoutes from './routes/dashboard.js';
+import commonRoutes from './routes/common.js';
+import interviewsRoutes from './routes/interviews.js';
 
 dotenv.config();
 
@@ -35,6 +38,68 @@ app.use('/api', trainingRoutes);
 app.use('/api', talentRoutes);
 app.use('/api', alertRoutes);
 app.use('/api', systemRoutes);
+app.use('/api', dashboardRoutes);
+app.use('/api', commonRoutes);
+app.use('/api', interviewsRoutes);
+
+app.get('/api/training/records', (req, res) => {
+    res.json({ code: 200, data: [], message: 'success' });
+});
+
+app.get('/api/alert/risk-prediction', (req, res) => {
+    res.json({
+        code: 200,
+        data: {
+            high: [],
+            medium: [],
+            low: []
+        },
+        message: 'success'
+    });
+});
+
+app.get('/api/system/dashboard', (req, res) => {
+    res.json({
+        code: 200,
+        data: {
+            onlineUsers: 0,
+            todayVisits: 0,
+            errorCount: 0
+        },
+        message: 'success'
+    });
+});
+
+app.get('/api/system/announcements', (req, res) => {
+    res.json({
+        code: 200,
+        data: [
+            { id: 1, title: '系统维护通知', content: '本周六将进行系统维护', time: '2026-05-10' }
+        ],
+        message: 'success'
+    });
+});
+
+app.get('/api/system/todos', (req, res) => {
+    res.json({
+        code: 200,
+        data: [
+            { id: 1, title: '审批请假申请', status: 'pending', type: 'leave' },
+            { id: 2, title: '完成绩效自评', status: 'pending', type: 'performance' }
+        ],
+        message: 'success'
+    });
+});
+
+app.get('/api/system/schedule', (req, res) => {
+    res.json({
+        code: 200,
+        data: [
+            { id: 1, title: '部门会议', time: '2026-05-09 14:00', location: '会议室A' }
+        ],
+        message: 'success'
+    });
+});
 
 app.get('/api/health', (req, res) => {
     res.json({ code: 200, message: 'HRMS Backend Service is running' });
