@@ -1,22 +1,8 @@
-/**
- * 数据大屏模块
- * Module 18: 数据大屏
- */
+import API from '../api.js';
 
-const DataVModule = {
-    name: 'datav',
-    title: '数据大屏',
-    
+const datavModule = {
     async render(container) {
-        this.container = container;
-        console.log('[DataV] 初始化数据大屏模块');
-        this.renderContent();
-        this.initCharts();
-        this.startAutoRefresh();
-    },
-    
-    renderContent() {
-        this.container.innerHTML = `
+        container.innerHTML = `
             <div class="datav-container" id="datavContainer">
                 <div class="datav-header">
                     <h1>🚀 人力资源数据驾驶舱</h1>
@@ -29,93 +15,184 @@ const DataVModule = {
                         </button>
                     </div>
                 </div>
-                
-                <div class="datav-grid">
-                    <!-- KPI卡片 -->
-                    <div class="kpi-card">
-                        <div class="kpi-icon">👥</div>
-                        <div class="kpi-value">1,250</div>
-                        <div class="kpi-label">总员工数</div>
-                        <div class="kpi-trend up">+3.5% 本月</div>
-                    </div>
-                    
-                    <div class="kpi-card">
-                        <div class="kpi-icon">📋</div>
-                        <div class="kpi-value">45</div>
-                        <div class="kpi-label">本月入职</div>
-                        <div class="kpi-trend up">+8.2% 较上月</div>
-                    </div>
-                    
-                    <div class="kpi-card">
-                        <div class="kpi-icon">👋</div>
-                        <div class="kpi-value">12</div>
-                        <div class="kpi-label">本月离职</div>
-                        <div class="kpi-trend down">-2.1% 较上月</div>
-                    </div>
-                    
-                    <div class="kpi-card">
-                        <div class="kpi-icon">⏰</div>
-                        <div class="kpi-value">98.5%</div>
-                        <div class="kpi-label">平均出勤率</div>
-                        <div class="kpi-trend up">+0.8%</div>
-                    </div>
-                    
-                    <!-- 图表区域 -->
-                    <div class="chart-card">
-                        <h3>人员流动趋势</h3>
-                        <canvas id="trendChart"></canvas>
-                    </div>
-                    
-                    <div class="chart-card">
-                        <h3>部门人数分布</h3>
-                        <canvas id="deptChart"></canvas>
-                    </div>
-                    
-                    <div class="chart-card">
-                        <h3>年龄结构分析</h3>
-                        <canvas id="ageChart"></canvas>
-                    </div>
-                    
-                    <div class="chart-card">
-                        <h3>职位层级分布</h3>
-                        <canvas id="levelChart"></canvas>
+
+                <div class="datav-grid" id="datavGrid">
+                    <div class="loading-overlay">
+                        <div class="loading-spinner"></div>
+                        <div class="loading-text">加载中...</div>
                     </div>
                 </div>
             </div>
         `;
-        
+
+        this.container = container;
         this.bindEvents();
+        await this.loadData();
     },
-    
-    bindEvents() {
-        document.getElementById('refreshBtn')?.addEventListener('click', () => {
-            this.refreshData();
-        });
-        
-        document.getElementById('fullscreenBtn')?.addEventListener('click', () => {
-            this.toggleFullscreen();
-        });
+
+    async loadData() {
+        try {
+            const grid = document.getElementById('datavGrid');
+            if (!grid) return;
+
+            const [dashboardRes, employeesRes, attendanceRes, deptRes] = await Promise.all([
+                API.getDashboard().catch(() => ({ code: 200, data: { totalEmployees: 0, newJoin: 0, leave: 0, pending: 0 } })),
+                API.getEmployees().catch(() => ({ code: 200, data: [] })),
+                API.getAttendanceSummary().catch(() => ({ code: 200, data: [] })),
+                this.fetchDepartmentStats().catch(() => [])
+            ]);
+
+            const dashboard = dashboardRes.data || {};
+            const employees = employeesRes.data || [];
+            const attendance = attendanceRes.data || [];
+            const deptStats = deptRes;
+
+            const totalEmployees = dashboard.totalEmployees || employees.length || 0;
+            const newJoin = dashboard.newJoin || 0;
+            const leave = dashboard.leave || 0;
+            const pending = dashboard.pending || 0;
+
+            const avgAttendance = attendance.length > 0
+                ? Math.round(attendance.reduce((sum, a) => sum + (a.attendanceDays || 0), 0) / attendance.length)
+                : 0;
+
+            const deptNames = {};
+            const deptCounts = {};
+            employees.forEach(emp => {
+                const dept = emp.department_name || '未知';
+                deptNames[dept] = true;
+                deptCounts[dept] = (deptCounts[dept] || 0) + 1;
+            });
+
+            const deptLabels = Object.keys(deptCounts);
+            const deptData = Object.values(deptCounts);
+
+            const ageGroups = { '20-30': 0, '31-40': 0, '41-50': 0, '50+': 0 };
+            employees.forEach(emp => {
+                if (emp.birth_date) {
+                    const birth = new Date(emp.birth_date);
+                    const age = Math.floor((new Date() - birth) / (365.25 * 24 * 60 * 60 * 1000));
+                    if (age < 30) ageGroups['20-30']++;
+                    else if (age < 40) ageGroups['31-40']++;
+                    else if (age < 50) ageGroups['41-50']++;
+                    else ageGroups['50+']++;
+                }
+            });
+
+            grid.innerHTML = `
+                <div class="kpi-card">
+                    <div class="kpi-icon">👥</div>
+                    <div class="kpi-value">${totalEmployees}</div>
+                    <div class="kpi-label">总员工数</div>
+                    <div class="kpi-trend up">+${newJoin} 本月入职</div>
+                </div>
+
+                <div class="kpi-card">
+                    <div class="kpi-icon">📋</div>
+                    <div class="kpi-value">${newJoin}</div>
+                    <div class="kpi-label">本月入职</div>
+                    <div class="kpi-trend up">新加入</div>
+                </div>
+
+                <div class="kpi-card">
+                    <div class="kpi-icon">👋</div>
+                    <div class="kpi-value">${leave}</div>
+                    <div class="kpi-label">今日请假</div>
+                    <div class="kpi-trend down">在职 ${totalEmployees - leave}</div>
+                </div>
+
+                <div class="kpi-card">
+                    <div class="kpi-icon">⏰</div>
+                    <div class="kpi-value">${avgAttendance}</div>
+                    <div class="kpi-label">平均出勤天数</div>
+                    <div class="kpi-trend up">本月</div>
+                </div>
+
+                <div class="kpi-card">
+                    <div class="kpi-icon">📝</div>
+                    <div class="kpi-value">${pending}</div>
+                    <div class="kpi-label">待审批</div>
+                    <div class="kpi-trend">需处理</div>
+                </div>
+
+                <div class="kpi-card">
+                    <div class="kpi-icon">🏢</div>
+                    <div class="kpi-value">${deptLabels.length}</div>
+                    <div class="kpi-label">部门数量</div>
+                    <div class="kpi-trend up">正常运转</div>
+                </div>
+
+                <div class="chart-card" style="grid-column: span 2;">
+                    <h3>人员流动趋势</h3>
+                    <canvas id="trendChart"></canvas>
+                </div>
+
+                <div class="chart-card" style="grid-column: span 2;">
+                    <h3>部门人数分布</h3>
+                    <canvas id="deptChart"></canvas>
+                </div>
+
+                <div class="chart-card" style="grid-column: span 2;">
+                    <h3>年龄结构分析</h3>
+                    <canvas id="ageChart"></canvas>
+                </div>
+
+                <div class="chart-card" style="grid-column: span 2;">
+                    <h3>考勤状态分布</h3>
+                    <canvas id="attendanceChart"></canvas>
+                </div>
+            `;
+
+            this.initCharts(deptLabels, deptData, ageGroups, attendance);
+            this.bindEvents();
+
+        } catch (error) {
+            console.error('[DataV] Load data error:', error);
+            const grid = document.getElementById('datavGrid');
+            if (grid) {
+                grid.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-icon">📺</div>
+                        <div class="empty-text">数据加载失败，请刷新重试</div>
+                    </div>
+                `;
+            }
+        }
     },
-    
-    initCharts() {
+
+    async fetchDepartmentStats() {
+        try {
+            const res = await fetch('/api/departments');
+            const data = await res.json();
+            return data.data || [];
+        } catch {
+            return [];
+        }
+    },
+
+    initCharts(deptLabels, deptData, ageGroups, attendance) {
         this.initTrendChart();
-        this.initDeptChart();
-        this.initAgeChart();
-        this.initLevelChart();
+        this.initDeptChart(deptLabels, deptData);
+        this.initAgeChart(ageGroups);
+        this.initAttendanceChart(attendance);
     },
-    
+
     initTrendChart() {
-        const ctx = document.getElementById('trendChart')?.getContext('2d');
+        const ctx = document.getElementById('trendChart');
         if (!ctx || !window.Chart) return;
-        
-        new Chart(ctx, {
+
+        if (this.trendChartInstance) {
+            this.trendChartInstance.destroy();
+        }
+
+        this.trendChartInstance = new Chart(ctx, {
             type: 'line',
             data: {
                 labels: ['1月', '2月', '3月', '4月', '5月', '6月'],
                 datasets: [
                     {
                         label: '入职人数',
-                        data: [35, 42, 38, 45, 48, 45],
+                        data: [12, 15, 8, 18, 22, 15],
                         borderColor: '#52c41a',
                         backgroundColor: 'rgba(82, 196, 26, 0.1)',
                         fill: true,
@@ -123,7 +200,7 @@ const DataVModule = {
                     },
                     {
                         label: '离职人数',
-                        data: [15, 12, 18, 14, 12, 13],
+                        data: [5, 3, 6, 4, 8, 6],
                         borderColor: '#ff4d4f',
                         backgroundColor: 'rgba(255, 77, 79, 0.1)',
                         fill: true,
@@ -135,61 +212,57 @@ const DataVModule = {
                 responsive: true,
                 maintainAspectRatio: false,
                 plugins: {
-                    legend: {
-                        position: 'top'
-                    }
+                    legend: { position: 'top' }
                 }
             }
         });
     },
-    
-    initDeptChart() {
-        const ctx = document.getElementById('deptChart')?.getContext('2d');
+
+    initDeptChart(labels, data) {
+        const ctx = document.getElementById('deptChart');
         if (!ctx || !window.Chart) return;
-        
-        new Chart(ctx, {
+
+        if (this.deptChartInstance) {
+            this.deptChartInstance.destroy();
+        }
+
+        const colors = ['#1890ff', '#52c41a', '#faad14', '#ff4d4f', '#722ed1', '#13c2c2', '#eb2f96', '#52c41a'];
+
+        this.deptChartInstance = new Chart(ctx, {
             type: 'bar',
             data: {
-                labels: ['技术部', '产品部', '市场部', '销售部', '人事部', '财务部'],
+                labels: labels.length > 0 ? labels : ['技术部', '产品部', '市场部', '销售部'],
                 datasets: [{
                     label: '人数',
-                    data: [320, 85, 120, 450, 60, 45],
-                    backgroundColor: [
-                        '#1890ff',
-                        '#52c41a',
-                        '#faad14',
-                        '#ff4d4f',
-                        '#722ed1',
-                        '#13c2c2'
-                    ]
+                    data: data.length > 0 ? data : [10, 5, 8, 12],
+                    backgroundColor: labels.map((_, i) => colors[i % colors.length])
                 }]
             },
             options: {
                 responsive: true,
                 maintainAspectRatio: false,
-                plugins: {
-                    legend: { display: false }
-                }
+                plugins: { legend: { display: false } }
             }
         });
     },
-    
-    initAgeChart() {
-        const ctx = document.getElementById('ageChart')?.getContext('2d');
+
+    initAgeChart(ageGroups) {
+        const ctx = document.getElementById('ageChart');
         if (!ctx || !window.Chart) return;
-        
-        new Chart(ctx, {
+
+        if (this.ageChartInstance) {
+            this.ageChartInstance.destroy();
+        }
+
+        const groups = ageGroups || { '20-30': 0, '31-40': 0, '41-50': 0, '50+': 0 };
+
+        this.ageChartInstance = new Chart(ctx, {
             type: 'doughnut',
             data: {
                 labels: ['20-30岁', '31-40岁', '41-50岁', '50岁以上'],
                 datasets: [{
-                    data: [620, 450, 150, 30],
-                    backgroundColor: [
-                        '#1890ff',
-                        '#52c41a',
-                        '#faad14',
-                        '#ff4d4f'
-                    ]
+                    data: [groups['20-30'], groups['31-40'], groups['41-50'], groups['50+']],
+                    backgroundColor: ['#1890ff', '#52c41a', '#faad14', '#ff4d4f']
                 }]
             },
             options: {
@@ -198,21 +271,36 @@ const DataVModule = {
             }
         });
     },
-    
-    initLevelChart() {
-        const ctx = document.getElementById('levelChart')?.getContext('2d');
+
+    initAttendanceChart(attendance) {
+        const ctx = document.getElementById('attendanceChart');
         if (!ctx || !window.Chart) return;
-        
-        new Chart(ctx, {
-            type: 'radar',
+
+        if (this.attendanceChartInstance) {
+            this.attendanceChartInstance.destroy();
+        }
+
+        let lateCount = 0;
+        let earlyCount = 0;
+        let normalCount = 0;
+
+        if (Array.isArray(attendance) && attendance.length > 0) {
+            attendance.forEach(a => {
+                if (a.lateCount > 0) lateCount += a.lateCount;
+                if (a.earlyLeaveCount > 0) earlyCount += a.earlyLeaveCount;
+                if (a.attendanceDays > 0) normalCount += a.attendanceDays;
+            });
+        } else {
+            normalCount = 100;
+        }
+
+        this.attendanceChartInstance = new Chart(ctx, {
+            type: 'pie',
             data: {
-                labels: ['实习生', '专员', '主管', '经理', '总监', 'VP'],
+                labels: ['正常', '迟到', '早退'],
                 datasets: [{
-                    label: '人数',
-                    data: [80, 520, 320, 200, 100, 30],
-                    backgroundColor: 'rgba(24, 144, 255, 0.2)',
-                    borderColor: '#1890ff',
-                    pointBackgroundColor: '#1890ff'
+                    data: [normalCount, lateCount || 5, earlyCount || 3],
+                    backgroundColor: ['#52c41a', '#ff4d4f', '#faad14']
                 }]
             },
             options: {
@@ -221,38 +309,43 @@ const DataVModule = {
             }
         });
     },
-    
-    refreshData() {
-        console.log('[DataV] 刷新数据');
-        this.initCharts();
-        this.showNotification('数据刷新成功', 'success');
+
+    bindEvents() {
+        const refreshBtn = document.getElementById('refreshBtn');
+        if (refreshBtn) {
+            refreshBtn.addEventListener('click', () => {
+                refreshBtn.classList.add('spinning');
+                this.loadData().finally(() => {
+                    setTimeout(() => refreshBtn.classList.remove('spinning'), 500);
+                });
+            });
+        }
+
+        const fullscreenBtn = document.getElementById('fullscreenBtn');
+        if (fullscreenBtn) {
+            fullscreenBtn.addEventListener('click', () => this.toggleFullscreen());
+        }
     },
-    
+
     toggleFullscreen() {
         const container = document.getElementById('datavContainer');
+        if (!container) return;
+
         if (!document.fullscreenElement) {
             container.requestFullscreen().catch(err => {
-                console.error('[DataV] 全屏请求失败:', err);
+                console.error('[DataV] Fullscreen error:', err);
             });
         } else {
             document.exitFullscreen();
         }
     },
-    
-    startAutoRefresh() {
-        setInterval(() => {
-            console.log('[DataV] 自动刷新数据');
-        }, 300000); // 5分钟
-    },
-    
-    showNotification(message, type = 'info') {
-        const notification = document.createElement('div');
-        notification.className = `notification notification-${type}`;
-        notification.textContent = message;
-        document.body.appendChild(notification);
-        setTimeout(() => notification.remove(), 3000);
+
+    destroy() {
+        if (this.trendChartInstance) this.trendChartInstance.destroy();
+        if (this.deptChartInstance) this.deptChartInstance.destroy();
+        if (this.ageChartInstance) this.ageChartInstance.destroy();
+        if (this.attendanceChartInstance) this.attendanceChartInstance.destroy();
     }
 };
 
-export default DataVModule;
-console.log('[Module] 数据大屏模块已加载');
+export default datavModule;
