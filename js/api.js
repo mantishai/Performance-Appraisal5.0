@@ -128,6 +128,18 @@ const API = {
         return this.request('/org/positions');
     },
 
+    createPosition(data) {
+        return this.request('/org/position', { method: 'POST', body: JSON.stringify(data) });
+    },
+
+    updatePosition(id, data) {
+        return this.request(`/org/position/${id}`, { method: 'PUT', body: JSON.stringify(data) });
+    },
+
+    deletePosition(id) {
+        return this.request(`/org/position/${id}`, { method: 'DELETE' });
+    },
+
     getContracts(params = {}) {
         const query = new URLSearchParams(params).toString();
         return this.request(`/hr/contracts${query ? '?' + query : ''}`);

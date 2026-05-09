@@ -1,26 +1,56 @@
-import { Toast, Skeleton } from '../utils.js';
+import { Toast, Skeleton, Modal } from '../utils.js';
+import API from '../api.js';
 
 const state = {
-    positions: [
-        { id: 1, name: '前端工程师', department: '技术部', level: 'P5', headcount: 10, current: 8, vacant: 2, description: '负责公司Web前端开发工作' },
-        { id: 2, name: '后端工程师', department: '技术部', level: 'P5', headcount: 15, current: 12, vacant: 3, description: '负责公司后端服务开发' },
-        { id: 3, name: '产品经理', department: '产品部', level: 'P6', headcount: 5, current: 5, vacant: 0, description: '负责产品规划和设计' },
-        { id: 4, name: '市场专员', department: '市场部', level: 'P4', headcount: 8, current: 6, vacant: 2, description: '负责市场推广和运营' }
-    ]
+    positions: [],
+    departments: [],
+    filteredList: [],
+    currentPage: 1,
+    pageSize: 10,
+    loading: false
 };
 
 const positionModule = {
     async render(container) {
         container.innerHTML = Skeleton.renderTable(4, 7);
-        await new Promise(resolve => setTimeout(resolve, 500));
+        await this.loadData();
         this.renderContent(container);
+        this.bindEvents();
+    },
+
+    async loadData() {
+        state.loading = true;
+        try {
+            const [posRes, deptRes] = await Promise.all([
+                API.getOrgPositions(),
+                API.getDepartments()
+            ]);
+
+            if (posRes.code === 200) {
+                state.positions = posRes.data || [];
+            }
+            if (deptRes.code === 200) {
+                state.departments = deptRes.data || [];
+            }
+            state.filteredList = [...state.positions];
+        } catch (error) {
+            console.error('Failed to load positions:', error);
+            Toast.error('岗位数据加载失败');
+        } finally {
+            state.loading = false;
+        }
+    },
+
+    getDepartmentName(deptId) {
+        const dept = state.departments.find(d => d.id === deptId);
+        return dept ? dept.name : '未知部门';
     },
 
     renderContent(container) {
         container.innerHTML = `
             <div class="page-header">
                 <h1 class="page-title">岗位说明书</h1>
-                <button class="btn btn-primary">+ 新增岗位</button>
+                <button class="btn btn-primary" id="addPositionBtn">+ 新增岗位</button>
             </div>
 
             <div class="card">
@@ -38,33 +68,44 @@ const positionModule = {
                             </tr>
                         </thead>
                         <tbody>
-                            ${state.positions.map(p => `
+                            ${state.filteredList.map(p => `
                                 <tr>
-                                    <td><strong>${p.name}</strong></td>
-                                    <td>${p.department}</td>
-                                    <td>${p.level}</td>
-                                    <td>${p.headcount}</td>
-                                    <td>${p.current}</td>
-                                    <td>${p.vacant > 0 ? `<span style="color: #f5222d; font-weight: 500;">${p.vacant}</span>` : p.vacant}</td>
+                                    <td><strong>${escapeHtml(p.name)}</strong></td>
+                                    <td>${escapeHtml(this.getDepartmentName(p.departmentId))}</td>
+                                    <td>${escapeHtml(p.level || 'P5')}</td>
+                                    <td>${p.headcount || 0}</td>
+                                    <td>${p.current || 0}</td>
+                                    <td>${(p.vacant || 0) > 0 ? `<span style="color: #f5222d; font-weight: 500;">${p.vacant}</span>` : p.vacant || 0}</td>
                                     <td>
                                         <div class="action-btns">
                                             <button class="action-btn" data-id="${p.id}" data-action="view">查看</button>
                                             <button class="action-btn" data-id="${p.id}" data-action="edit">编辑</button>
+                                            <button class="action-btn" data-id="${p.id}" data-action="delete">删除</button>
                                         </div>
                                     </td>
                                 </tr>
                             `).join('')}
+                            ${state.filteredList.length === 0 ? `
+                                <tr>
+                                    <td colspan="7" style="text-align: center; padding: 40px; color: #8ba9c4;">
+                                        暂无岗位数据
+                                    </td>
+                                </tr>
+                            ` : ''}
                         </tbody>
                     </table>
                 </div>
             </div>
         `;
-
-        this.bindEvents(container);
     },
 
-    bindEvents(container) {
-        container.addEventListener('click', (e) => {
+    bindEvents() {
+        const addBtn = document.getElementById('addPositionBtn');
+        if (addBtn) {
+            addBtn.addEventListener('click', () => this.showPositionForm());
+        }
+
+        document.getElementById('content')?.addEventListener('click', (e) => {
             const btn = e.target.closest('.action-btn');
             if (btn) {
                 const id = parseInt(btn.dataset.id);
@@ -74,16 +115,125 @@ const positionModule = {
         });
     },
 
-    handleAction(id, action) {
-        const pos = state.positions.find(p => p.id === id);
-        if (action === 'view' && pos) {
-            Toast.info(`查看【${pos.name}】岗位说明书`);
+    showPositionForm(position = null) {
+        const isEdit = !!position;
+        const title = isEdit ? '编辑岗位' : '新增岗位';
+
+        const formHtml = `
+            <form id="positionForm" class="form-grid" style="display: grid; gap: 16px; padding: 20px;">
+                <div class="form-group">
+                    <label style="display: block; margin-bottom: 8px; font-weight: 500;">岗位名称 <span style="color: #f5222d;">*</span></label>
+                    <input type="text" id="posName" value="${isEdit ? escapeHtml(position.name) : ''}" 
+                           placeholder="请输入岗位名称" required
+                           style="width: 100%; padding: 10px 12px; border: 1px solid #d9d9d9; border-radius: 6px;">
+                </div>
+                <div class="form-group">
+                    <label style="display: block; margin-bottom: 8px; font-weight: 500;">所属部门 <span style="color: #f5222d;">*</span></label>
+                    <select id="posDept" required style="width: 100%; padding: 10px 12px; border: 1px solid #d9d9d9; border-radius: 6px;">
+                        <option value="">请选择部门</option>
+                        ${state.departments.map(d => `
+                            <option value="${d.id}" ${isEdit && position.departmentId === d.id ? 'selected' : ''}>
+                                ${escapeHtml(d.name)}
+                            </option>
+                        `).join('')}
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label style="display: block; margin-bottom: 8px; font-weight: 500;">职级</label>
+                    <input type="text" id="posLevel" value="${isEdit ? escapeHtml(position.level || 'P5') : 'P5'}" 
+                           placeholder="如：P5、M1"
+                           style="width: 100%; padding: 10px 12px; border: 1px solid #d9d9d9; border-radius: 6px;">
+                </div>
+                <div class="form-group">
+                    <label style="display: block; margin-bottom: 8px; font-weight: 500;">编制人数</label>
+                    <input type="number" id="posHeadcount" value="${isEdit ? (position.headcount || 0) : 0}" 
+                           min="0" placeholder="请输入编制人数"
+                           style="width: 100%; padding: 10px 12px; border: 1px solid #d9d9d9; border-radius: 6px;">
+                </div>
+            </form>
+        `;
+
+        Modal.show({
+            title: title,
+            content: formHtml,
+            onOk: async () => {
+                const name = document.getElementById('posName').value.trim();
+                const deptId = parseInt(document.getElementById('posDept').value);
+                const level = document.getElementById('posLevel').value.trim();
+                const headcount = parseInt(document.getElementById('posHeadcount').value) || 0;
+
+                if (!name) {
+                    Toast.error('请输入岗位名称');
+                    return false;
+                }
+                if (!deptId) {
+                    Toast.error('请选择所属部门');
+                    return false;
+                }
+
+                try {
+                    const data = { name, department_id: deptId, level, headcount };
+                    let res;
+                    if (isEdit) {
+                        res = await API.updatePosition(position.id, data);
+                    } else {
+                        res = await API.createPosition(data);
+                    }
+
+                    if (res.code === 200) {
+                        Toast.success(isEdit ? '岗位更新成功' : '岗位新增成功');
+                        await this.loadData();
+                        this.renderContent(document.getElementById('content'));
+                        this.bindEvents();
+                        return true;
+                    } else {
+                        Toast.error(res.message || '操作失败');
+                        return false;
+                    }
+                } catch (error) {
+                    console.error('Position save error:', error);
+                    Toast.error('操作失败');
+                    return false;
+                }
+            },
+            width: 480
+        });
+    },
+
+    async handleAction(id, action) {
+        const position = state.positions.find(p => p.id === id);
+        if (action === 'view' && position) {
+            Toast.info(`查看【${position.name}】岗位说明书`);
         } else if (action === 'edit') {
-            Toast.info('编辑岗位信息');
+            this.showPositionForm(position);
+        } else if (action === 'delete' && position) {
+            if (confirm(`确定要删除岗位【${position.name}】吗？`)) {
+                try {
+                    const res = await API.deletePosition(id);
+                    if (res.code === 200) {
+                        Toast.success('删除成功');
+                        await this.loadData();
+                        this.renderContent(document.getElementById('content'));
+                        this.bindEvents();
+                    } else {
+                        Toast.error(res.message || '删除失败');
+                    }
+                } catch (error) {
+                    console.error('Delete position error:', error);
+                    Toast.error('删除失败');
+                }
+            }
         }
     },
 
     destroy() {}
 };
+
+function escapeHtml(text) {
+    if (!text) return '';
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
 
 export default positionModule;
