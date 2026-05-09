@@ -1,3 +1,5 @@
+import API from './api.js';
+
 const Toast = {
     container: null,
 
@@ -612,10 +614,15 @@ function hasAnyRole(roles) {
     return roles.includes(user?.role);
 }
 
-function logout() {
+async function logout() {
+    try {
+        await API.logout();
+    } catch (e) {
+        console.error('Logout error:', e);
+    }
     clearCurrentUser();
     localStorage.removeItem('token');
-    window.location.href = '/index.html';
+    window.location.reload();
 }
 
 function checkAuth() {

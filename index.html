@@ -26,7 +26,31 @@
     
 </head>
 <body>
-    <div id="app">
+    <div id="loginPage" style="display: none;">
+        <div class="login-container">
+            <div class="login-box">
+                <div class="login-logo">
+                    <h1>HRMS</h1>
+                    <p>人力资源管理系统</p>
+                </div>
+                <form id="loginForm" class="login-form">
+                    <div class="form-group">
+                        <label for="username">用户名</label>
+                        <input type="text" id="username" placeholder="请输入用户名" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="password">密码</label>
+                        <input type="password" id="password" placeholder="请输入密码" required>
+                    </div>
+                    <button type="submit" class="login-btn">登录</button>
+                </form>
+                <div class="login-tips">
+                    <p>默认账号: admin / 123456</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div id="app" style="display: none;">
         <aside class="sidebar" id="sidebar">
             <div class="sidebar-header">
                 <h1>HRMS</h1>
@@ -158,7 +182,7 @@
             <main class="content" id="content"></main>
         </div>
     </div>
-    <script type="module" src="js/app.js?v=2"></script>
+    <script type="module" src="js/app.js?v=3"></script>
     <script>
         // PWA Service Worker 注册
         if ('serviceWorker' in navigator) {

@@ -3,7 +3,9 @@ import pool from '../db.js';
 
 const router = Router();
 
-router.post('/login', async (req, res) => {
+let currentLoggedInUser = null;
+
+router.post('/auth/login', async (req, res) => {
     try {
         const { username, password } = req.body;
         
@@ -21,6 +23,8 @@ router.post('/login', async (req, res) => {
             ? JSON.parse(user.permissions) 
             : (user.permissions || []);
         
+        currentLoggedInUser = user;
+        
         res.json({ 
             code: 200, 
             data: user, 
@@ -34,20 +38,11 @@ router.post('/login', async (req, res) => {
 
 router.get('/auth/me', async (req, res) => {
     try {
-        const [rows] = await pool.execute(
-            'SELECT id, username, real_name as name, role, permissions FROM user WHERE id = 1'
-        );
-        
-        if (rows.length === 0) {
+        if (!currentLoggedInUser) {
             return res.json({ code: 401, message: '未登录' });
         }
         
-        const user = rows[0];
-        user.permissions = user.permissions && typeof user.permissions === 'string' 
-            ? JSON.parse(user.permissions) 
-            : (user.permissions || []);
-        
-        res.json({ code: 200, data: user, message: 'success' });
+        res.json({ code: 200, data: currentLoggedInUser, message: 'success' });
     } catch (error) {
         console.error('Get current user error:', error);
         res.json({ code: 500, message: '服务器错误' });
@@ -56,20 +51,11 @@ router.get('/auth/me', async (req, res) => {
 
 router.get('/system/current-user', async (req, res) => {
     try {
-        const [rows] = await pool.execute(
-            'SELECT id, username, real_name as name, role, permissions FROM user WHERE id = 1'
-        );
-        
-        if (rows.length === 0) {
+        if (!currentLoggedInUser) {
             return res.json({ code: 401, message: '未登录' });
         }
         
-        const user = rows[0];
-        user.permissions = user.permissions && typeof user.permissions === 'string' 
-            ? JSON.parse(user.permissions) 
-            : (user.permissions || []);
-        
-        res.json({ code: 200, data: user, message: 'success' });
+        res.json({ code: 200, data: currentLoggedInUser, message: 'success' });
     } catch (error) {
         console.error('Get current user error:', error);
         res.json({ code: 500, message: '服务器错误' });
@@ -77,6 +63,7 @@ router.get('/system/current-user', async (req, res) => {
 });
 
 router.post('/auth/logout', async (req, res) => {
+    currentLoggedInUser = null;
     res.json({ code: 200, message: '登出成功' });
 });
 

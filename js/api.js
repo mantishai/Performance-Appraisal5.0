@@ -40,11 +40,17 @@ const API = {
                 method: 'GET',
                 headers: {
                     'Content-Type': 'application/json',
-                },
-                credentials: 'include'
+                }
             };
 
-            const mergedOptions = { ...defaultOptions, ...options };
+            const mergedOptions = {
+                ...defaultOptions,
+                ...options,
+                headers: {
+                    ...defaultOptions.headers,
+                    ...(options.headers || {})
+                }
+            };
             
             const response = await fetch(API_BASE_URL + url, mergedOptions);
             

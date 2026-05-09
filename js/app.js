@@ -1,3 +1,4 @@
+import API from './api.js';
 import GlobalSearch from './components/GlobalSearch.js';
 import NotificationCenter from './components/NotificationCenter.js';
 import ThemeSwitcher from './components/ThemeSwitcher.js';
@@ -609,7 +610,29 @@ function initFullscreen() {
     headerActions.appendChild(fullscreenBtn);
 }
 
-document.addEventListener('DOMContentLoaded', async () => {
+async function handleLogin(e) {
+    e.preventDefault();
+    
+    const username = document.getElementById('username').value;
+    const password = document.getElementById('password').value;
+    
+    try {
+        const res = await API.login(username, password);
+        if (res.code === 200) {
+            Utils.setCurrentUser(res.data);
+            document.getElementById('loginPage').style.display = 'none';
+            document.getElementById('app').style.display = '';
+            await initApp();
+        } else {
+            Utils.Toast.error(res.message || '登录失败');
+        }
+    } catch (error) {
+        Utils.Toast.error('登录失败，请稍后重试');
+        console.error('Login error:', error);
+    }
+}
+
+async function initApp() {
     APIAuth.init();
     await initAuth();
     initSidebar();
@@ -620,13 +643,36 @@ document.addEventListener('DOMContentLoaded', async () => {
     NotificationCenter.init();
     ThemeSwitcher.init();
 
-    // 初始化布局模式
     switchLayoutMode();
-
-    // 监听窗口大小变化
     window.addEventListener('resize', Utils.debounce(switchLayoutMode, 200));
 
     await switchModule('dashboard');
+}
+
+document.addEventListener('DOMContentLoaded', async () => {
+    const savedUser = Utils.getCurrentUser();
+    
+    if (savedUser) {
+        try {
+            const res = await API.getCurrentUser();
+            if (res.code === 200) {
+                document.getElementById('loginPage').style.display = 'none';
+                document.getElementById('app').style.display = '';
+                await initApp();
+                return;
+            }
+        } catch (e) {
+            console.warn('Auto login failed:', e);
+        }
+    }
+    
+    document.getElementById('loginPage').style.display = '';
+    document.getElementById('app').style.display = 'none';
+    
+    const loginForm = document.getElementById('loginForm');
+    if (loginForm) {
+        loginForm.addEventListener('submit', handleLogin);
+    }
 });
 
 export { 

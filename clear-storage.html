@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Clear Storage</title>
+</head>
+<body>
+    <h1>Clear Storage Test</h1>
+    <p>Click the button to clear localStorage and check current user:</p>
+    <button onclick="clearAndCheck()">Clear Storage & Check</button>
+    <pre id="result"></pre>
+    <script>
+        function clearAndCheck() {
+            const currentUser = localStorage.getItem('currentUser');
+            localStorage.removeItem('currentUser');
+            document.getElementById('result').textContent = 'Cleared user: ' + (currentUser || 'none');
+        }
+
+        // Check on load
+        const currentUser = localStorage.getItem('currentUser');
+        document.getElementById('result').textContent = 'Current user in localStorage: ' + (currentUser || 'none');
+    </script>
+</body>
+</html>
