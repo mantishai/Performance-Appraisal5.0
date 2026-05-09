@@ -8,6 +8,28 @@ router.get('/audit/logs', async (req, res) => {
         const { page = 1, limit = 20, type, startDate, endDate } = req.query;
         const offset = (page - 1) * limit;
         
+        const actionTypeMap = {
+            'login': 'LOGIN',
+            'create': 'CREATE',
+            'update': 'UPDATE',
+            'delete': 'DELETE',
+            'approve': 'UPDATE',
+            'export': 'EXPORT',
+            'import': 'IMPORT',
+            'permission': 'UPDATE'
+        };
+        
+        const moduleMap = {
+            '/login': 'system',
+            '员工管理': 'employee',
+            '张三': 'employee',
+            '测试部': 'employee',
+            '李四的请假申请': 'hr',
+            '员工列表': 'employee',
+            '考勤数据': 'attendance',
+            '角色管理': 'system'
+        };
+        
         const logs = [
             { id: 1, type: 'login', user: 'admin', action: '用户登录', target: '/login', result: 'success', time: '2026-05-09 10:30:00', ip: '192.168.1.100' },
             { id: 2, type: 'create', user: 'admin', action: '创建员工', target: '员工管理', result: 'success', time: '2026-05-09 10:25:00', ip: '192.168.1.100' },
@@ -21,7 +43,19 @@ router.get('/audit/logs', async (req, res) => {
             { id: 10, type: 'permission', user: 'admin', action: '修改权限', target: '角色管理', result: 'success', time: '2026-05-09 09:45:00', ip: '192.168.1.100' }
         ];
         
-        res.json({ code: 200, data: logs, message: 'success' });
+        const formattedLogs = logs.map(log => ({
+            id: log.id,
+            username: log.user,
+            module: moduleMap[log.target] || 'system',
+            action: actionTypeMap[log.type] || 'READ',
+            detail: `${log.action}: ${log.target}`,
+            ip: log.ip,
+            createTime: log.time,
+            result: log.result,
+            userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+        }));
+        
+        res.json({ code: 200, data: formattedLogs, message: 'success' });
     } catch (error) {
         console.error('Get audit logs error:', error);
         res.json({ code: 500, message: '服务器错误' });
@@ -33,26 +67,11 @@ router.get('/audit/statistics', async (req, res) => {
         res.json({ 
             code: 200, 
             data: {
-                totalLogs: 156,
-                todayLogs: 12,
-                loginSuccess: 89,
-                loginFailed: 15,
-                operations: 52,
-                byType: {
-                    login: 104,
-                    create: 15,
-                    update: 20,
-                    delete: 8,
-                    approve: 5,
-                    export: 3,
-                    import: 1
-                },
-                byUser: {
-                    admin: 65,
-                    manager: 42,
-                    hr: 30,
-                    user1: 19
-                }
+                todayTotal: 10,
+                create: 1,
+                update: 4,
+                delete: 1,
+                read: 4
             }, 
             message: 'success' 
         });
@@ -64,6 +83,17 @@ router.get('/audit/statistics', async (req, res) => {
 
 router.get('/audit/sensitive', async (req, res) => {
     try {
+        const typeMap = {
+            'password_change': 'password_reset',
+            'permission_update': 'permission_change',
+            'user_delete': 'batch_delete',
+            'data_export': 'data_export',
+            'login_failed': 'config_modify',
+            'system_config': 'config_modify',
+            'database_backup': 'config_modify',
+            'api_key_create': 'permission_change'
+        };
+        
         const sensitiveOperations = [
             { id: 1, type: 'password_change', user: 'admin', action: '修改密码', target: 'admin', time: '2026-05-09 10:30:00', ip: '192.168.1.100', riskLevel: 'high' },
             { id: 2, type: 'permission_update', user: 'admin', action: '修改权限', target: '角色管理', time: '2026-05-09 10:20:00', ip: '192.168.1.100', riskLevel: 'high' },
@@ -75,7 +105,16 @@ router.get('/audit/sensitive', async (req, res) => {
             { id: 8, type: 'api_key_create', user: 'admin', action: '创建API密钥', target: 'OpenAPI应用', time: '2026-05-09 09:00:00', ip: '192.168.1.100', riskLevel: 'high' }
         ];
         
-        res.json({ code: 200, data: sensitiveOperations, message: 'success' });
+        const formattedSensitive = sensitiveOperations.map(op => ({
+            id: op.id,
+            type: typeMap[op.type] || 'config_modify',
+            username: op.user,
+            detail: `${op.action}: ${op.target}`,
+            createTime: op.time,
+            ip: op.ip
+        }));
+        
+        res.json({ code: 200, data: formattedSensitive, message: 'success' });
     } catch (error) {
         console.error('Get sensitive operations error:', error);
         res.json({ code: 500, message: '服务器错误' });

@@ -48,9 +48,10 @@ router.get('/attendance/records', async (req, res) => {
         const { employee_id, month } = req.query;
         
         let query = `
-            SELECT a.*, e.name as employee_name 
+            SELECT a.*, e.name as employee_name, d.dept_name as department 
             FROM attendance_record a
             LEFT JOIN employee e ON a.employee_id = e.id
+            LEFT JOIN department d ON e.department_id = d.id
             WHERE 1=1
         `;
         const params = [];
@@ -69,11 +70,12 @@ router.get('/attendance/records', async (req, res) => {
         const records = rows.map(row => ({
             id: row.id,
             employeeId: row.employee_id,
-            employeeName: row.employee_name,
+            employeeName: row.employee_name || '未知',
+            department: row.department || '未知',
             date: row.attendance_date,
-            clockIn: row.clock_in_time,
-            clockOut: row.clock_out_time,
-            status: row.status === 'normal' ? '正常' : row.status === 'late' ? '迟到' : row.status === 'early' ? '早退' : row.status
+            checkIn: row.clock_in_time ? row.clock_in_time.split(' ')[1] : null,
+            checkOut: row.clock_out_time ? row.clock_out_time.split(' ')[1] : null,
+            status: row.status === 'normal' ? '正常' : row.status === 'late' ? '迟到' : row.status === 'early' ? '早退' : row.status || '未知'
         }));
         
         res.json({ code: 200, data: records, message: 'success' });
@@ -87,49 +89,52 @@ router.get('/attendance/summary', async (req, res) => {
     try {
         const { month } = req.query;
         
-        const [summaryRows] = await pool.execute(`
+        const [empRows] = await pool.execute(`
             SELECT 
-                a.status,
-                COUNT(*) as count
-            FROM attendance_record a
-            WHERE a.attendance_date LIKE ?
-            GROUP BY a.status
-        `, [`${month}%`]);
+                e.id as employee_id,
+                e.name as employee_name,
+                d.dept_name as department
+            FROM employee e
+            LEFT JOIN department d ON e.department_id = d.id
+        `);
         
-        const statusMap = { 'normal': '正常', 'late': '迟到', 'early': '早退' };
-        const summary = {
-            total: 0,
-            normal: 0,
-            late: 0,
-            early: 0,
-            absent: 0
-        };
-        
-        summaryRows.forEach(row => {
-            const status = row.status;
-            const count = parseInt(row.count);
-            if (status === 'normal') summary.normal = count;
-            else if (status === 'late') summary.late = count;
-            else if (status === 'early') summary.early = count;
-            summary.total += count;
-        });
-        
-        const [leaveRows] = await pool.execute(`
-            SELECT COUNT(*) as count
-            FROM leave_request
-            WHERE start_time LIKE ? AND approve_status = 1
-        `, [`${month}%`]);
-        
-        summary.absent = parseInt(leaveRows[0]?.count) || 0;
+        const summary = await Promise.all(empRows.map(async emp => {
+            const [attRows] = await pool.execute(`
+                SELECT status FROM attendance_record
+                WHERE employee_id = ? AND attendance_date LIKE ?
+            `, [emp.employee_id, `${month}%`]);
+            
+            const [leaveRows] = await pool.execute(`
+                SELECT SUM(leave_days) as total_leave_days
+                FROM leave_request
+                WHERE employee_id = ? AND start_time LIKE ? AND approve_status = 1
+            `, [emp.employee_id, `${month}%`]);
+            
+            let attendanceDays = 0;
+            let lateCount = 0;
+            let earlyLeaveCount = 0;
+            
+            attRows.forEach(row => {
+                if (row.status !== 'absent') attendanceDays++;
+                if (row.status === 'late') lateCount++;
+                if (row.status === 'early') earlyLeaveCount++;
+            });
+            
+            return {
+                employeeId: emp.employee_id,
+                employeeName: emp.employee_name || '未知',
+                department: emp.department || '未知',
+                attendanceDays: attendanceDays,
+                lateCount: lateCount,
+                earlyLeaveCount: earlyLeaveCount,
+                leaveDays: parseInt(leaveRows[0]?.total_leave_days) || 0
+            };
+        }));
         
         res.json({ code: 200, data: summary, message: 'success' });
     } catch (error) {
         console.error('Get attendance summary error:', error);
-        res.json({ 
-            code: 200, 
-            data: { total: 0, normal: 0, late: 0, early: 0, absent: 0 }, 
-            message: 'success' 
-        });
+        res.json({ code: 200, data: [], message: 'success' });
     }
 });
 
