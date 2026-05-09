@@ -100,9 +100,14 @@ const positionModule = {
     },
 
     bindEvents() {
+        const self = this;
+        
         const addBtn = document.getElementById('addPositionBtn');
+        
         if (addBtn) {
-            addBtn.addEventListener('click', () => this.showPositionForm());
+            addBtn.onclick = function() {
+                self.showPositionForm();
+            };
         }
 
         document.getElementById('content')?.addEventListener('click', (e) => {
@@ -110,7 +115,7 @@ const positionModule = {
             if (btn) {
                 const id = parseInt(btn.dataset.id);
                 const action = btn.dataset.action;
-                this.handleAction(id, action);
+                self.handleAction(id, action);
             }
         });
     },
@@ -150,61 +155,85 @@ const positionModule = {
                            min="0" placeholder="请输入编制人数"
                            style="width: 100%; padding: 10px 12px; border: 1px solid #d9d9d9; border-radius: 6px;">
                 </div>
+                <div class="form-group">
+                    <label style="display: block; margin-bottom: 8px; font-weight: 500;">岗位编码</label>
+                    <input type="text" id="posCode" value="${isEdit ? escapeHtml(position.position_code || '') : ''}" 
+                           placeholder="自动生成或手动输入"
+                           style="width: 100%; padding: 10px 12px; border: 1px solid #d9d9d9; border-radius: 6px;">
+                </div>
             </form>
         `;
 
-        Modal.show({
+        const modalInstance = Modal.open({
             title: title,
             content: formHtml,
-            onOk: async () => {
-                const name = document.getElementById('posName').value.trim();
-                const deptId = parseInt(document.getElementById('posDept').value);
-                const level = document.getElementById('posLevel').value.trim();
-                const headcount = parseInt(document.getElementById('posHeadcount').value) || 0;
-
-                if (!name) {
-                    Toast.error('请输入岗位名称');
-                    return false;
-                }
-                if (!deptId) {
-                    Toast.error('请选择所属部门');
-                    return false;
-                }
-
-                try {
-                    const data = { name, department_id: deptId, level, headcount };
-                    let res;
-                    if (isEdit) {
-                        res = await API.updatePosition(position.id, data);
-                    } else {
-                        res = await API.createPosition(data);
-                    }
-
-                    if (res.code === 200) {
-                        Toast.success(isEdit ? '岗位更新成功' : '岗位新增成功');
-                        await this.loadData();
-                        this.renderContent(document.getElementById('content'));
-                        this.bindEvents();
-                        return true;
-                    } else {
-                        Toast.error(res.message || '操作失败');
-                        return false;
-                    }
-                } catch (error) {
-                    console.error('Position save error:', error);
-                    Toast.error('操作失败');
-                    return false;
-                }
-            },
+            footer: `
+                <button type="button" class="btn btn-default" id="modalCancelBtn">取消</button>
+                <button type="button" class="btn btn-primary" id="modalOkBtn">确定</button>
+            `,
             width: 480
         });
+
+        // 延迟绑定事件，确保DOM已经渲染
+        setTimeout(() => {
+            const cancelBtn = document.getElementById('modalCancelBtn');
+            const okBtn = document.getElementById('modalOkBtn');
+            
+            if (cancelBtn) {
+                cancelBtn.onclick = () => {
+                    modalInstance.close();
+                };
+            }
+            
+            if (okBtn) {
+                okBtn.onclick = async () => {
+                    const name = document.getElementById('posName')?.value.trim();
+                    const deptId = parseInt(document.getElementById('posDept')?.value);
+                    const level = document.getElementById('posLevel')?.value.trim() || 'P5';
+                    const headcount = parseInt(document.getElementById('posHeadcount')?.value) || 0;
+                    const position_code = document.getElementById('posCode')?.value.trim() || '';
+
+                    if (!name) {
+                        Toast.error('请输入岗位名称');
+                        return;
+                    }
+                    if (!deptId) {
+                        Toast.error('请选择所属部门');
+                        return;
+                    }
+
+                    try {
+                        const data = { name, department_id: deptId, level, headcount, position_code };
+                        let res;
+                        if (isEdit) {
+                            res = await API.updatePosition(position.id, data);
+                        } else {
+                            res = await API.createPosition(data);
+                        }
+
+                        if (res.code === 200) {
+                            Toast.success(isEdit ? '岗位更新成功' : '岗位新增成功');
+                            modalInstance.close();
+                            await this.loadData();
+                            this.renderContent(document.getElementById('content'));
+                            this.bindEvents();
+                        } else {
+                            Toast.error(res.message || '操作失败');
+                        }
+                    } catch (error) {
+                        console.error('Position save error:', error);
+                        Toast.error('操作失败');
+                    }
+                };
+            }
+        }, 50);
     },
 
     async handleAction(id, action) {
         const position = state.positions.find(p => p.id === id);
         if (action === 'view' && position) {
-            Toast.info(`查看【${position.name}】岗位说明书`);
-        } else if (action === 'edit') {
+            window.openReadOnlyPositionModal(`pos_${id}`);
+        } else if (action === 'edit' && position) {
             this.showPositionForm(position);
         } else if (action === 'delete' && position) {
             if (confirm(`确定要删除岗位【${position.name}】吗？`)) {

@@ -120,6 +120,18 @@ const API = {
         return this.request('/org/departments');
     },
 
+    createDepartment(data) {
+        return this.request('/org/department', { method: 'POST', body: JSON.stringify(data) });
+    },
+
+    updateDepartment(id, data) {
+        return this.request(`/org/department/${id}`, { method: 'PUT', body: JSON.stringify(data) });
+    },
+
+    deleteDepartment(id) {
+        return this.request(`/org/department/${id}`, { method: 'DELETE' });
+    },
+
     getPositions() {
         return this.request('/positions');
     },

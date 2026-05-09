@@ -6,7 +6,7 @@ dotenv.config();
 const pool = createPool({
     host: 'localhost',
     user: 'root',
-    password: process.env.DB_PASSWORD || 'root',
+    password: 'root',
     database: 'hr_system',
     waitForConnections: true,
     connectionLimit: 10,

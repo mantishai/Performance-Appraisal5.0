@@ -182,7 +182,349 @@
             <main class="content" id="content"></main>
         </div>
     </div>
+    
+    <!-- 岗位说明书弹窗 -->
+    <div id="hrPositionModal" class="modal-overlay">
+        <div class="modal-container-large">
+            <!-- 头部 -->
+            <div class="modal-header">
+                <h2 id="hrPositionModalTitle">📋 岗位职责说明书</h2>
+                <div class="modal-header-actions">
+                    <button class="btn-modal-export" id="hrExportPDFBtn" onclick="exportPositionToPDF()">📄 导出PDF</button>
+                    <button class="modal-close" onclick="closePositionModal()">×</button>
+                </div>
+            </div>
+            
+            <!-- 内容区域 -->
+            <div class="modal-body">
+                <!-- 基本信息网格 -->
+                <div class="info-grid">
+                    <div class="info-item">
+                        <span class="info-label">职位名称</span>
+                        <input type="text" id="hrPositionName">
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">职务名称</span>
+                        <input type="text" id="hrJobTitle">
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">职级范围</span>
+                        <input type="text" id="hrLevel">
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">所属部门</span>
+                        <input type="text" id="hrDepartment">
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">部门类型</span>
+                        <input type="text" id="hrDeptType">
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">部门性质</span>
+                        <input type="text" id="hrDeptNature">
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">直属主管</span>
+                        <input type="text" id="hrSupervisor">
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">跨级主管</span>
+                        <input type="text" id="hrCrossSupervisor">
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">直接下属</span>
+                        <input type="text" id="hrDirectSubordinates">
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">间接下属</span>
+                        <input type="text" id="hrIndirectSubordinates">
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">晋升方向</span>
+                        <input type="text" id="hrPromotionDirection">
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">轮转岗位</span>
+                        <input type="text" id="hrRotationPosition">
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">生效日期</span>
+                        <input type="text" id="hrEffectiveDate">
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">审批人</span>
+                        <input type="text" id="hrApprover">
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">职位代码</span>
+                        <input type="text" id="hrPositionCode">
+                    </div>
+                    <div class="info-item info-item-full">
+                        <span class="info-label">职位概述</span>
+                        <textarea id="hrSummary" rows="3"></textarea>
+                    </div>
+                </div>
+                
+                <!-- 岗位设置目的 -->
+                <div class="section">
+                    <h3>🎯 岗位设置目的</h3>
+                    <textarea id="hrPurpose" class="editable-text"></textarea>
+                </div>
+                
+                <!-- 主要岗位职责 -->
+                <div class="section">
+                    <div class="section-header">
+                        <h3>⚙️ 主要岗位职责</h3>
+                        <div class="section-actions">
+                            <button class="btn-modal-import" onclick="importHrDutyFromCSV()">📤 导入</button>
+                            <button class="btn-modal-add" onclick="addHrDutyRow()">➕ 增加</button>
+                            <button class="btn-modal-delete" onclick="deleteSelectedHrDuties()">🗑️ 删除</button>
+                        </div>
+                        <input type="file" id="hrDutyFileInput" accept=".csv" style="display: none;">
+                    </div>
+                    <table class="duty-table">
+                        <thead>
+                            <tr>
+                                <th><input type="checkbox" onchange="toggleSelectAllHrDuties()"></th>
+                                <th>职责模块</th>
+                                <th>职责分类</th>
+                                <th>工作分类</th>
+                                <th>职责细则</th>
+                            </tr>
+                        </thead>
+                        <tbody id="hrDutyTableBody"></tbody>
+                    </table>
+                </div>
+                
+                <!-- 任职资格 -->
+                <div class="section">
+                    <h3>📌 任职资格</h3>
+                    <div class="qualify-list">
+                        <div class="qualify-item">
+                            <span class="qualify-label">教育背景</span>
+                            <input type="text" id="hrEducation">
+                        </div>
+                        <div class="qualify-item">
+                            <span class="qualify-label">培训经历</span>
+                            <input type="text" id="hrTraining">
+                        </div>
+                        <div class="qualify-item">
+                            <span class="qualify-label">工作经验</span>
+                            <textarea id="hrExperience" class="plain-editable" rows="3"></textarea>
+                        </div>
+                        <div class="qualify-item">
+                            <span class="qualify-label">技能要求</span>
+                            <textarea id="hrSkills" class="plain-editable" rows="3"></textarea>
+                        </div>
+                        <div class="qualify-item">
+                            <span class="qualify-label">其他要求</span>
+                            <textarea id="hrOtherRequirements" class="plain-editable" rows="3"></textarea>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 工作条件 -->
+                <div class="section">
+                    <h3>🏢 工作条件</h3>
+                    <div class="conditions-grid">
+                        <div class="condition-item">
+                            <span class="condition-label">工作时间</span>
+                            <input type="text" id="hrWorkTime">
+                        </div>
+                        <div class="condition-item">
+                            <span class="condition-label">工作场所</span>
+                            <input type="text" id="hrWorkPlace">
+                        </div>
+                        <div class="condition-item">
+                            <span class="condition-label">工作环境</span>
+                            <input type="text" id="hrWorkEnv">
+                        </div>
+                        <div class="condition-item">
+                            <span class="condition-label">危险性</span>
+                            <input type="text" id="hrRisk">
+                        </div>
+                        <div class="condition-item">
+                            <span class="condition-label">职业病危害因素</span>
+                            <input type="text" id="hrOccupationalHazard">
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 考核指标 -->
+                <div class="section">
+                    <div class="section-header">
+                        <h3>📊 考核指标</h3>
+                        <div class="section-actions">
+                            <button class="btn-modal-import" onclick="importHrMetricFromCSV()">📤 导入</button>
+                            <button class="btn-modal-add" onclick="addHrMetricRow()">➕ 增加</button>
+                            <button class="btn-modal-delete" onclick="deleteSelectedHrMetrics()">🗑️ 删除</button>
+                        </div>
+                        <input type="file" id="hrMetricFileInput" accept=".csv" style="display: none;">
+                    </div>
+                    <table class="metric-table">
+                        <thead>
+                            <tr>
+                                <th><input type="checkbox" onchange="toggleSelectAllHrMetrics()"></th>
+                                <th>考核维度</th>
+                                <th>核心指标</th>
+                                <th>量化标准</th>
+                                <th>数据来源</th>
+                            </tr>
+                        </thead>
+                        <tbody id="hrMetricTableBody"></tbody>
+                    </table>
+                </div>
+                
+                <!-- 台账/文件签发与主持 -->
+                <div class="section">
+                    <h3>📁 台账 / 文件签发与主持</h3>
+                    <textarea id="hrDocuments" class="editable-text"></textarea>
+                </div>
+                
+                <!-- 量化指标库 -->
+                <div class="section">
+                    <h3>📊 量化指标库</h3>
+                    <div class="summary-cards">
+                        <div class="summary-card">
+                            <div class="summary-value">5</div>
+                            <div class="summary-label">考核模块总数</div>
+                        </div>
+                        <div class="summary-card">
+                            <div class="summary-value">23</div>
+                            <div class="summary-label">量化指标（结果）</div>
+                        </div>
+                        <div class="summary-card">
+                            <div class="summary-value">12</div>
+                            <div class="summary-label">基本管理动作</div>
+                        </div>
+                        <div class="summary-card">
+                            <div class="summary-value">35</div>
+                            <div class="summary-label">总考核项</div>
+                        </div>
+                    </div>
+                    
+                    <!-- 模块一：绩效考核管理 -->
+                    <div class="metrics-module">
+                        <h4>模块一：绩效考核管理（权重35%）</h4>
+                        <table class="metrics-table">
+                            <thead>
+                                <tr>
+                                    <th>考核指标名称</th>
+                                    <th>量化标准与考核方法</th>
+                                    <th>数据来源</th>
+                                    <th>类型标识</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr><td>绩效完成率</td><td>实际完成值/目标值×100%，季度考核</td><td>绩效系统</td><td>🎯 量化考核</td></tr>
+                                <tr><td>OKR达成率</td><td>完成OKR数量/总OKR数量×100%</td><td>OKR系统</td><td>🎯 量化考核</td></tr>
+                                <tr><td>绩效等级分布</td><td>A/B/C/D等级分布比例</td><td>绩效系统</td><td>⚙️ 基本管理</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <!-- 模块二：劳资风险管控 -->
+                    <div class="metrics-module">
+                        <h4>模块二：劳资风险管控（权重30%）</h4>
+                        <table class="metrics-table">
+                            <thead>
+                                <tr>
+                                    <th>考核指标名称</th>
+                                    <th>量化标准与考核方法</th>
+                                    <th>数据来源</th>
+                                    <th>类型标识</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr><td>劳动争议发生率</td><td>争议次数/员工总数×100%</td><td>法务系统</td><td>🎯 量化考核</td></tr>
+                                <tr><td>合规检查通过率</td><td>合规项通过数/检查项总数×100%</td><td>合规系统</td><td>🎯 量化考核</td></tr>
+                                <tr><td>合同到期续签率</td><td>续签合同数/到期合同数×100%</td><td>HR系统</td><td>🎯 量化考核</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <!-- 模块三：人才供给与招聘效能 -->
+                    <div class="metrics-module">
+                        <h4>模块三：人才供给与招聘效能（权重15%）</h4>
+                        <table class="metrics-table">
+                            <thead>
+                                <tr>
+                                    <th>考核指标名称</th>
+                                    <th>量化标准与考核方法</th>
+                                    <th>数据来源</th>
+                                    <th>类型标识</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr><td>招聘周期</td><td>从需求提报到候选人入职的平均天数</td><td>招聘系统</td><td>🎯 量化考核</td></tr>
+                                <tr><td>招聘成本</td><td>人均招聘成本=总费用/录用人数</td><td>财务系统</td><td>🎯 量化考核</td></tr>
+                                <tr><td>试用期通过率</td><td>转正人数/试用期人数×100%</td><td>HR系统</td><td>🎯 量化考核</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <!-- 模块四：薪酬福利与成本管控 -->
+                    <div class="metrics-module">
+                        <h4>模块四：薪酬福利与成本管控（权重10%）</h4>
+                        <table class="metrics-table">
+                            <thead>
+                                <tr>
+                                    <th>考核指标名称</th>
+                                    <th>量化标准与考核方法</th>
+                                    <th>数据来源</th>
+                                    <th>类型标识</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr><td>薪酬预算执行率</td><td>实际发放/预算×100%</td><td>财务系统</td><td>🎯 量化考核</td></tr>
+                                <tr><td>社保公积金合规率</td><td>合规人数/参保人数×100%</td><td>社保系统</td><td>⚙️ 基本管理</td></tr>
+                                <tr><td>福利满意度</td><td>满意度调研得分</td><td>调研系统</td><td>⚙️ 基本管理</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <!-- 模块五：组织发展与基础运营 -->
+                    <div class="metrics-module">
+                        <h4>模块五：组织发展与基础运营（权重10%）</h4>
+                        <table class="metrics-table">
+                            <thead>
+                                <tr>
+                                    <th>考核指标名称</th>
+                                    <th>量化标准与考核方法</th>
+                                    <th>数据来源</th>
+                                    <th>类型标识</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr><td>组织架构优化完成率</td><td>完成项/计划项×100%</td><td>HR系统</td><td>⚙️ 基本管理</td></tr>
+                                <tr><td>员工信息准确率</td><td>准确信息数/总信息数×100%</td><td>HR系统</td><td>⚙️ 基本管理</td></tr>
+                                <tr><td>流程效率</td><td>平均审批时长</td><td>OA系统</td><td>⚙️ 基本管理</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <div class="footer-note">
+                        <p>考核规则说明：以上指标为岗位考核的核心维度，各模块权重根据岗位性质可调整。量化考核指标直接影响绩效得分，基本管理动作作为过程指标进行监控。</p>
+                    </div>
+                </div>
+                
+                <!-- 底部页脚 -->
+                <div class="modal-footer-note">
+                    岗位说明书为动态管理文件，所有文本框均可直接编辑。
+                </div>
+            </div>
+            
+            <!-- 底部操作按钮 -->
+            <div class="modal-actions">
+                <button class="btn-modal-secondary" onclick="closePositionModal()">关闭</button>
+                <button class="btn-modal-warning" id="hrResetBtn" onclick="loadHrPositionDesc()">🔄 恢复</button>
+                <button class="btn-modal-primary" id="hrSaveBtn" onclick="saveHrPositionDesc()">💾 保存</button>
+            </div>
+        </div>
+    </div>
+    
     <script type="module" src="js/app.js?v=3"></script>
+    <script src="js/position-manual.js"></script>
     <script>
         // PWA Service Worker 注册
         if ('serviceWorker' in navigator) {

@@ -153,6 +153,10 @@ const dashboardModule = {
                             <span>🔄</span>
                             <span>刷新数据</span>
                         </button>
+                        <button class="btn btn-secondary" id="positionManualBtn">
+                            <span>📋</span>
+                            <span>岗位说明书</span>
+                        </button>
                     </div>
                 </div>
             </div>
@@ -460,6 +464,16 @@ const dashboardModule = {
                 this.initCharts();
             }
             Toast.success('数据刷新成功！');
+        });
+
+        document.getElementById('positionManualBtn')?.addEventListener('click', () => {
+            const positionName = state.currentUser?.position || '人力资源经理';
+            const positionId = window.getPositionIdByName ? window.getPositionIdByName(positionName) : 'hr1';
+            if (window.openReadOnlyPositionModal) {
+                window.openReadOnlyPositionModal(positionId);
+            } else {
+                Toast.info('岗位说明书功能加载中...');
+            }
         });
 
         document.querySelectorAll('.quick-link, .stat-card[data-module]').forEach(el => {

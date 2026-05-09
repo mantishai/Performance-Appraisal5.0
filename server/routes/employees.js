@@ -15,7 +15,7 @@ router.get('/employees', async (req, res) => {
                    e.entry_date as entryDate
             FROM employee e
             LEFT JOIN department d ON e.department_id = d.id
-            LEFT JOIN position p ON e.position_id = p.id
+            LEFT JOIN \`position\` p ON e.position_id = p.id
             WHERE 1=1
         `;
         const params = [];

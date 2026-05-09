@@ -1,0 +1,446 @@
+请帮我在当前开发的人力资源管理系统中实现"岗位说明书弹窗"功能。我会提供详细的参考逻辑、数据结构、样式要求和API规范。
+
+---
+
+## 一、功能概述
+
+实现一个模态弹窗，用于查看和编辑各岗位的岗位说明书。弹窗支持两种模式：
+1. **查看模式（只读）**：所有表单字段禁用，仅展示数据
+2. **编辑模式**：所有表单字段可编辑，支持增删职责行和考核指标行，支持保存/恢复操作
+
+---
+
+## 二、弹窗触发入口
+
+请为以下位置添加触发逻辑：
+
+1. **个人看板页面** - "岗位说明书"按钮：
+   - 点击触发：openReadOnlyPositionModal(positionId)
+   - 模式：只读查看
+   - positionId通过当前登录用户的岗位名称从getPositionIdByName()函数获取
+
+2. **领导看板页面** - 侧边栏"岗位说明书"树状菜单：
+   - 点击人员触发：openPositionModal(positionId)
+   - 模式：可编辑
+   - 树状菜单结构参考：部门列表下有岗位列表，每个岗位是一个可点击项
+   - 岗位ID范围：hr1 到 hr75
+
+3. **组织架构页面** - 人员详情中的"岗位说明书"按钮（如有）
+
+---
+
+## 三、弹窗HTML结构
+
+请创建以下结构的模态弹窗（参考id="hrPositionModal"）：
+
+### 3.1 外层容器
+```html
+<div id="hrPositionModal" class="modal-overlay">
+    <div class="modal-container-large">
+        <!-- 头部 -->
+        <!-- 内容区域 -->
+        <!-- 底部按钮 -->
+    </div>
+</div>
+3.2 弹窗头部
+左侧：弹窗标题，动态显示"📋 [岗位名称]岗位职责说明书"
+
+右侧：导出PDF按钮 + 关闭按钮（×）
+
+3.3 弹窗内容区域（可滚动）
+3.3.1 基本信息网格（.info-grid 双列布局）
+包含以下字段（每个字段为 .info-item，内含 .info-label + input/textarea）：
+
+职位名称（input）- id="hrPositionName"
+
+职务名称（input）- id="hrJobTitle"
+
+职级范围（input）- id="hrLevel"
+
+所属部门（input）- id="hrDepartment"
+
+部门类型（input）- id="hrDeptType"
+
+部门性质（input）- id="hrDeptNature"
+
+直属主管（input）- id="hrSupervisor"
+
+跨级主管（input）- id="hrCrossSupervisor"
+
+直接下属（input）- id="hrDirectSubordinates"
+
+间接下属（input）- id="hrIndirectSubordinates"
+
+晋升方向（input）- id="hrPromotionDirection"
+
+轮转岗位（input）- id="hrRotationPosition"
+
+生效日期（input）- id="hrEffectiveDate"
+
+审批人（input）- id="hrApprover"
+
+职位代码（input）- id="hrPositionCode"
+
+职位概述（textarea）- id="hrSummary"
+
+3.3.2 岗位设置目的（.section）
+标题：🎯 岗位设置目的
+
+内容：textarea（id="hrPurpose"），class="editable-text"
+
+3.3.3 主要岗位职责（.section）
+标题栏：左侧"⚙️ 主要岗位职责"，右侧"📤 导入"+"➕ 增加"+"🗑️ 删除"按钮
+
+表格（.duty-table）：
+
+表头：复选框(全选) | 职责模块 | 职责分类 | 工作分类(下拉：核心/重点/基础) | 职责细则
+
+表体：tbody id="hrDutyTableBody"
+
+每行包含：复选框(.hr-duty-checkbox) + textarea(职责模块) + textarea(职责分类) + select(工作分类) + textarea(职责细则)
+
+导入按钮触发：<input type="file" id="hrDutyFileInput" accept=".csv"> 选择CSV文件
+
+增删逻辑：addHrDutyRow()添加新行，deleteSelectedHrDuties()删除选中行，toggleSelectAllHrDuties()全选
+
+3.3.4 任职资格（.section）
+标题：📌 任职资格
+
+内容（.qualify-list）：
+
+教育背景（input，id="hrEducation"）
+
+培训经历（input，id="hrTraining"）
+
+工作经验（textarea，id="hrExperience"，class="plain-editable"）
+
+技能要求（textarea，id="hrSkills"，class="plain-editable"）
+
+其他要求（textarea，id="hrOtherRequirements"，class="plain-editable"）
+
+3.3.5 工作条件（.section）
+标题：🏢 工作条件
+
+内容（.conditions-grid，多列网格布局）：
+
+工作时间（input，id="hrWorkTime"）
+
+工作场所（input，id="hrWorkPlace"）
+
+工作环境（input，id="hrWorkEnv"）
+
+危险性（input，id="hrRisk"）
+
+职业病危害因素（input，id="hrOccupationalHazard"）
+
+3.3.6 考核指标（.section）
+标题栏：左侧"📊 考核指标"，右侧"📤 导入"+"➕ 增加"+"🗑️ 删除"按钮
+
+表格（.metric-table）：
+
+表头：复选框(全选) | 考核维度 | 核心指标 | 量化标准 | 数据来源
+
+表体：tbody id="hrMetricTableBody"
+
+每行包含：复选框(.hr-metric-checkbox) + 4个textarea
+
+导入按钮触发：<input type="file" id="hrMetricFileInput" accept=".csv">
+
+3.3.7 台账/文件签发与主持（.section）
+标题：📁 台账 / 文件签发与主持
+
+内容：textarea（id="hrDocuments"），class="editable-text"
+
+3.3.8 量化指标库（.section）
+标题：📊 量化指标库
+
+统计卡片（.summary-cards）：考核模块总数、量化指标（结果）、基本管理动作、总考核项
+
+按模块展示详细指标表格（.metrics-table），包含5个模块：
+
+模块一：绩效考核管理（权重35%）
+
+模块二：劳资风险管控（权重30%）
+
+模块三：人才供给与招聘效能（权重15%）
+
+模块四：薪酬福利与成本管控（权重10%）
+
+模块五：组织发展与基础运营（权重10%）
+
+每个模块表格包含：考核指标名称、量化标准与考核方法、数据来源、类型标识（量化考核🎯/基本管理⚙️）
+
+底部考核规则说明（.footer-note）
+
+3.3.9 底部页脚
+文字："岗位说明书为动态管理文件，所有文本框均可直接编辑。"
+
+3.4 弹窗底部操作按钮（.modal-actions）
+查看模式：仅显示"关闭"按钮
+
+编辑模式：显示"关闭"+"🔄 恢复"+"💾 保存"按钮
+
+四、样式要求
+4.1 遮罩层（.modal-overlay）
+css
+.modal-overlay {
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(0,0,0,0.5);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 2000;
+}
+.modal-overlay.show { display: flex; }
+4.2 弹窗容器（.modal-container-large）
+背景白色，圆角24px
+
+最大宽度950px，宽度95%
+
+最大高度90vh，内容溢出可滚动
+
+内边距24px
+
+4.3 表单样式（编辑模式 vs 查看模式）
+编辑模式：input/textarea/select 可编辑，白色背景，边框#e2e8f0
+
+查看模式：input/textarea/select 禁用状态（disabled），背景#f8fafc
+
+查看模式下隐藏"导入/增加/删除"按钮
+
+编辑模式下显示所有操作按钮
+
+4.4 按钮样式
+主按钮（保存）：.btn-modal-primary，背景渐变 #1a4a6f到#0b2b3b，白色文字
+
+次要按钮（取消/关闭）：.btn-modal-secondary，背景#f1f5f9
+
+导入按钮：.btn-modal-import，绿色渐变
+
+导出按钮：.btn-modal-export，青色渐变
+
+恢复按钮：.btn-modal-warning，黄色渐变
+
+4.5 表格样式
+.duty-table：全宽，边框合并，字号0.85rem
+
+.metric-table：全宽，边框合并，字号0.85rem
+
+th：背景#eef4fa，文字#1f5e7e，加粗
+
+td：border 1px solid #e2edf2，padding 12px
+
+4.6 响应式
+小屏幕（<768px）：.form-grid改为单列，弹窗宽度100%
+
+五、JavaScript功能函数
+5.1 弹窗打开/关闭
+javascript
+// 打开编辑模式弹窗
+function openPositionModal(positionId) {
+    window.currentHrPositionId = positionId;
+    // 1. 获取岗位数据
+    // 2. 渲染弹窗内容
+    // 3. 设置编辑模式
+    // 4. 显示弹窗
+}
+
+// 打开只读查看弹窗
+function openReadOnlyPositionModal(positionId) {
+    // 1. 调用openPositionModal
+    // 2. 设置所有字段为disabled
+    // 3. 隐藏编辑相关按钮
+    // 4. 底部只显示"关闭"按钮
+}
+
+// 关闭弹窗
+function closePositionModal() {
+    document.getElementById('hrPositionModal').classList.remove('show');
+}
+5.2 数据获取函数 getPositionData(positionId)
+返回包含完整岗位信息的对象
+
+数据结构：
+
+javascript
+{
+    info: {
+        positionName, jobTitle, level, department, deptType, deptNature,
+        supervisor, crossSupervisor, directSubordinates, indirectSubordinates,
+        promotionDirection, rotationPosition, effectiveDate, approver,
+        positionCode, summary
+    },
+    purpose: "岗位设置目的文本",
+    duties: [
+        { module: "职责模块名", category: "职责分类", workType: "核心/重点/基础", detail: "职责细则" }
+    ],
+    qualification: {
+        education, training, experience, skills, otherRequirements
+    },
+    conditions: {
+        workTime, workPlace, workEnv, risk, occupationalHazard
+    },
+    metrics: [
+        { dimension: "考核维度", metric: "核心指标", standard: "量化标准", source: "数据来源" }
+    ],
+    documents: "台账文件说明文本"
+}
+初期可以硬编码所有岗位数据（hr1-hr75），每个岗位一个case分支
+
+5.3 编辑模式切换
+javascript
+// 切换编辑/查看模式
+function togglePositionEdit() {
+    const isReadOnly = 检查当前是否只读;
+    if (isReadOnly) {
+        设置为编辑模式();
+        底部按钮改为"关闭+恢复+保存";
+    } else {
+        设置为只读模式();
+        底部按钮改为"关闭+编辑";
+    }
+}
+
+// 设置表单只读状态
+function setPositionModalReadOnly(readOnly) {
+    遍历弹窗内所有input/textarea/select，设置disabled = readOnly;
+    遍历所有操作按钮（导入/增加/删除），设置显示状态;
+}
+5.4 职责和指标的增删操作
+javascript
+function addHrDutyRow() { /* 在hrDutyTableBody添加一行 */ }
+function deleteSelectedHrDuties() { /* 删除选中的职责行 */ }
+function toggleSelectAllHrDuties() { /* 全选/取消全选职责复选框 */ }
+function addHrMetricRow() { /* 在hrMetricTableBody添加一行 */ }
+function deleteSelectedHrMetrics() { /* 删除选中的指标行 */ }
+function toggleSelectAllHrMetrics() { /* 全选/取消全选指标复选框 */ }
+5.5 CSV导入导出
+javascript
+function importHrDutyFromCSV() { /* 从CSV文件导入职责数据 */ }
+function importHrMetricFromCSV() { /* 从CSV文件导入指标数据 */ }
+function importHrPositionFromCSV() { /* 从CSV文件导入完整岗位信息 */ }
+function exportHrPositionToCSV() { /* 导出岗位信息为CSV */ }
+5.6 PDF导出
+javascript
+async function exportPositionToPDF() {
+    // 1. 收集弹窗中所有数据
+    // 2. 构建纯展示HTML（无表单控件，使用<span>显示数据）
+    // 3. 使用window.open打开新窗口
+    // 4. 将HTML写入新窗口
+    // 5. 调用print()触发PDF下载
+}
+5.7 数据持久化
+javascript
+// 保存到服务器
+async function saveHrPositionDesc() {
+    const positionData = {
+        positionId: window.currentHrPositionId,
+        data: 收集弹窗中所有表单数据()
+    };
+    
+    try {
+        const res = await fetch('/api/hr/position/save', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'x-session-id': sessionId
+            },
+            body: JSON.stringify(positionData)
+        });
+        
+        if (res.ok) {
+            保存到localStorage作为备份();
+            showToast('✅ 保存成功');
+            切换回只读模式();
+        }
+    } catch (e) {
+        保存到localStorage();
+        showToast('⚠️ 网络异常，已保存到本地');
+    }
+}
+
+// 从服务器加载
+async function loadHrPositionDesc() {
+    try {
+        const res = await fetch('/api/hr/position/' + window.currentHrPositionId, {
+            headers: { 'x-session-id': sessionId }
+        });
+        
+        if (res.ok) {
+            const data = await res.json();
+            应用数据到弹窗表单();
+            return;
+        }
+    } catch (e) {}
+    
+    // 降级：从localStorage加载
+    const localData = localStorage.getItem('hrPositions');
+    if (localData) {
+        应用数据到弹窗表单();
+    }
+}
+六、API接口规范
+6.1 保存岗位说明书
+端点：POST /api/hr/position/save
+
+请求头：Content-Type: application/json, x-session-id: {sessionId}
+
+请求体：
+
+json
+{
+    "positionId": "hr1",
+    "data": {
+        "info": { ... },
+        "purpose": "...",
+        "duties": [ ... ],
+        "qualification": { ... },
+        "conditions": { ... },
+        "metrics": [ ... ],
+        "documents": "..."
+    }
+}
+响应：{ "success": true }
+
+6.2 加载岗位说明书
+端点：GET /api/hr/position/{positionId}
+
+请求头：x-session-id: {sessionId}
+
+响应：{ "success": true, "data": { "info": {...}, ... } }
+
+6.3 降级策略
+API调用失败时，自动降级到localStorage存储
+
+localStorage key：'hrPositions'，值为JSON对象 { "hr1": {...}, "hr2": {...} }
+
+加载时优先从API获取，失败后从localStorage读取
+
+七、技术约束
+不引入任何前端框架（React/Vue等），使用原生JavaScript
+
+CSS不依赖外部库，使用项目已有的CSS变量和样式体系
+
+代码风格：函数命名使用驼峰命名法，变量名语义化
+
+复用项目现有组件：Toast提示（showToast函数）、认证工具（getHeaders函数）
+
+兼容性：支持Chrome、Edge、Firefox最新版本
+
+错误处理：所有异步操作需包含try-catch，网络失败有降级方案
+
+八、特别注意
+弹窗的positionId存储在 window.currentHrPositionId 全局变量中
+
+标题动态更新：根据职位名称实时更新弹窗标题
+
+恢复按钮：从API/localStorage重新加载数据覆盖当前表单
+
+关闭弹窗时：如果有未保存修改，可以提示用户（可选）
+
+导出PDF时：生成纯展示版HTML（无表单控件），使用表格展示数据
+
+量化指标库部分的内容是固定的（5个模块的详细指标），不需要可编辑
+
+请根据以上规范，生成完整的HTML结构、CSS样式和JavaScript代码。
