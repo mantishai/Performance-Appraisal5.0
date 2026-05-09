@@ -11,7 +11,7 @@
 ## 技术栈
 
 - 前端：HTML5 + CSS3 + JavaScript ES6+
-- 后端：Node.js + Express（Mock）
+- 后端：Node.js + Express + MySQL
 - 数据库：MySQL 8.0
 - 缓存：Redis 7.0
 - 部署：Docker + Nginx

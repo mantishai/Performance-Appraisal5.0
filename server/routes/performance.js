@@ -6,7 +6,7 @@ const router = Router();
 router.get('/performance/plans', async (req, res) => {
     try {
         const [rows] = await pool.execute('SELECT * FROM performance_plan');
-        
+
         const plans = rows.map(row => ({
             id: row.id,
             name: row.plan_name || row.name,
@@ -17,7 +17,7 @@ router.get('/performance/plans', async (req, res) => {
             status: row.status === 2 ? 'completed' : row.status === 1 ? 'ongoing' : 'pending',
             description: row.description
         }));
-        
+
         res.json({ code: 200, data: plans, message: 'success' });
     } catch (error) {
         console.error('Get plans error:', error);
@@ -28,12 +28,12 @@ router.get('/performance/plans', async (req, res) => {
 router.post('/performance/plan', async (req, res) => {
     try {
         const { name, start_date, end_date, description } = req.body;
-        
+
         const [result] = await pool.execute(
             'INSERT INTO performance_plan (name, start_date, end_date, description, created_at) VALUES (?, ?, ?, ?, NOW())',
             [name, start_date, end_date, description]
         );
-        
+
         res.json({ code: 200, data: { id: result.insertId }, message: '绩效计划创建成功' });
     } catch (error) {
         console.error('Create plan error:', error);
@@ -44,16 +44,19 @@ router.post('/performance/plan', async (req, res) => {
 router.get('/performance/evaluations', async (req, res) => {
     try {
         const { plan_id, employee_id } = req.query;
-        
+
         let query = `
-            SELECT e.*, p.plan_name as planName, emp.name as employeeName
+            SELECT e.*, p.plan_name as planName, COALESCE(emp.name, '未知') as employeeName,
+                   d.dept_name as department, pos.position_name as position
             FROM performance_evaluation e
             LEFT JOIN performance_plan p ON e.plan_id = p.id
             LEFT JOIN employee emp ON e.employee_id = emp.id
+            LEFT JOIN department d ON emp.department_id = d.id
+            LEFT JOIN position pos ON emp.position_id = pos.id
             WHERE 1=1
         `;
         const params = [];
-        
+
         if (plan_id) {
             query += ' AND e.plan_id = ?';
             params.push(plan_id);
@@ -62,25 +65,40 @@ router.get('/performance/evaluations', async (req, res) => {
             query += ' AND e.employee_id = ?';
             params.push(employee_id);
         }
-        
+
         const [rows] = await pool.execute(query, params);
-        
+
         const evaluations = rows.map(row => {
             let selfStatus = 'pending';
             let leaderStatus = 'pending';
             if (row.status === 1) {
-                selfStatus = 'completed';
+                selfStatus = 'self_completed';
             } else if (row.status === 2) {
                 selfStatus = 'completed';
                 leaderStatus = 'completed';
             }
             return {
-                ...row,
+                id: row.id,
+                employeeId: row.employee_id,
+                employeeName: row.employeeName,
+                planId: row.plan_id,
+                planName: row.planName,
+                department: row.department || '未知',
+                position: row.position || '未知',
+                selfScore: row.self_score,
+                selfComment: row.self_comment,
                 selfStatus,
-                leaderStatus
+                selfSubmittedAt: row.self_submitted_at,
+                leaderScore: row.leader_score,
+                leaderComment: row.leader_comment,
+                leaderStatus,
+                leaderSubmittedAt: row.leader_submitted_at,
+                finalScore: row.final_score,
+                grade: row.grade,
+                status: row.status
             };
         });
-        
+
         res.json({ code: 200, data: evaluations, message: 'success' });
     } catch (error) {
         console.error('Get evaluations error:', error);
@@ -92,12 +110,12 @@ router.post('/performance/evaluation/:id/self', async (req, res) => {
     try {
         const { id } = req.params;
         const { self_score, self_comment } = req.body;
-        
+
         const [result] = await pool.execute(
             'UPDATE performance_evaluation SET self_score = ?, self_comment = ?, self_submitted_at = NOW() WHERE id = ?',
             [self_score, self_comment, id]
         );
-        
+
         res.json({ code: 200, data: { affectedRows: result.affectedRows }, message: '自评提交成功' });
     } catch (error) {
         console.error('Submit self evaluation error:', error);
@@ -109,12 +127,12 @@ router.post('/performance/evaluation/:id/leader', async (req, res) => {
     try {
         const { id } = req.params;
         const { leader_score, leader_comment } = req.body;
-        
+
         const [result] = await pool.execute(
             'UPDATE performance_evaluation SET leader_score = ?, leader_comment = ?, leader_submitted_at = NOW() WHERE id = ?',
             [leader_score, leader_comment, id]
         );
-        
+
         res.json({ code: 200, data: { affectedRows: result.affectedRows }, message: '上级评价提交成功' });
     } catch (error) {
         console.error('Submit leader evaluation error:', error);
@@ -135,12 +153,12 @@ router.get('/performance/kpis', async (req, res) => {
 router.post('/performance/kpi', async (req, res) => {
     try {
         const { name, type, standard_score, formula, data_source } = req.body;
-        
+
         const [result] = await pool.execute(
             'INSERT INTO kpi_indicator (name, type, standard_score, formula, data_source, create_time) VALUES (?, ?, ?, ?, ?, NOW())',
             [name, type, standard_score, formula, data_source]
         );
-        
+
         res.json({ code: 200, data: { id: result.insertId }, message: 'KPI创建成功' });
     } catch (error) {
         console.error('Create KPI error:', error);
@@ -152,12 +170,12 @@ router.put('/performance/kpi/:id', async (req, res) => {
     try {
         const { id } = req.params;
         const { name, type, standard_score, formula, data_source } = req.body;
-        
+
         const [result] = await pool.execute(
             'UPDATE kpi_indicator SET name = ?, type = ?, standard_score = ?, formula = ?, data_source = ? WHERE id = ?',
             [name, type, standard_score, formula, data_source, id]
         );
-        
+
         res.json({ code: 200, data: { affectedRows: result.affectedRows }, message: 'KPI更新成功' });
     } catch (error) {
         console.error('Update KPI error:', error);
@@ -168,9 +186,9 @@ router.put('/performance/kpi/:id', async (req, res) => {
 router.delete('/performance/kpi/:id', async (req, res) => {
     try {
         const { id } = req.params;
-        
+
         const [result] = await pool.execute('DELETE FROM kpi_indicator WHERE id = ?', [id]);
-        
+
         res.json({ code: 200, data: { affectedRows: result.affectedRows }, message: 'KPI删除成功' });
     } catch (error) {
         console.error('Delete KPI error:', error);
@@ -186,12 +204,12 @@ router.put('/performance/appeal/:id', async (req, res) => {
     try {
         const { id } = req.params;
         const { handle_comment, new_score, status } = req.body;
-        
+
         const [result] = await pool.execute(
             'UPDATE performance_appeal SET handle_comment = ?, new_score = ?, status = ?, handle_time = NOW() WHERE id = ?',
             [handle_comment, new_score, status || 'resolved', id]
         );
-        
+
         res.json({ code: 200, data: { affectedRows: result.affectedRows }, message: '申诉处理成功' });
     } catch (error) {
         console.error('Handle appeal error:', error);
@@ -202,15 +220,15 @@ router.put('/performance/appeal/:id', async (req, res) => {
 router.get('/performance/result/statistics', async (req, res) => {
     try {
         const [rows] = await pool.execute(`
-            SELECT 
-                grade, 
+            SELECT
+                grade,
                 COUNT(*) as count,
                 AVG(final_score) as avg_score
             FROM performance_evaluation
-            WHERE status = 'completed'
+            WHERE status = 2
             GROUP BY grade
         `);
-        
+
         const gradeDistribution = {};
         ['S', 'A', 'B', 'C', 'D'].forEach(g => gradeDistribution[g] = 0);
         rows.forEach(row => {
@@ -218,42 +236,42 @@ router.get('/performance/result/statistics', async (req, res) => {
                 gradeDistribution[row.grade] = parseInt(row.count);
             }
         });
-        
+
         const [deptRows] = await pool.execute(`
-            SELECT 
+            SELECT
                 d.dept_name as department,
                 AVG(pe.final_score) as avg_score
             FROM performance_evaluation pe
             LEFT JOIN employee e ON pe.employee_id = e.id
             LEFT JOIN department d ON e.department_id = d.id
-            WHERE pe.status = 'completed'
+            WHERE pe.status = 2
             GROUP BY d.dept_name
         `);
-        
+
         const deptAvg = deptRows.map(row => ({
             department: row.department || '未知',
             avgScore: parseFloat(row.avg_score) || 0
         }));
-        
-        res.json({ 
-            code: 200, 
+
+        res.json({
+            code: 200,
             data: {
                 gradeDistribution,
                 deptAvg,
                 completedCount: rows.reduce((sum, row) => sum + parseInt(row.count), 0)
-            }, 
-            message: 'success' 
+            },
+            message: 'success'
         });
     } catch (error) {
         console.error('Get statistics error:', error);
-        res.json({ 
-            code: 200, 
+        res.json({
+            code: 200,
             data: {
                 gradeDistribution: { S: 0, A: 0, B: 0, C: 0, D: 0 },
                 deptAvg: [],
                 completedCount: 0
-            }, 
-            message: 'success' 
+            },
+            message: 'success'
         });
     }
 });

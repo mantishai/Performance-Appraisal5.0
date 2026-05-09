@@ -32,6 +32,28 @@ router.post('/login', async (req, res) => {
     }
 });
 
+router.get('/auth/me', async (req, res) => {
+    try {
+        const [rows] = await pool.execute(
+            'SELECT id, username, real_name as name, role, permissions FROM user WHERE id = 1'
+        );
+        
+        if (rows.length === 0) {
+            return res.json({ code: 401, message: '未登录' });
+        }
+        
+        const user = rows[0];
+        user.permissions = user.permissions && typeof user.permissions === 'string' 
+            ? JSON.parse(user.permissions) 
+            : (user.permissions || []);
+        
+        res.json({ code: 200, data: user, message: 'success' });
+    } catch (error) {
+        console.error('Get current user error:', error);
+        res.json({ code: 500, message: '服务器错误' });
+    }
+});
+
 router.get('/system/current-user', async (req, res) => {
     try {
         const [rows] = await pool.execute(
@@ -52,6 +74,10 @@ router.get('/system/current-user', async (req, res) => {
         console.error('Get current user error:', error);
         res.json({ code: 500, message: '服务器错误' });
     }
+});
+
+router.post('/auth/logout', async (req, res) => {
+    res.json({ code: 200, message: '登出成功' });
 });
 
 export default router;

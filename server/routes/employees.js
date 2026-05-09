@@ -8,7 +8,12 @@ router.get('/employees', async (req, res) => {
         const { department, position, status, keyword } = req.query;
         
         let query = `
-            SELECT e.*, d.dept_name as department_name, p.position_name as position_name 
+            SELECT e.*, 
+                   d.dept_name as department, 
+                   p.position_name as position,
+                   e.employee_no as employeeNo,
+                   e.hire_date as entryDate,
+                   e.potential_tag as potentialTag
             FROM employee e
             LEFT JOIN department d ON e.department_id = d.id
             LEFT JOIN position p ON e.position_id = p.id

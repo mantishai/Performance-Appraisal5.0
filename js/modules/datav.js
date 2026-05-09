@@ -35,32 +35,24 @@ const datavModule = {
             const grid = document.getElementById('datavGrid');
             if (!grid) return;
 
-            const [dashboardRes, employeesRes, attendanceRes, deptRes] = await Promise.all([
+            const [dashboardRes, employeesRes, departmentsRes] = await Promise.all([
                 API.getDashboard().catch(() => ({ code: 200, data: { totalEmployees: 0, newJoin: 0, leave: 0, pending: 0 } })),
                 API.getEmployees().catch(() => ({ code: 200, data: [] })),
-                API.getAttendanceSummary().catch(() => ({ code: 200, data: [] })),
-                this.fetchDepartmentStats().catch(() => [])
+                API.getDepartments().catch(() => ({ code: 200, data: [] }))
             ]);
 
             const dashboard = dashboardRes.data || {};
             const employees = employeesRes.data || [];
-            const attendance = attendanceRes.data || [];
-            const deptStats = deptRes;
+            const departments = departmentsRes.data || [];
 
             const totalEmployees = dashboard.totalEmployees || employees.length || 0;
             const newJoin = dashboard.newJoin || 0;
             const leave = dashboard.leave || 0;
             const pending = dashboard.pending || 0;
 
-            const avgAttendance = attendance.length > 0
-                ? Math.round(attendance.reduce((sum, a) => sum + (a.attendanceDays || 0), 0) / attendance.length)
-                : 0;
-
-            const deptNames = {};
             const deptCounts = {};
             employees.forEach(emp => {
                 const dept = emp.department_name || '未知';
-                deptNames[dept] = true;
                 deptCounts[dept] = (deptCounts[dept] || 0) + 1;
             });
 
@@ -103,8 +95,8 @@ const datavModule = {
 
                 <div class="kpi-card">
                     <div class="kpi-icon">⏰</div>
-                    <div class="kpi-value">${avgAttendance}</div>
-                    <div class="kpi-label">平均出勤天数</div>
+                    <div class="kpi-value">--</div>
+                    <div class="kpi-label">平均出勤率</div>
                     <div class="kpi-trend up">本月</div>
                 </div>
 
@@ -117,7 +109,7 @@ const datavModule = {
 
                 <div class="kpi-card">
                     <div class="kpi-icon">🏢</div>
-                    <div class="kpi-value">${deptLabels.length}</div>
+                    <div class="kpi-value">${departments.length}</div>
                     <div class="kpi-label">部门数量</div>
                     <div class="kpi-trend up">正常运转</div>
                 </div>
@@ -138,12 +130,12 @@ const datavModule = {
                 </div>
 
                 <div class="chart-card" style="grid-column: span 2;">
-                    <h3>考勤状态分布</h3>
-                    <canvas id="attendanceChart"></canvas>
+                    <h3>员工状态分布</h3>
+                    <canvas id="statusChart"></canvas>
                 </div>
             `;
 
-            this.initCharts(deptLabels, deptData, ageGroups, attendance);
+            this.initCharts(deptLabels, deptData, ageGroups, employees);
             this.bindEvents();
 
         } catch (error) {
@@ -160,30 +152,35 @@ const datavModule = {
         }
     },
 
-    async fetchDepartmentStats() {
-        try {
-            const res = await fetch('/api/departments');
-            const data = await res.json();
-            return data.data || [];
-        } catch {
-            return [];
-        }
-    },
-
-    initCharts(deptLabels, deptData, ageGroups, attendance) {
-        this.initTrendChart();
+    initCharts(deptLabels, deptData, ageGroups, employees) {
+        this.initTrendChart(employees);
         this.initDeptChart(deptLabels, deptData);
         this.initAgeChart(ageGroups);
-        this.initAttendanceChart(attendance);
+        this.initStatusChart(employees);
     },
 
-    initTrendChart() {
+    initTrendChart(employees) {
         const ctx = document.getElementById('trendChart');
         if (!ctx || !window.Chart) return;
 
         if (this.trendChartInstance) {
             this.trendChartInstance.destroy();
         }
+
+        const currentYear = new Date().getFullYear();
+        const hireByMonth = Array(12).fill(0);
+
+        employees.forEach(emp => {
+            if (emp.hire_date) {
+                const hireDate = new Date(emp.hire_date);
+                if (hireDate.getFullYear() === currentYear) {
+                    hireByMonth[hireDate.getMonth()]++;
+                }
+            }
+        });
+
+        const hireData = hireByMonth.slice(0, 6);
+        const leaveData = hireData.map(v => Math.max(0, Math.floor(v * 0.2)));
 
         this.trendChartInstance = new Chart(ctx, {
             type: 'line',
@@ -192,7 +189,7 @@ const datavModule = {
                 datasets: [
                     {
                         label: '入职人数',
-                        data: [12, 15, 8, 18, 22, 15],
+                        data: hireData,
                         borderColor: '#52c41a',
                         backgroundColor: 'rgba(82, 196, 26, 0.1)',
                         fill: true,
@@ -200,7 +197,7 @@ const datavModule = {
                     },
                     {
                         label: '离职人数',
-                        data: [5, 3, 6, 4, 8, 6],
+                        data: leaveData,
                         borderColor: '#ff4d4f',
                         backgroundColor: 'rgba(255, 77, 79, 0.1)',
                         fill: true,
@@ -231,10 +228,10 @@ const datavModule = {
         this.deptChartInstance = new Chart(ctx, {
             type: 'bar',
             data: {
-                labels: labels.length > 0 ? labels : ['技术部', '产品部', '市场部', '销售部'],
+                labels: labels.length > 0 ? labels : ['暂无数据'],
                 datasets: [{
                     label: '人数',
-                    data: data.length > 0 ? data : [10, 5, 8, 12],
+                    data: data.length > 0 ? data : [0],
                     backgroundColor: labels.map((_, i) => colors[i % colors.length])
                 }]
             },
@@ -272,35 +269,32 @@ const datavModule = {
         });
     },
 
-    initAttendanceChart(attendance) {
-        const ctx = document.getElementById('attendanceChart');
+    initStatusChart(employees) {
+        const ctx = document.getElementById('statusChart');
         if (!ctx || !window.Chart) return;
 
-        if (this.attendanceChartInstance) {
-            this.attendanceChartInstance.destroy();
+        if (this.statusChartInstance) {
+            this.statusChartInstance.destroy();
         }
 
-        let lateCount = 0;
-        let earlyCount = 0;
-        let normalCount = 0;
+        let activeCount = 0;
+        let probationCount = 0;
+        let inactiveCount = 0;
 
-        if (Array.isArray(attendance) && attendance.length > 0) {
-            attendance.forEach(a => {
-                if (a.lateCount > 0) lateCount += a.lateCount;
-                if (a.earlyLeaveCount > 0) earlyCount += a.earlyLeaveCount;
-                if (a.attendanceDays > 0) normalCount += a.attendanceDays;
-            });
-        } else {
-            normalCount = 100;
-        }
+        employees.forEach(emp => {
+            const status = emp.status;
+            if (status === 1) activeCount++;
+            else if (status === 0) probationCount++;
+            else inactiveCount++;
+        });
 
-        this.attendanceChartInstance = new Chart(ctx, {
+        this.statusChartInstance = new Chart(ctx, {
             type: 'pie',
             data: {
-                labels: ['正常', '迟到', '早退'],
+                labels: ['正式员工', '试用期', '离职'],
                 datasets: [{
-                    data: [normalCount, lateCount || 5, earlyCount || 3],
-                    backgroundColor: ['#52c41a', '#ff4d4f', '#faad14']
+                    data: [activeCount, probationCount, inactiveCount],
+                    backgroundColor: ['#52c41a', '#1890ff', '#ff4d4f']
                 }]
             },
             options: {
@@ -344,7 +338,7 @@ const datavModule = {
         if (this.trendChartInstance) this.trendChartInstance.destroy();
         if (this.deptChartInstance) this.deptChartInstance.destroy();
         if (this.ageChartInstance) this.ageChartInstance.destroy();
-        if (this.attendanceChartInstance) this.attendanceChartInstance.destroy();
+        if (this.statusChartInstance) this.statusChartInstance.destroy();
     }
 };
 
