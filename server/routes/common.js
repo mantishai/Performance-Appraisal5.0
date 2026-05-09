@@ -17,11 +17,11 @@ router.get('/positions', async (req, res) => {
     try {
         const { department_id } = req.query;
         
-        let query = 'SELECT * FROM position WHERE 1=1';
+        let query = 'SELECT p.*, p.position_name as name, p.dept_id as departmentId, d.dept_name as departmentName FROM position p LEFT JOIN department d ON p.dept_id = d.id WHERE 1=1';
         const params = [];
         
         if (department_id) {
-            query += ' AND department_id = ?';
+            query += ' AND p.dept_id = ?';
             params.push(department_id);
         }
         
