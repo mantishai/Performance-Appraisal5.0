@@ -434,6 +434,18 @@ const API = {
 
     getSystemSchedule() {
         return this.request('/system/schedule');
+    },
+    
+    getNotifications() {
+        return this.request('/notifications');
+    },
+    
+    markNotificationAsRead(id) {
+        return this.request(`/notifications/${id}/read`, { method: 'PUT' });
+    },
+    
+    markAllNotificationsAsRead() {
+        return this.request('/notifications/read-all', { method: 'PUT' });
     }
 };
 

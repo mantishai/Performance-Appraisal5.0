@@ -1,3 +1,19 @@
+// 导入switchModule函数
+let switchModule = null;
+
+// 延迟加载app.js的switchModule
+async function getSwitchModule() {
+    if (!switchModule) {
+        try {
+            const appModule = await import('../app.js');
+            switchModule = appModule.switchModule;
+        } catch (e) {
+            console.error('Failed to load switchModule:', e);
+        }
+    }
+    return switchModule;
+}
+
 const NotificationCenter = {
     container: null,
     dropdown: null,
@@ -79,17 +95,17 @@ const NotificationCenter = {
             </div>
             <div class="notification-list">
                 ${this.notifications.slice(0, 5).map(notif => `
-                    <div class="notification-item ${notif.read ? '' : 'unread'}" data-id="${notif.id}">
+                    <div class="notification-item ${notif.read ? '' : 'unread'}" data-id="${notif.id}" style="cursor: pointer; transition: background-color 0.2s;">
                         <div class="notification-icon ${notif.type}">${notif.icon}</div>
                         <div class="notification-content">
                             <div class="notification-text"><strong>${notif.title}</strong><br>${notif.message}</div>
-                            <div class="notification-time">${notif.time}</div>
+                            <div class="notification-time">${notif.time} <span style="color: #1890ff; font-size: 12px;">点击查看 →</span></div>
                         </div>
                     </div>
                 `).join('')}
             </div>
             <div class="notification-footer">
-                <a href="#">查看全部通知 →</a>
+                <a href="#" id="viewAllNotifications" style="cursor: pointer;">查看全部通知 →</a>
             </div>
         `;
     },
@@ -112,13 +128,77 @@ const NotificationCenter = {
             });
         }
 
+        const viewAll = document.getElementById('viewAllNotifications');
+        if (viewAll) {
+            viewAll.addEventListener('click', async (e) => {
+                e.preventDefault();
+                this.hideDropdown();
+                // 跳转到智能预警模块查看全部通知
+                try {
+                    const switchFn = await getSwitchModule();
+                    if (switchFn) {
+                        await switchFn('alert');
+                    } else {
+                        window.location.hash = 'alert';
+                    }
+                } catch (err) {
+                    console.error('Failed to navigate:', err);
+                    window.location.hash = 'alert';
+                }
+            });
+        }
+
         const items = this.dropdown.querySelectorAll('.notification-item');
         items.forEach(item => {
-            item.addEventListener('click', () => {
+            item.addEventListener('click', async (e) => {
                 const id = parseInt(item.dataset.id);
-                this.markAsRead(id);
+                const notif = this.notifications.find(n => n.id === id);
+                
+                // 先标记为已读
+                if (notif && !notif.read) {
+                    await this.markAsRead(id);
+                }
+                
+                // 关闭下拉
+                this.hideDropdown();
+                
+                // 根据通知类型跳转到不同模块
+                if (notif) {
+                    this.navigateToModule(notif);
+                }
             });
         });
+    },
+
+    async navigateToModule(notification) {
+        let targetModule = 'dashboard';
+        
+        // 根据通知类型判断跳转模块
+        if (notification.title.includes('合同') || notification.title.includes('试用期')) {
+            targetModule = 'hr';
+        } else if (notification.title.includes('迟到') || notification.title.includes('考勤')) {
+            targetModule = 'attendance';
+        } else if (notification.title.includes('生日')) {
+            targetModule = 'employee';
+        } else if (notification.title.includes('系统')) {
+            targetModule = 'dashboard';
+        }
+        
+        console.log('Navigating to module:', targetModule);
+        
+        try {
+            const switchFn = await getSwitchModule();
+            if (switchFn) {
+                await switchFn(targetModule);
+            } else {
+                // 如果获取不到switchModule，尝试更新hash
+                window.location.hash = targetModule;
+            }
+        } catch (err) {
+            console.error('Failed to navigate:', err);
+            // 备用方案：更新hash
+            window.location.hash = targetModule;
+        }
     },
 
     toggleDropdown() {
@@ -163,19 +243,35 @@ const NotificationCenter = {
         }
     },
 
-    markAsRead(id) {
+    async markAsRead(id) {
         const notif = this.notifications.find(n => n.id === id);
-        if (notif) {
+        if (notif && !notif.read) {
             notif.read = true;
             this.updateBadge();
             this.refreshDropdown();
+            
+            // 调用API
+            try {
+                const { default: API } = await import('../api.js');
+                await API.markNotificationAsRead(id);
+            } catch (error) {
+                console.error('Failed to mark notification as read:', error);
+            }
         }
     },
 
-    markAllAsRead() {
+    async markAllAsRead() {
         this.notifications.forEach(n => n.read = true);
         this.updateBadge();
         this.refreshDropdown();
+        
+        // 调用API
+        try {
+            const { default: API } = await import('../api.js');
+            await API.markAllNotificationsAsRead();
+        } catch (error) {
+            console.error('Failed to mark all notifications as read:', error);
+        }
     },
 
     refreshDropdown() {

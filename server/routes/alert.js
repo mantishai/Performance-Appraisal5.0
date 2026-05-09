@@ -225,4 +225,116 @@ router.post('/alert/trigger', async (req, res) => {
     }
 });
 
+// 通知相关路由
+router.get('/notifications', async (req, res) => {
+    try {
+        let [rows] = await pool.execute(`
+            SELECT id, alert_type as type, alert_title as title, alert_content as message, 
+                   status, risk_level, created_at as time
+            FROM alert_record 
+            ORDER BY created_at DESC 
+            LIMIT 20
+        `);
+        
+        // 如果没有数据，先插入一些测试数据
+        if (rows.length === 0) {
+            await pool.execute(`
+                INSERT INTO alert_record (rule_id, alert_type, alert_title, alert_content, target_id, target_type, risk_level, status, handler_id, handle_time, handle_remark, created_at) VALUES
+                (1, 'contract', '合同到期提醒', '李四的劳动合同将于30天后到期，请及时处理', 2, 'employee', 3, 0, NULL, NULL, NULL, NOW() - INTERVAL 30 MINUTE),
+                (2, 'birthday', '生日祝福', '今天是张三的生日', 1, 'employee', 1, 1, 2, '2026-05-01 09:00:00', '已发送祝福', NOW() - INTERVAL 1 HOUR),
+                (3, 'probation', '试用期转正提醒', '赵六的试用期将于7天后到期，请安排转正评估', 4, 'employee', 2, 0, NULL, NULL, NULL, NOW() - INTERVAL 2 HOUR),
+                (4, 'attendance', '迟到预警', '李四本月已迟到3次，请关注', 2, 'employee', 2, 1, NULL, NULL, NULL, NOW() - INTERVAL 3 HOUR),
+                (NULL, 'system', '系统通知', '系统将于今晚进行维护', NULL, 'system', 2, 0, NULL, NULL, NULL, NOW() - INTERVAL 1 DAY)
+            `);
+            
+            // 重新查询
+            [rows] = await pool.execute(`
+                SELECT id, alert_type as type, alert_title as title, alert_content as message, 
+                       status, risk_level, created_at as time
+                FROM alert_record 
+                ORDER BY created_at DESC 
+                LIMIT 20
+            `);
+        }
+        
+        // 转换为通知格式
+        const notifications = rows.map(row => {
+            let icon = '📋';
+            let notifType = 'info';
+            
+            if (row.type === 'contract') {
+                icon = '📄';
+                notifType = 'warning';
+            } else if (row.type === 'birthday') {
+                icon = '🎂';
+                notifType = 'success';
+            } else if (row.type === 'probation') {
+                icon = '📅';
+                notifType = 'warning';
+            } else if (row.type === 'attendance') {
+                icon = '⏰';
+                notifType = 'error';
+            } else if (row.type === 'system') {
+                icon = '🔔';
+                notifType = 'info';
+            }
+            
+            // 计算时间差
+            const now = new Date();
+            const createTime = new Date(row.time);
+            const diffMs = now - createTime;
+            const diffMins = Math.floor(diffMs / 60000);
+            const diffHours = Math.floor(diffMs / 3600000);
+            const diffDays = Math.floor(diffMs / 86400000);
+            
+            let timeStr = '刚刚';
+            if (diffMins < 60) {
+                timeStr = `${diffMins}分钟前`;
+            } else if (diffHours < 24) {
+                timeStr = `${diffHours}小时前`;
+            } else if (diffDays < 7) {
+                timeStr = `${diffDays}天前`;
+            } else {
+                timeStr = createTime.toLocaleDateString('zh-CN');
+            }
+            
+            return {
+                id: row.id,
+                type: notifType,
+                icon: icon,
+                title: row.title,
+                message: row.message,
+                time: timeStr,
+                read: row.status !== 0 // status 0 表示未读
+            };
+        });
+        
+        res.json({ code: 200, data: notifications, message: 'success' });
+    } catch (error) {
+        console.error('Get notifications error:', error);
+        res.json({ code: 500, message: '服务器错误' });
+    }
+});
+
+router.put('/notifications/:id/read', async (req, res) => {
+    try {
+        const { id } = req.params;
+        await pool.execute('UPDATE alert_record SET status = 1 WHERE id = ?', [id]);
+        res.json({ code: 200, message: '已标记为已读' });
+    } catch (error) {
+        console.error('Mark notification read error:', error);
+        res.json({ code: 500, message: '服务器错误' });
+    }
+});
+
+router.put('/notifications/read-all', async (req, res) => {
+    try {
+        await pool.execute('UPDATE alert_record SET status = 1 WHERE status = 0');
+        res.json({ code: 200, message: '全部标记为已读' });
+    } catch (error) {
+        console.error('Mark all notifications read error:', error);
+        res.json({ code: 500, message: '服务器错误' });
+    }
+});
+
 export default router;

@@ -413,6 +413,16 @@ const employeeModule = {
     openFormModal(employee = null) {
         const isEdit = !!employee;
         const title = isEdit ? '编辑员工' : '新增员工';
+        
+        // 生成工号：E + 当前日期 + 随机数
+        const generateEmployeeNo = () => {
+            const date = new Date();
+            const year = date.getFullYear().toString().slice(-2);
+            const month = (date.getMonth() + 1).toString().padStart(2, '0');
+            const day = date.getDate().toString().padStart(2, '0');
+            const random = Math.floor(Math.random() * 1000).toString().padStart(3, '0');
+            return `E${year}${month}${day}${random}`;
+        };
 
         const modal = Modal.open({
             title,
@@ -426,7 +436,7 @@ const employeeModule = {
                         </div>
                         <div class="form-field">
                             <label>工号 <span class="required">*</span></label>
-                            <input type="text" id="empNo" value="${employee?.employeeNo || ''}" ${isEdit ? 'readonly' : ''} placeholder="${isEdit ? '' : '系统自动生成'}">
+                            <input type="text" id="empNo" value="${employee?.employeeNo || generateEmployeeNo()}" ${isEdit ? 'readonly' : ''} placeholder="${isEdit ? '' : '系统自动生成'}">
                             <div class="validate-message" id="empNoMsg"></div>
                         </div>
                         <div class="form-field">
@@ -493,8 +503,12 @@ const employeeModule = {
 
         const updatePositions = (selectedDept) => {
             positionSelect.innerHTML = '<option value="">请选择岗位</option>';
-            const deptId = state.departments.find(d => d.name === selectedDept)?.id;
-            const filteredPositions = state.positions.filter(p => p.departmentId === deptId);
+            let filteredPositions = state.positions;
+            
+            if (selectedDept) {
+                const deptId = state.departments.find(d => d.name === selectedDept)?.id;
+                filteredPositions = state.positions.filter(p => p.departmentId === deptId);
+            }
 
             filteredPositions.forEach(p => {
                 const option = document.createElement('option');
@@ -511,8 +525,11 @@ const employeeModule = {
             }
         };
 
+        // 初始化时，如果有员工数据就按部门过滤，否则显示所有岗位
         if (employee?.department) {
             updatePositions(employee.department);
+        } else {
+            updatePositions(''); // 显示所有岗位
         }
 
         deptSelect?.addEventListener('change', () => {
@@ -615,7 +632,7 @@ const employeeModule = {
         
         const formData = {
             name: document.getElementById('empName').value.trim(),
-            employee_no: document.getElementById('empNo').value.trim() || `E${Date.now().toString().slice(-6)}`,
+            employee_no: document.getElementById('empNo').value.trim(),
             department_id: department?.id || null,
             position_id: position?.id || null,
             phone: document.getElementById('empPhone').value.trim(),
