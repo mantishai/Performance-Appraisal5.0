@@ -42,7 +42,56 @@ router.get('/auth/me', async (req, res) => {
             return res.json({ code: 401, message: '未登录' });
         }
         
-        res.json({ code: 200, data: currentLoggedInUser, message: 'success' });
+        // 如果用户关联了员工ID，获取员工详细信息
+        let employeeInfo = null;
+        if (currentLoggedInUser.employee_id) {
+            const [employees] = await pool.execute(
+                `SELECT e.*, 
+                        d.dept_name as department, 
+                        p.position_name as position,
+                        e.employee_no as employeeNo,
+                        e.entry_date as entryDate,
+                        e.regular_date as regularDate,
+                        CASE e.gender WHEN 1 THEN '男' WHEN 0 THEN '女' ELSE '' END as genderText
+                 FROM employee e
+                 LEFT JOIN department d ON e.department_id = d.id
+                 LEFT JOIN \`position\` p ON e.position_id = p.id
+                 WHERE e.id = ?`,
+                [currentLoggedInUser.employee_id]
+            );
+            
+            if (employees.length > 0) {
+                const employee = employees[0];
+                employeeInfo = {
+                    id: employee.id,
+                    employeeNo: employee.employee_no,
+                    name: employee.name,
+                    gender: employee.genderText,
+                    birthDate: employee.birth_date,
+                    idCard: employee.id_card,
+                    phone: employee.phone,
+                    email: employee.email,
+                    address: employee.address,
+                    department: employee.department,
+                    position: employee.position,
+                    jobLevel: employee.job_level,
+                    entryDate: employee.entry_date,
+                    regularDate: employee.regular_date,
+                    status: employee.status === 1 ? '在职' : employee.status === 2 ? '试用期' : '离职',
+                    employmentType: employee.employment_type === 1 ? '正式员工' : employee.employment_type === 2 ? '兼职' : employee.employment_type === 3 ? '实习生' : '劳务派遣',
+                    avatar: employee.avatar
+                };
+            }
+        }
+        
+        res.json({ 
+            code: 200, 
+            data: {
+                ...currentLoggedInUser,
+                employeeInfo: employeeInfo
+            }, 
+            message: 'success' 
+        });
     } catch (error) {
         console.error('Get current user error:', error);
         res.json({ code: 500, message: '服务器错误' });

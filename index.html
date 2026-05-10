@@ -80,7 +80,7 @@
                     </div>
                     <div class="nav-item" data-module="position">
                         <span class="icon">📋</span>
-                        <span class="text">岗位说明书</span>
+                        <span class="text">岗位管理</span>
                     </div>
                 </div>
                 <div class="nav-section">
@@ -183,6 +183,115 @@
         </div>
     </div>
     
+    <!-- 个人信息弹窗 -->
+    <div id="personalInfoModal" class="modal-overlay">
+        <div class="modal-container-large">
+            <!-- 头部 -->
+            <div class="modal-header">
+                <h2>👤 个人详细信息</h2>
+                <div class="modal-header-actions">
+                    <button class="modal-close" onclick="closePersonalInfoModal()">×</button>
+                </div>
+            </div>
+            
+            <!-- 内容区域 -->
+            <div class="modal-body">
+                <!-- 基本信息 -->
+                <div class="section">
+                    <h3>📌 基本信息</h3>
+                    <div class="form-grid">
+                        <div class="form-row">
+                            <span class="form-label">姓名</span>
+                            <input type="text" id="piName" class="form-input" readonly>
+                        </div>
+                        <div class="form-row">
+                            <span class="form-label">工号</span>
+                            <input type="text" id="piEmployeeNo" class="form-input" readonly>
+                        </div>
+                        <div class="form-row">
+                            <span class="form-label">性别</span>
+                            <input type="text" id="piGender" class="form-input" readonly>
+                        </div>
+                        <div class="form-row">
+                            <span class="form-label">出生日期</span>
+                            <input type="text" id="piBirthDate" class="form-input" readonly>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 身份信息 -->
+                <div class="section">
+                    <h3>🆔 身份信息</h3>
+                    <div class="form-grid">
+                        <div class="form-row">
+                            <span class="form-label">身份证号</span>
+                            <input type="text" id="piIdCard" class="form-input" readonly>
+                        </div>
+                        <div class="form-row">
+                            <span class="form-label">用工类型</span>
+                            <input type="text" id="piEmploymentType" class="form-input" readonly>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 联系信息 -->
+                <div class="section">
+                    <h3>📞 联系信息</h3>
+                    <div class="form-grid">
+                        <div class="form-row">
+                            <span class="form-label">手机号</span>
+                            <input type="text" id="piPhone" class="form-input" readonly>
+                        </div>
+                        <div class="form-row">
+                            <span class="form-label">邮箱</span>
+                            <input type="text" id="piEmail" class="form-input" readonly>
+                        </div>
+                        <div class="form-row">
+                            <span class="form-label">地址</span>
+                            <input type="text" id="piAddress" class="form-input" readonly>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 工作信息 -->
+                <div class="section">
+                    <h3>💼 工作信息</h3>
+                    <div class="form-grid">
+                        <div class="form-row">
+                            <span class="form-label">所属部门</span>
+                            <input type="text" id="piDepartment" class="form-input" readonly>
+                        </div>
+                        <div class="form-row">
+                            <span class="form-label">工作岗位</span>
+                            <input type="text" id="piPosition" class="form-input" readonly>
+                        </div>
+                        <div class="form-row">
+                            <span class="form-label">职级</span>
+                            <input type="text" id="piJobLevel" class="form-input" readonly>
+                        </div>
+                        <div class="form-row">
+                            <span class="form-label">入职日期</span>
+                            <input type="text" id="piEntryDate" class="form-input" readonly>
+                        </div>
+                        <div class="form-row">
+                            <span class="form-label">转正日期</span>
+                            <input type="text" id="piRegularDate" class="form-input" readonly>
+                        </div>
+                        <div class="form-row">
+                            <span class="form-label">员工状态</span>
+                            <input type="text" id="piStatus" class="form-input" readonly>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 底部按钮 -->
+            <div class="modal-actions">
+                <button class="btn-modal btn-modal-secondary" onclick="closePersonalInfoModal()">关闭</button>
+            </div>
+        </div>
+    </div>
+
     <!-- 岗位说明书弹窗 -->
     <div id="hrPositionModal" class="modal-overlay">
         <div class="modal-container-large">
@@ -519,12 +628,14 @@
                 <button class="btn-modal-secondary" onclick="closePositionModal()">关闭</button>
                 <button class="btn-modal-warning" id="hrResetBtn" onclick="loadHrPositionDesc()">🔄 恢复</button>
                 <button class="btn-modal-primary" id="hrSaveBtn" onclick="saveHrPositionDesc()">💾 保存</button>
+                <button class="btn-modal-primary" id="hrEditBtn" onclick="togglePositionEdit()">✏️ 编辑</button>
             </div>
         </div>
     </div>
     
-    <script type="module" src="js/app.js?v=3"></script>
-    <script src="js/position-manual.js"></script>
+    <script type="module" src="js/app.js?v=10"></script>
+    <script src="js/position-manual.js?v=10"></script>
+    <script type="module" src="js/personal-info.js?v=10"></script>
     <script>
         // PWA Service Worker 注册
         if ('serviceWorker' in navigator) {

@@ -1,5 +1,6 @@
 import { Toast, Skeleton } from '../utils.js';
 import API from '../api.js';
+import { openPersonalInfoModal } from '../personal-info.js';
 
 let charts = {};
 let refreshInterval = null;
@@ -152,6 +153,10 @@ const dashboardModule = {
                         <button class="btn btn-primary" id="refreshBtn">
                             <span>🔄</span>
                             <span>刷新数据</span>
+                        </button>
+                        <button class="btn btn-secondary" id="personalInfoBtn">
+                            <span>👤</span>
+                            <span>个人信息</span>
                         </button>
                         <button class="btn btn-secondary" id="positionManualBtn">
                             <span>📋</span>
@@ -474,6 +479,10 @@ const dashboardModule = {
             } else {
                 Toast.info('岗位说明书功能加载中...');
             }
+        });
+
+        document.getElementById('personalInfoBtn')?.addEventListener('click', async () => {
+            await openPersonalInfoModal();
         });
 
         document.querySelectorAll('.quick-link, .stat-card[data-module]').forEach(el => {

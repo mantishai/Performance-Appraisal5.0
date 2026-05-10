@@ -49,7 +49,7 @@ const positionModule = {
     renderContent(container) {
         container.innerHTML = `
             <div class="page-header">
-                <h1 class="page-title">岗位说明书</h1>
+                <h1 class="page-title">岗位管理</h1>
                 <button class="btn btn-primary" id="addPositionBtn">+ 新增岗位</button>
             </div>
 
@@ -78,7 +78,7 @@ const positionModule = {
                                     <td>${(p.vacant || 0) > 0 ? `<span style="color: #f5222d; font-weight: 500;">${p.vacant}</span>` : p.vacant || 0}</td>
                                     <td>
                                         <div class="action-btns">
-                                            <button class="action-btn" data-id="${p.id}" data-action="view">查看</button>
+                                            <button class="action-btn" data-id="${p.id}" data-action="viewManual">岗位说明书</button>
                                             <button class="action-btn" data-id="${p.id}" data-action="edit">编辑</button>
                                             <button class="action-btn" data-id="${p.id}" data-action="delete">删除</button>
                                         </div>
@@ -231,8 +231,44 @@ const positionModule = {
 
     async handleAction(id, action) {
         const position = state.positions.find(p => p.id === id);
-        if (action === 'view' && position) {
-            window.openReadOnlyPositionModal(`pos_${id}`);
+        if (action === 'viewManual' && position) {
+            // 默认以只读模式打开岗位说明书
+            window.currentHrPositionId = `pos_${id}`;
+            window.currentHrPositionReadOnly = true;
+            
+            // 先设置只读状态，确保按钮显示正确
+            window.setPositionModalReadOnly(true);
+            
+            // 加载数据
+            await window.loadHrPositionDesc();
+            
+            // 确保岗位名称正确显示
+            if (position.name) {
+                const titleEl = document.getElementById('hrPositionModalTitle');
+                if (titleEl) {
+                    titleEl.textContent = `📋 ${position.name}职责说明书`;
+                }
+                const nameInput = document.getElementById('hrPositionName');
+                if (nameInput) {
+                    nameInput.value = position.name;
+                }
+                const deptInput = document.getElementById('hrDepartment');
+                if (deptInput && position.departmentId) {
+                    const deptName = this.getDepartmentName(position.departmentId);
+                    deptInput.value = deptName;
+                }
+                const levelInput = document.getElementById('hrLevel');
+                if (levelInput && position.level) {
+                    levelInput.value = position.level;
+                }
+                const codeInput = document.getElementById('hrPositionCode');
+                if (codeInput && position.position_code) {
+                    codeInput.value = position.position_code;
+                }
+            }
+            
+            // 最后显示弹窗
+            document.getElementById('hrPositionModal').classList.add('show');
         } else if (action === 'edit' && position) {
             this.showPositionForm(position);
         } else if (action === 'delete' && position) {

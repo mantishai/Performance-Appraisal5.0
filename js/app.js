@@ -251,7 +251,7 @@ const moduleTitles = {
     employee: '员工管理',
     hr: '人事管理',
     org: '组织架构',
-    position: '岗位说明书',
+    position: '岗位管理',
     daily: '考勤打卡',
     attendance: '考勤管理',
     recruitment: '招聘管理',

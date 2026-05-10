@@ -100,6 +100,15 @@ const API = {
         return this.request(`/employees/${id}`);
     },
 
+    getEmployeeDetail(id) {
+        return this.request(`/employees/${id}/detail`);
+    },
+
+    getEmployeeByName(name) {
+        const encodedName = encodeURIComponent(name);
+        return this.request(`/employees/by-name/${encodedName}`);
+    },
+
     createEmployee(data) {
         return this.request('/employees', { method: 'POST', body: JSON.stringify(data) });
     },

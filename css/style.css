@@ -2688,11 +2688,23 @@ body {
 .modal-overlay.readonly .duty-table td input,
 .modal-overlay.readonly .duty-table td textarea,
 .modal-overlay.readonly .duty-table td select,
-.modal-overlay.readonly .metric-table td textarea {
+.modal-overlay.readonly .metric-table td textarea,
+.modal-overlay.readonly input,
+.modal-overlay.readonly textarea,
+.modal-overlay.readonly select,
+.modal-overlay.readonly [type="checkbox"] {
     background: #f8fafc;
     border-color: #e2e8f0;
     color: #64748b;
     cursor: not-allowed;
+    pointer-events: none;
+    user-select: none;
+}
+
+/* 确保表格中的所有元素都不可点击 */
+.modal-overlay.readonly .duty-table,
+.modal-overlay.readonly .metric-table {
+    pointer-events: none;
 }
 
 .modal-overlay.readonly .section-actions {
@@ -2705,7 +2717,7 @@ body {
 }
 
 .modal-overlay.readonly .btn-modal-export {
-    display: none;
+    display: inline-block;
 }
 
 /* 响应式 */

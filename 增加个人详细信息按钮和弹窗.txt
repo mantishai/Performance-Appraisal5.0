@@ -1,0 +1,459 @@
+
+text
+请帮我为当前的人力资源管理系统（Performance-Appraisal5.0）在个人看板模块中，实现"编辑个人信息"弹窗功能。
+
+## 项目背景（重要！）
+
+当前系统架构：
+- **前端**：单页应用（index.html + js/ 目录下的模块文件）
+- **后端**：Node.js + Express（server/ 目录）
+- **数据库**：MySQL 8.0（sql/ 目录下的初始化脚本）
+- **认证**：使用 session 机制（x-session-id 请求头）
+- **API风格**：RESTful API，基础路径为 '/api'
+
+## 需要修改的文件
+
+1. **index.html** - 添加弹窗HTML结构和CSS
+2. **js/pages/dashboard.js**（或个人看板相关JS文件）- 添加弹窗逻辑
+3. 可能需要新建 **js/modals/personalInfoModal.js** - 弹窗独立模块
+
+## 一、功能概述
+
+在个人看板页面"个人信息卡片"中，点击"✏️ 编辑个人信息"按钮，弹出模态弹窗，用于查看和编辑当前登录用户的个人详细信息。
+
+弹窗包含以下内容模块：
+1. 基本信息 + 一寸照片上传
+2. 身份信息
+3. 联系信息
+4. 学历与职称信息
+5. 工作信息（部门-岗位联动）
+6. 薪酬福利
+7. 附件
+8. 详细信息表格（11个子表格）
+
+## 二、弹窗触发入口
+
+**位置**：index.html → 个人看板 → 个人信息卡片底部 → "✏️ 编辑个人信息"按钮
+
+**触发函数**：openPersonalInfoModal()（建议放在 js/pages/dashboard.js 或新建 js/modals/personalInfoModal.js）
+
+**弹窗ID**：personalInfoModal
+
+**实现逻辑**：
+```javascript
+async function openPersonalInfoModal() {
+    // 1. 检查是否登录
+    if (!currentUser) return;
+    
+    // 2. 从数据库API加载最新数据
+    try {
+        const res = await fetch(`/api/user/${currentUser.id}`, {
+            headers: { 'x-session-id': sessionId }
+        });
+        if (res.ok) {
+            const data = await res.json();
+            loadPersonalInfoToModal(data);
+        }
+    } catch (e) {
+        // 降级处理：使用当前 users 数组中的数据
+        const user = users.find(u => u.id === currentUser.id);
+        loadPersonalInfoToModal(user || {});
+    }
+    
+    // 3. 显示弹窗
+    document.getElementById('personalInfoModal').classList.add('show');
+}
+三、弹窗HTML结构
+请创建以下结构的模态弹窗（添加到 index.html 的 <body> 中）：
+
+3.1 外层容器
+html
+<div id="personalInfoModal" class="modal-overlay">
+    <div class="modal-container-large">
+        <!-- 头部 -->
+        <!-- 内容区域 -->
+        <!-- 底部按钮 -->
+    </div>
+</div>
+3.2 弹窗头部
+左侧标题"👤 个人详细信息"，右侧关闭按钮（×）
+
+3.3 弹窗内容区域
+3.3.1 基本信息
+照片上传区域（跨2列居中，120×160px预区域，点击触发 file input）
+
+姓名（input，id="modalName"）
+
+性别（select，男/女）
+
+年龄（number input）
+
+民族（select，56个民族选项）
+
+3.3.2 身份信息
+身份证号、政治面貌（13个选项select）、档案所在地
+
+体检报告（select: 已提交/未提交/待复查）
+
+户口性质（select: 城镇/农村）
+
+婚姻状况（select: 未婚/已婚/离异/丧偶）
+
+3.3.3 联系信息
+户籍地址、现住址、手机号码、电子邮箱
+
+紧急联系人、紧急联系人电话
+
+3.3.4 学历与职称信息
+最高学历（select: 专科/本科/硕士/博士）、毕业时间、专业
+
+现有职称（select: 无/助理工程师/工程师/高级工程师）、职称取得时间
+
+工龄、工作领域（select: 建筑设计/工程施工/工程监理/工程检测/工程造价/市政公用）
+
+项目级别（select: 三级工程/二级工程/一级工程）
+
+是否担任负责人（select: 是/否）
+
+3.3.5 工作信息（部门-岗位联动）
+归属部门（select, id="modalDepartment"）— 选项从数据库 departments 表加载
+
+工作岗位（select, id="modalPosition"）— 关键联动逻辑：选择部门后，从数据库 positions 表加载该部门下的岗位
+
+入职时间、转正日期、部门性质
+
+人员性质（select: 正式员工/实习生/兼职/劳务派遣）
+
+工号、直接上级、分管领导
+
+是否考勤（select）、聘用性质（select: 合同制/事业编制/劳务派遣）
+
+加入工会时间、保密协议（select: 已签订/未签订）
+
+部门-岗位联动函数：
+
+javascript
+async function updatePositionOptions() {
+    const department = document.getElementById('modalDepartment').value;
+    const positionSelect = document.getElementById('modalPosition');
+    
+    positionSelect.innerHTML = '<option value="">请选择工作岗位</option>';
+    if (!department) return;
+    
+    try {
+        // 从数据库API加载该部门的岗位列表
+        const res = await fetch(`/api/positions?department=${encodeURIComponent(department)}`, {
+            headers: { 'x-session-id': sessionId }
+        });
+        if (res.ok) {
+            const data = await res.json();
+            data.forEach(pos => {
+                const option = document.createElement('option');
+                option.value = pos.name;
+                option.textContent = pos.name;
+                positionSelect.appendChild(option);
+            });
+        }
+    } catch (e) {
+        console.error('加载岗位列表失败:', e);
+    }
+}
+3.3.6 薪酬福利
+月薪标准、参考年薪、社保基数、社保购买单位、社保开始时间、银行卡号
+
+3.3.7 附件
+体检报告上传按钮
+
+3.3.8 详细信息表格（11个子表格）
+每个子表格包含序号、多个字段列、操作列（编辑/删除按钮），底部有"➕ 添加"按钮：
+
+工作经历（起止时间、工作单位、职位、证明人、联系电话、证明材料、简历附件）
+
+家庭主要成员（姓名、关系、工作单位、联系电话、备注）
+
+本人项目业绩（项目类型、开始时间、结束时间、项目名称、项目级别、个人角色、证明材料）
+
+部门信息（部门名称、职位、入职时间、离职时间、备注）
+
+教育信息（学历、学校、专业、入学时间、毕业时间、备注）
+
+获奖情况（奖项名称、颁奖单位、获奖时间、获奖内容、备注）
+
+职称信息（职称名称、评定机构、取得时间、有效期至、备注）
+
+注册证信息（证书名称、证书编号、取得时间、有效期至、备注）
+
+岗位证信息（证书名称、证书编号、取得时间、有效期至、备注）
+
+人事调动情况（调动类型、原部门、原职位、新部门、新职位、调动时间、备注）
+
+流程记录（流程名称、流程类型、发起时间、完成时间、状态、备注）
+
+3.4 底部按钮
+取消、保存、📥 导入、📤 导出
+
+四、CSS样式
+弹窗使用项目已有的 .modal-overlay 和 .modal-container-large 样式体系。如果没有，请添加以下样式：
+
+css
+.modal-overlay {
+    position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(0,0,0,0.5); display: none;
+    align-items: center; justify-content: center; z-index: 2000;
+}
+.modal-overlay.show { display: flex; }
+
+.modal-container-large {
+    background: white; border-radius: 24px; padding: 24px;
+    max-width: 950px; width: 95%; max-height: 90vh;
+    overflow-y: auto; box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+}
+
+/* 表单网格 2列布局 */
+.form-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px; }
+
+/* 表单行 */
+.form-row { display: flex; align-items: center; gap: 12px; padding: 6px 0; }
+.form-label { font-size: 0.88rem; font-weight: 600; color: #1f5e7e; min-width: 85px; text-align: right; }
+.form-input { flex: 1; min-width: 150px; padding: 10px 14px; border: 2px solid #e2e8f0; border-radius: 10px; font-size: 0.88rem; transition: all 0.2s; background: #fafcff; }
+.form-input:focus { outline: none; border-color: #f0b429; box-shadow: 0 0 0 3px rgba(240,180,41,0.2); background: white; }
+
+/* 照片上传区域 */
+.upload-area { border: 2px dashed #b8d4e8; border-radius: 14px; padding: 28px; text-align: center; cursor: pointer; transition: all 0.2s; background: #fafcff; }
+.upload-area:hover { border-color: #f0b429; background: #fffef8; }
+
+/* 表格 */
+.table-container { overflow-x: auto; border-radius: 14px; border: 1px solid #e2e8f0; }
+.detail-table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
+.detail-table th { background: linear-gradient(135deg, #e6f0fa, #d8e8f5); padding: 12px; font-weight: 600; color: #1a4a6f; border-bottom: 2px solid #b8d4e8; }
+.detail-table td { padding: 12px; border-bottom: 1px solid #e8f0f7; background: white; }
+
+/* 按钮样式 */
+.btn-table { padding: 4px 10px; border-radius: 6px; border: none; cursor: pointer; font-size: 0.75rem; font-weight: 500; }
+.btn-table-edit { background: #3b82f6; color: white; }
+.btn-table-delete { background: #ef4444; color: white; }
+.btn-table-add { background: #22c55e; color: white; margin-top: 12px; padding: 8px 16px; }
+.btn-table-upload { background: #f0b429; color: white; }
+
+.modal-actions { display: flex; gap: 12px; justify-content: flex-end; margin-top: 28px; position: sticky; bottom: 0; padding: 16px 0; background: white; border-top: 1px solid #e2e8f0; }
+.btn-modal { padding: 12px 24px; border-radius: 12px; border: none; cursor: pointer; font-size: 0.95rem; font-weight: 600; }
+.btn-modal-primary { background: linear-gradient(135deg, #1a4a6f, #0b2b3b); color: white; }
+.btn-modal-secondary { background: #f1f5f9; color: #1a4a6f; }
+.btn-modal-import { background: linear-gradient(135deg, #28a745, #1e7e34); color: white; }
+.btn-modal-export { background: linear-gradient(135deg, #17a2b8, #138496); color: white; }
+
+@media (max-width: 768px) {
+    .form-grid { grid-template-columns: 1fr; }
+    .modal-container-large { padding: 16px; max-width: 100%; }
+}
+五、JavaScript核心函数
+5.1 数据加载（从数据库API）
+javascript
+async function openPersonalInfoModal() {
+    if (!currentUser) return;
+    
+    try {
+        const res = await fetch(`/api/user/${currentUser.id}`, {
+            headers: { 'x-session-id': sessionId }
+        });
+        if (res.ok) {
+            const userData = await res.json();
+            loadPersonalInfoToModal(userData);
+        }
+    } catch (e) {
+        console.error('加载用户数据失败:', e);
+    }
+    
+    document.getElementById('personalInfoModal').classList.add('show');
+}
+
+function loadPersonalInfoToModal(userData) {
+    // 照片
+    if (userData.photo) {
+        personalPhoto = userData.photo;
+        document.getElementById('photoPreview').style.background = `url(${userData.photo}) center/contain no-repeat`;
+        document.getElementById('photoPreview').textContent = '';
+    }
+    
+    // 基本信息字段映射（注意数据库字段名与前端id的对应关系）
+    document.getElementById('modalName').value = userData.name || '';
+    document.getElementById('modalGender').value = userData.gender || '男';
+    document.getElementById('modalAge').value = userData.age || '';
+    // ... 更多字段映射
+    
+    // 部门-岗位联动
+    document.getElementById('modalDepartment').value = userData.department || '';
+    await updatePositionOptions(); // 加载岗位列表
+    document.getElementById('modalPosition').value = userData.position || '';
+    
+    // 加载子表格数据
+    loadWorkExperiences(userData.workExperiences || []);
+    // ... 加载其他10个子表格
+}
+5.2 数据保存（到数据库API）
+javascript
+async function savePersonalInfo() {
+    const name = document.getElementById('modalName').value;
+    if (!name.trim()) {
+        showToast('请输入姓名', 'warning');
+        return;
+    }
+    
+    // 收集所有表单数据
+    const personalInfo = {
+        photo: personalPhoto,
+        name: name,
+        gender: document.getElementById('modalGender').value,
+        // ... 所有字段
+        workExperiences: collectWorkExperiences(),
+        familyMembers: collectFamilyMembers(),
+        // ... 其他子表格数据
+    };
+    
+    try {
+        const res = await fetch(`/api/user/${currentUser.id}`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+                'x-session-id': sessionId
+            },
+            body: JSON.stringify(personalInfo)
+        });
+        
+        if (res.ok) {
+            // 更新本地 users 数组中的用户数据
+            const userIndex = users.findIndex(u => u.id === currentUser.id);
+            if (userIndex !== -1) {
+                users[userIndex] = { ...users[userIndex], ...personalInfo };
+            }
+            
+            updatePersonalInfoDisplay(personalInfo);
+            closePersonalInfoModal();
+            showToast('✅ 个人信息已保存', 'success');
+        }
+    } catch (e) {
+        showToast('⚠️ 保存失败，请重试', 'error');
+    }
+}
+5.3 看板显示更新（数据联动）
+javascript
+function updatePersonalInfoDisplay(info) {
+    document.getElementById('infoName').textContent = info.name || '用户';
+    document.getElementById('infoEmployeeId').textContent = info.employeeId || '-';
+    document.getElementById('infoDepartment').textContent = info.department || '未分配';
+    document.getElementById('infoPosition').textContent = info.position || '未分配';
+    document.getElementById('infoJoinDate').textContent = info.joinDate || '-';
+    
+    // 手机号脱敏
+    const phone = info.phone || '';
+    document.getElementById('infoPhone').textContent = phone.replace(/(\d{3})\d{4}(\d{4})/, '$1****$2');
+    
+    // 更新顶部导航栏
+    document.getElementById('welcomeName').textContent = info.name;
+    document.getElementById('welcomeDept').textContent = `${info.department} - ${info.position}`;
+    document.getElementById('userName').textContent = info.name;
+    document.getElementById('userAvatar').textContent = (info.name || '用').charAt(0);
+}
+5.4 子表格增删函数（11个表格分别实现）
+javascript
+function addWorkExperience() {
+    const tbody = document.getElementById('workExperienceBody');
+    const row = tbody.insertRow();
+    row.innerHTML = `
+        <td>${tbody.rows.length}</td>
+        <td><input type="text" class="form-input" style="width:100%;" placeholder="起止时间"></td>
+        <td><input type="text" class="form-input" style="width:100%;" placeholder="工作单位"></td>
+        <td><input type="text" class="form-input" style="width:100%;" placeholder="职位"></td>
+        <td><input type="text" class="form-input" style="width:100%;" placeholder="证明人"></td>
+        <td><input type="text" class="form-input" style="width:100%;" placeholder="联系电话"></td>
+        <td><button class="btn-table btn-table-upload">上传</button></td>
+        <td><button class="btn-table btn-table-upload">上传</button></td>
+        <td>
+            <button class="btn-table btn-table-edit">编辑</button>
+            <button class="btn-table btn-table-delete" onclick="this.closest('tr').remove(); renumberTable('workExperienceBody')">删除</button>
+        </td>
+    `;
+}
+
+function collectWorkExperiences() {
+    const rows = document.querySelectorAll('#workExperienceBody tr');
+    return Array.from(rows).map(row => {
+        const inputs = row.querySelectorAll('input');
+        return {
+            period: inputs[0]?.value || '',
+            company: inputs[1]?.value || '',
+            position: inputs[2]?.value || '',
+            reference: inputs[3]?.value || '',
+            phone: inputs[4]?.value || ''
+        };
+    });
+}
+5.5 导入导出
+javascript
+function exportPersonalInfo() {
+    const user = users.find(u => u.id === currentUser.id);
+    if (!user) { showToast('暂无数据', 'warning'); return; }
+    
+    const blob = new Blob([JSON.stringify(user, null, 2)], { type: 'application/json' });
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = `个人信息_${user.name}_${new Date().toISOString().slice(0,10)}.json`;
+    link.click();
+    showToast('✅ 导出成功', 'success');
+}
+
+function importPersonalInfo() {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = '.json';
+    input.onchange = async function(e) {
+        const file = e.target.files[0];
+        const text = await file.text();
+        try {
+            const data = JSON.parse(text);
+            loadPersonalInfoToModal(data);
+            showToast('✅ 导入成功，请点击保存确认', 'success');
+        } catch (e) {
+            showToast('❌ 文件格式不正确', 'error');
+        }
+    };
+    input.click();
+}
+六、数据库相关（参考 server/ 和 sql/ 目录）
+用户表（示例）：
+
+users 表包含所有基本信息字段
+
+work_experiences 表关联 user_id
+
+family_members 表关联 user_id
+
+其他子表格同样关联 user_id
+
+API端点：
+
+GET /api/user/:id - 获取用户完整信息（含关联子表数据）
+
+PUT /api/user/:id - 更新用户完整信息（建议使用事务保存主表+子表）
+
+GET /api/departments - 获取部门列表
+
+GET /api/positions?department=xxx - 获取某部门下的岗位列表
+
+七、注意事项
+数据来源：用户数据从数据库API加载，不要使用 localStorage 作为主要存储
+
+字段映射：注意数据库字段名（如 direct_superior）与前端变量名（如 directSuperior）的转换
+
+部门-岗位联动：选择部门后，从 /api/positions?department=xxx 加载岗位列表
+
+照片存储：照片使用 base64 存储在数据库的 photo 字段（MEDIUMTEXT类型）
+
+手机号脱敏：只在看板展示时脱敏，弹窗中显示完整号码
+
+子表格：建议后端使用事务保存主表+11个子表，确保数据一致性
+
+错误处理：所有API调用需try-catch，失败时给出友好提示
+
+请根据以上规范，在 index.html 中添加弹窗HTML，在对应的 js/pages/ 文件中添加JavaScript逻辑，实现完整的"编辑个人信息"弹窗功能。
+

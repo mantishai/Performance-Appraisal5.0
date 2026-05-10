@@ -1141,7 +1141,7 @@ INSERT INTO api_call_log (app_id, api_path, request_method, request_params, resp
 (1, '/api/v1/organization', 'POST', '{"action":"sync"}', 200, '{"status":"success"}', 85, '192.168.1.100', 'Python/3.9.7');
 
 INSERT INTO user (username, password, employee_id, real_name, email, phone, role, permissions, status) VALUES
-('admin', 'password123', 1, '张三', 'admin@example.com', '13800138001', 'super_admin', '{"modules": ["all"]}', 1),
+('admin', '1', 1, '张三', 'admin@example.com', '13800138001', 'super_admin', '{"modules": ["all"]}', 1),
 ('hr_admin', 'password123', 2, '李四', 'hr@example.com', '13800138002', 'hr', '{"modules": ["employee", "hr", "attendance"]}', 1),
 ('tech_lead', 'password123', 3, '王五', 'tech@example.com', '13800138003', 'manager', '{"modules": ["dashboard", "employee", "performance"]}', 1),
 ('employee1', 'password123', 4, '赵六', 'emp1@example.com', '13800138004', 'employee', '{"modules": ["dashboard"]}', 1),
@@ -1180,6 +1180,10 @@ INSERT INTO operation_log (user_id, username, module, operation, method, params,
 -- 使用示例：
 -- mysql -u root -p < database.sql
 -- 或在MySQL客户端中 source database.sql
+
+-- 更新admin密码（如果数据库已存在，执行此语句）：
+-- USE hr_system;
+-- UPDATE user SET password = '1' WHERE username = 'admin';
 
 -- 验证数据：
 -- USE hr_system;

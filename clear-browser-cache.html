@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>清理浏览器缓存</title>
+    <style>
+        body {
+            font-family: 'Microsoft YaHei', sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        .container {
+            background: white;
+            border-radius: 16px;
+            padding: 30px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .btn {
+            display: block;
+            width: 100%;
+            padding: 15px;
+            margin: 10px 0;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        .btn-danger {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+        }
+        .btn-success {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            color: white;
+        }
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+        .result {
+            margin-top: 20px;
+            padding: 15px;
+            background: #f5f7fa;
+            border-radius: 8px;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        .log {
+            font-family: monospace;
+            font-size: 14px;
+            line-height: 1.6;
+            margin: 5px 0;
+        }
+        .log-success {
+            color: #28a745;
+        }
+        .log-error {
+            color: #dc3545;
+        }
+        .log-info {
+            color: #17a2b8;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧹 浏览器缓存清理工具</h1>
+
+        <button class="btn btn-primary" onclick="clearLocalStorage()">
+            📦 清理 LocalStorage
+        </button>
+
+        <button class="btn btn-danger" onclick="clearSessionStorage()">
+            🔄 清理 SessionStorage
+        </button>
+
+        <button class="btn btn-success" onclick="clearCookies()">
+            🍪 清理 Cookies
+        </button>
+
+        <button class="btn btn-primary" onclick="clearIndexedDB()">
+            💾 清理 IndexedDB
+        </button>
+
+        <button class="btn btn-danger" onclick="clearAll()">
+            🔥 清理所有缓存
+        </button>
+
+        <button class="btn btn-success" onclick="forceReload()">
+            🔄 强制刷新页面
+        </button>
+
+        <div class="result">
+            <div id="logOutput"></div>
+        </div>
+    </div>
+
+    <script>
+        function log(message, type = 'info') {
+            const output = document.getElementById('logOutput');
+            const div = document.createElement('div');
+            div.className = 'log log-' + type;
+            div.textContent = '[' + new Date().toLocaleTimeString() + '] ' + message;
+            output.appendChild(div);
+            console.log(message);
+        }
+
+        function clearLocalStorage() {
+            log('开始清理 LocalStorage...', 'info');
+            try {
+                const keys = Object.keys(localStorage);
+                log('找到 ' + keys.length + ' 个 LocalStorage 项目', 'info');
+                keys.forEach(function(key) {
+                    log('- ' + key, 'info');
+                });
+                localStorage.clear();
+                log('✅ LocalStorage 清理完成', 'success');
+            } catch (e) {
+                log('❌ LocalStorage 清理失败: ' + e.message, 'error');
+            }
+        }
+
+        function clearSessionStorage() {
+            log('开始清理 SessionStorage...', 'info');
+            try {
+                const keys = Object.keys(sessionStorage);
+                log('找到 ' + keys.length + ' 个 SessionStorage 项目', 'info');
+                keys.forEach(function(key) {
+                    log('- ' + key, 'info');
+                });
+                sessionStorage.clear();
+                log('✅ SessionStorage 清理完成', 'success');
+            } catch (e) {
+                log('❌ SessionStorage 清理失败: ' + e.message, 'error');
+            }
+        }
+
+        function clearCookies() {
+            log('开始清理 Cookies...', 'info');
+            try {
+                document.cookie.split(';').forEach(function(cookie) {
+                    const eqPos = cookie.indexOf('=');
+                    const name = eqPos > -1 ? cookie.substr(0, eqPos) : cookie;
+                    document.cookie = name.trim() + '=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
+                });
+                log('✅ Cookies 清理完成', 'success');
+            } catch (e) {
+                log('❌ Cookies 清理失败: ' + e.message, 'error');
+            }
+        }
+
+        function clearIndexedDB() {
+            log('开始清理 IndexedDB...', 'info');
+            try {
+                if ('indexedDB' in window) {
+                    const req = indexedDB.databases();
+                    req.then(function(databases) {
+                        log('找到 ' + databases.length + ' 个数据库', 'info');
+                        databases.forEach(function(db) {
+                            log('- ' + db.name, 'info');
+                            indexedDB.deleteDatabase(db.name);
+                        });
+                        log('✅ IndexedDB 清理完成', 'success');
+                    });
+                } else {
+                    log('⚠️ 不支持 IndexedDB', 'info');
+                }
+            } catch (e) {
+                log('❌ IndexedDB 清理失败: ' + e.message, 'error');
+            }
+        }
+
+        function clearAll() {
+            log('开始清理所有缓存...', 'info');
+            clearLocalStorage();
+            clearSessionStorage();
+            clearCookies();
+            clearIndexedDB();
+            log('🎉 所有缓存清理完成！', 'success');
+        }
+
+        function forceReload() {
+            log('正在强制刷新...', 'info');
+            setTimeout(function() {
+                location.reload(true);
+            }, 1000);
+        }
+
+        window.onload = function() {
+            log('页面已加载，准备清理缓存', 'info');
+            log('请点击上方按钮开始清理', 'info');
+        };
+    </script>
+</body>
+</html>

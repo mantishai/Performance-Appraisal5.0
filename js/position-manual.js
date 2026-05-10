@@ -28,16 +28,67 @@ function closePositionModal() {
 // 设置表单只读状态
 function setPositionModalReadOnly(readOnly) {
     const modal = document.getElementById('hrPositionModal');
+    if (!modal) return;
+    
     if (readOnly) {
         modal.classList.add('readonly');
     } else {
         modal.classList.remove('readonly');
     }
     
-    const inputs = modal.querySelectorAll('input, textarea, select');
-    inputs.forEach(input => {
+    // 禁用所有输入元素
+    const allInputs = modal.querySelectorAll('input, textarea, select, [type="checkbox"]');
+    allInputs.forEach(input => {
         input.disabled = readOnly;
+        if (readOnly) {
+            input.setAttribute('readonly', 'readonly');
+        } else {
+            input.removeAttribute('readonly');
+        }
     });
+    
+    // 控制按钮显示
+    const saveBtn = document.getElementById('hrSaveBtn');
+    const resetBtn = document.getElementById('hrResetBtn');
+    const editBtn = document.getElementById('hrEditBtn');
+    
+    if (readOnly) {
+        // 查看模式：隐藏保存和恢复按钮，显示编辑按钮
+        if (saveBtn) saveBtn.style.display = 'none';
+        if (resetBtn) resetBtn.style.display = 'none';
+        if (editBtn) editBtn.style.display = 'inline-block';
+        
+        // 隐藏编辑相关按钮（导入、增加、删除）
+        const editButtons = modal.querySelectorAll('.section-actions button');
+        editButtons.forEach(btn => {
+            btn.style.display = 'none';
+        });
+    } else {
+        // 编辑模式：显示保存和恢复按钮，隐藏编辑按钮
+        if (saveBtn) saveBtn.style.display = 'inline-block';
+        if (resetBtn) resetBtn.style.display = 'inline-block';
+        if (editBtn) editBtn.style.display = 'none';
+        
+        // 显示编辑相关按钮
+        const editButtons = modal.querySelectorAll('.section-actions button');
+        editButtons.forEach(btn => {
+            btn.style.display = 'inline-block';
+        });
+    }
+}
+
+// 切换编辑/查看模式
+function togglePositionEdit() {
+    const isReadOnly = window.currentHrPositionReadOnly;
+    if (isReadOnly) {
+        // 切换到编辑模式
+        window.currentHrPositionReadOnly = false;
+        setPositionModalReadOnly(false);
+    } else {
+        // 切换到查看模式
+        window.currentHrPositionReadOnly = true;
+        setPositionModalReadOnly(true);
+    }
 }
 
 // 获取岗位数据
@@ -552,8 +603,8 @@ async function saveHrPositionDesc() {
             if (result.success) {
                 saveToLocalStorage(positionData);
                 showToast('✅ 保存成功');
-                setPositionModalReadOnly(true);
                 window.currentHrPositionReadOnly = true;
+                setPositionModalReadOnly(true);
             } else {
                 showToast('❌ 保存失败');
             }
@@ -561,8 +612,11 @@ async function saveHrPositionDesc() {
             throw new Error('Network error');
         }
     } catch (e) {
+        // 即使没有后端，也保存到本地并显示成功
         saveToLocalStorage(positionData);
-        showToast('⚠️ 网络异常，已保存到本地');
+        showToast('✅ 保存成功（本地）');
+        window.currentHrPositionReadOnly = true;
+        setPositionModalReadOnly(true);
     }
 }
 
@@ -779,6 +833,8 @@ function getPositionIdByName(positionName) {
 window.openPositionModal = openPositionModal;
 window.openReadOnlyPositionModal = openReadOnlyPositionModal;
 window.closePositionModal = closePositionModal;
+window.setPositionModalReadOnly = setPositionModalReadOnly;
+window.togglePositionEdit = togglePositionEdit;
 window.loadHrPositionDesc = loadHrPositionDesc;
 window.saveHrPositionDesc = saveHrPositionDesc;
 window.addHrDutyRow = addHrDutyRow;
