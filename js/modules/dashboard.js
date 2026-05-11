@@ -471,9 +471,31 @@ const dashboardModule = {
             Toast.success('数据刷新成功！');
         });
 
-        document.getElementById('positionManualBtn')?.addEventListener('click', () => {
-            const positionName = state.currentUser?.position || '人力资源经理';
+        document.getElementById('positionManualBtn')?.addEventListener('click', async () => {
+            // 获取当前用户的岗位名称
+            let positionName = state.currentUser?.position;
+            
+            // 如果用户信息中没有岗位，尝试从员工详情获取
+            if (!positionName && state.currentUser?.employee_no) {
+                try {
+                    const empRes = await API.getEmployees();
+                    if (empRes.code === 200) {
+                        const employee = empRes.data.find(emp => emp.employee_no === state.currentUser.employee_no || emp.employeeNo === state.currentUser.employee_no);
+                        if (employee) {
+                            positionName = employee.position || employee.position_name;
+                        }
+                    }
+                } catch (e) {
+                    console.error('Failed to get employee position:', e);
+                }
+            }
+            
+            // 默认岗位名称
+            positionName = positionName || '人力资源经理';
+            
+            // 根据岗位名称获取岗位ID
             const positionId = window.getPositionIdByName ? window.getPositionIdByName(positionName) : 'hr1';
+            
             if (window.openReadOnlyPositionModal) {
                 window.openReadOnlyPositionModal(positionId);
             } else {

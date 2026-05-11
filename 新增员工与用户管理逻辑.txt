@@ -1,0 +1,285 @@
+请帮我优化人力资源管理系统（Performance-Appraisal5.0）的员工与用户账号管理逻辑，实现以下4个核心需求。
+
+## 项目架构
+
+当前系统架构：
+- **前端**：index.html + js/ 目录下的模块文件（单页应用）
+- **后端**：Node.js + Express（server/ 目录）
+- **数据库**：MySQL 8.0（sql/ 目录下的初始化脚本）
+- **认证**：session 机制（x-session-id 请求头）
+- **API风格**：RESTful API，基础路径 '/api'
+
+## 核心需求
+
+### 需求1：新增员工自动分配工号并创建登录账号
+
+**业务逻辑**：
+- 在【组织架构】或【员工管理】中新增员工时，**自动生成工号**作为系统登录名
+- **默认密码**统一设为 `1`（或 `123456`，可根据你现有逻辑决定）
+- 新增员工的同时，自动在 `users` 表中创建对应的登录账号
+
+**工号生成规则**（建议）：
+- 格式：`EMP` + 日期(YYYYMMDD) + 3位流水号
+- 例如：`EMP20260510001`
+- 或简化为：年份后两位 + 4位序号，如 `260001`
+
+**数据库操作**：
+- 在新增员工的 API 中（如 `POST /api/employees`），使用**数据库事务**同时操作 `employees` 表和 `users` 表
+- `employees` 表存储员工详细信息（姓名、部门、岗位等）
+- `users` 表存储登录信息（username=工号，password=加密后的默认密码）
+
+**后端示例逻辑**：
+```javascript
+// POST /api/employees
+async function createEmployee(req, res) {
+    const connection = await db.getConnection();
+    await connection.beginTransaction();
+    
+    try {
+        // 1. 生成工号
+        const employeeNo = await generateEmployeeNo();
+        
+        // 2. 插入 employees 表
+        const [result] = await connection.execute(
+            'INSERT INTO employees (employee_no, name, department, position, ...) VALUES (?, ?, ?, ?, ...)',
+            [employeeNo, req.body.name, req.body.department, req.body.position, ...]
+        );
+        
+        // 3. 自动创建登录账号（users表）
+        const hashedPassword = await bcrypt.hash('1', 10); // 默认密码加密
+        await connection.execute(
+            'INSERT INTO users (username, password, employee_id, role, display_name) VALUES (?, ?, ?, ?, ?)',
+            [employeeNo, hashedPassword, result.insertId, 'employee', req.body.name]
+        );
+        
+        await connection.commit();
+        res.json({ success: true, employeeNo: employeeNo });
+    } catch (error) {
+        await connection.rollback();
+        res.status(500).json({ success: false, message: error.message });
+    } finally {
+        connection.release();
+    }
+}
+需求2：区分员工用户与非员工用户的管理入口
+业务逻辑：
+
+员工用户：登录名 = 工号，在【组织架构】新增员工时自动创建，自动出现在【系统管理】→【用户管理】列表中
+
+非员工用户（如外部顾问、临时管理员等）：由管理员在【系统管理】→【用户管理】中手动添加，需要设置登录名和默认密码
+
+用户列表展示：
+
+用户列表应包含 username（登录名）、display_name（显示名）、role（角色）、employee_no（关联工号）、created_at（创建时间）
+
+员工用户应显示关联的工号，非员工用户该字段为空
+
+支持按角色筛选（员工/管理员）
+
+数据库表结构（users 表需要增加字段）：
+
+sql
+ALTER TABLE users ADD COLUMN employee_no VARCHAR(20) DEFAULT NULL COMMENT '关联工号（员工用户有值，非员工为NULL）';
+ALTER TABLE users ADD COLUMN display_name VARCHAR(50) NOT NULL COMMENT '显示名称';
+ALTER TABLE users ADD COLUMN role VARCHAR(20) DEFAULT 'employee' COMMENT '角色：admin/employee';
+需求3：员工自行修改密码 + 管理员管理所有用户密码
+功能A：员工自助修改密码
+
+入口：
+
+在【系统设置】或个人看板的用户菜单下，添加"修改密码"入口
+
+点击弹出修改密码弹窗
+
+弹窗内容：
+
+显示当前登录用户名（工号）
+
+旧密码输入框
+
+新密码输入框
+
+确认新密码输入框
+
+保存/取消按钮
+
+验证逻辑：
+
+旧密码必须正确
+
+新密码不能为空，最小长度6位
+
+新密码与确认密码一致
+
+新密码不能与旧密码相同
+
+API端点：
+
+javascript
+// PUT /api/user/change-password
+{
+    "oldPassword": "旧密码",
+    "newPassword": "新密码"
+}
+后端逻辑：
+
+javascript
+async function changePassword(req, res) {
+    const userId = req.session.userId; // 从session获取当前用户ID
+    const { oldPassword, newPassword } = req.body;
+    
+    // 1. 验证旧密码
+    const [rows] = await db.execute('SELECT password FROM users WHERE id = ?', [userId]);
+    const isValid = await bcrypt.compare(oldPassword, rows[0].password);
+    if (!isValid) {
+        return res.status(400).json({ success: false, message: '旧密码不正确' });
+    }
+    
+    // 2. 更新密码
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+    await db.execute('UPDATE users SET password = ? WHERE id = ?', [hashedPassword, userId]);
+    
+    res.json({ success: true, message: '密码修改成功' });
+}
+功能B：管理员重置用户密码
+
+入口：
+
+在【系统管理】→【用户管理】列表中，每行添加"重置密码"按钮
+
+点击弹出重置密码弹窗
+
+弹窗内容：
+
+显示目标用户名
+
+新密码输入框（建议默认为 1 或可自定义）
+
+确认按钮
+
+API端点：
+
+javascript
+// PUT /api/admin/reset-password/:userId
+{
+    "newPassword": "新密码"
+}
+权限控制：
+
+仅 role = 'admin' 的用户可以访问此接口
+
+中间件验证管理员权限
+
+需求4：个人看板的个人信息弹窗关联登录账号
+业务逻辑：
+
+当前登录用户在【个人看板】点击"✏️ 编辑个人信息"时，打开的弹窗应显示和编辑当前登录账号关联的员工信息
+
+数据来源：users 表关联 employees 表（通过 employee_no 或 employee_id）
+
+数据加载：
+
+javascript
+async function openPersonalInfoModal() {
+    // 1. 获取当前登录用户信息
+    const user = users.find(u => u.id === currentUser.id);
+    let employeeInfo = {};
+    
+    // 2. 如果是员工用户，加载关联的员工详细信息
+    if (user.employee_no) {
+        try {
+            const res = await fetch(`/api/employees/by-no/${user.employee_no}`, {
+                headers: { 'x-session-id': sessionId }
+            });
+            if (res.ok) {
+                employeeInfo = await res.json();
+            }
+        } catch (e) { /* 降级处理 */ }
+    }
+    
+    // 3. 合并用户信息和员工信息
+    const combinedInfo = {
+        ...employeeInfo,
+        username: user.username,      // 登录名（工号）
+        display_name: user.display_name,
+        role: user.role
+    };
+    
+    // 4. 加载到弹窗
+    loadPersonalInfoToModal(combinedInfo);
+    document.getElementById('personalInfoModal').classList.add('show');
+}
+弹窗中显示关键信息：
+
+基本信息区域：姓名、性别、年龄、民族
+
+登录信息区域（新增）：
+
+登录名（工号）- 只读显示
+
+角色 - 只读显示
+
+修改密码按钮 → 调用需求3的修改密码弹窗
+
+工作信息区域：部门、岗位、入职时间等
+
+其他信息区域保持不变
+
+数据库调整汇总
+users 表结构（需要在 sql/ 目录的初始化脚本中添加）
+sql
+CREATE TABLE IF NOT EXISTS users (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    username VARCHAR(50) NOT NULL UNIQUE COMMENT '登录名（员工=工号，非员工=自定义）',
+    password VARCHAR(255) NOT NULL COMMENT '加密后的密码',
+    display_name VARCHAR(50) NOT NULL COMMENT '显示名称',
+    role VARCHAR(20) DEFAULT 'employee' COMMENT '角色：admin/employee',
+    employee_no VARCHAR(20) DEFAULT NULL COMMENT '关联工号（员工用户有值）',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    INDEX idx_employee_no (employee_no)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+employees 表结构（确认包含工号字段）
+sql
+ALTER TABLE employees ADD COLUMN employee_no VARCHAR(20) NOT NULL UNIQUE COMMENT '工号（自动生成）';
+API端点汇总
+端点	方法	功能	权限
+/api/employees	POST	新增员工（含自动创建登录账号）	管理员
+/api/employees/by-no/:employeeNo	GET	根据工号获取员工信息	登录用户
+/api/user/change-password	PUT	员工自助修改密码	登录用户
+/api/admin/reset-password/:userId	PUT	管理员重置用户密码	管理员
+/api/admin/users	GET	获取用户列表	管理员
+/api/admin/users	POST	手动添加非员工用户	管理员
+需要修改的文件
+sql/init.sql - 更新 users 表和 employees 表结构
+
+server/routes/employees.js - 新增员工API（事务操作）
+
+server/routes/users.js - 用户管理API（密码修改、用户列表等）
+
+server/middleware/auth.js - 管理员权限中间件
+
+index.html - 添加修改密码弹窗HTML、个人信息弹窗增加登录信息区域
+
+js/pages/userManagement.js - 用户管理页面逻辑
+
+js/modals/personalInfoModal.js - 个人信息弹窗逻辑（关联登录账号）
+
+js/modals/changePasswordModal.js - 修改密码弹窗逻辑
+
+注意事项
+事务一致性：新增员工时必须使用数据库事务，确保 employees 和 users 表数据一致性
+
+工号唯一性：工号生成逻辑需考虑并发情况，建议使用数据库自增或分布式ID
+
+密码加密：使用 bcrypt 加密存储密码，默认密码 1 也需加密
+
+Session管理：修改密码后，建议让用户重新登录或更新session
+
+权限控制：管理员重置密码的接口必须验证管理员权限
+
+前端联动：修改密码弹窗需集成到现有的 Toast 提示系统中
+
+错误处理：所有API需返回统一的JSON格式 { success: boolean, message: string, data?: any }
+
+请根据以上规范，修改数据库表结构、后端API路由、前端HTML和JavaScript代码，实现完整的员工-用户账号关联管理功能。

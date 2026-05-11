@@ -1,5 +1,6 @@
 import { Toast, Modal, Pagination, Skeleton, Validators, validateForm, escapeHtml } from '../utils.js';
 import API from '../api.js';
+import employeeDetailModule from './employee-detail.js';
 
 const state = {
     employees: [],
@@ -155,7 +156,6 @@ const employeeModule = {
                                     <td>
                                         <div class="action-btns">
                                             <button class="action-btn" data-action="view" data-id="${emp.id}">详情</button>
-                                            <button class="action-btn" data-action="edit" data-id="${emp.id}">编辑</button>
                                             <button class="action-btn" data-action="leave" data-id="${emp.id}" style="${emp.status === 0 ? 'display:none' : ''}">离职</button>
                                             <button class="action-btn" data-action="delete" data-id="${emp.id}" style="color: #f5222d;">删除</button>
                                         </div>
@@ -186,14 +186,20 @@ const employeeModule = {
             </div>
 
             <div class="modal-overlay" id="detailDrawer">
-                <div class="modal" style="max-width: 700px;">
+                <div class="modal-container-large">
                     <div class="modal-header">
-                        <span class="modal-title">员工详情</span>
-                        <div class="modal-controls">
-                            <button class="modal-control-btn modal-close">×</button>
+                        <h2>👤 员工详情</h2>
+                        <div class="modal-header-actions">
+                            <button class="btn-modal-export" id="exportEmployeePDFBtn">📄 导出PDF</button>
+                            <button class="modal-close">×</button>
                         </div>
                     </div>
                     <div class="modal-body" id="detailContent" style="max-height: 70vh; overflow-y: auto;"></div>
+                    <div class="modal-actions" id="detailActions">
+                        <button class="btn-modal btn-modal-secondary" id="toggleEditBtn">编辑</button>
+                        <button class="btn-modal btn-modal-secondary" id="cancelDetailBtn" style="display: none;">取消</button>
+                        <button class="btn-modal btn-modal-primary" id="saveDetailBtn" style="display: none;">保存</button>
+                    </div>
                 </div>
             </div>
         `;
@@ -398,9 +404,6 @@ const employeeModule = {
             case 'view':
                 this.openDetailDrawer(employee);
                 break;
-            case 'edit':
-                this.openFormModal(employee);
-                break;
             case 'leave':
                 this.openLeaveModal(employee);
                 break;
@@ -468,7 +471,7 @@ const employeeModule = {
                         </div>
                         <div class="form-field">
                             <label>入职日期 <span class="required">*</span></label>
-                            <input type="date" id="empEntryDate" value="${employee?.entryDate || ''}">
+                            <input type="date" id="empEntryDate" value="${employee?.entryDate || employee?.hire_date || ''}">
                             <div class="validate-message" id="empEntryDateMsg"></div>
                         </div>
                         <div class="form-field">
@@ -663,234 +666,11 @@ const employeeModule = {
     },
 
     async openDetailDrawer(employee) {
-        const drawer = document.getElementById('detailDrawer');
-        const content = document.getElementById('detailContent');
-
-        let attendanceRecords = [];
-        let stats = { normal: 0, late: 0, earlyLeave: 0, missing: 0, leaveDays: 0 };
-        try {
-            const res = await API.getAttendanceRecords({ employeeId: employee.id });
-            if (res.code === 200) {
-                attendanceRecords = res.data;
-                attendanceRecords.forEach(r => {
-                    if (r.status === '正常') stats.normal++;
-                    else if (r.status === '迟到') stats.late++;
-                    else if (r.status === '早退') stats.earlyLeave++;
-                    else if (r.status === '缺卡') stats.missing++;
-                });
-            }
-        } catch (error) {
-            console.error('Failed to load attendance records', error);
-        }
-
-        let trainingRecords = [];
-        let totalTrainingHours = 0;
-        try {
-            const trainingRes = await API.getTrainingRecords(employee.id);
-            if (trainingRes.code === 200) {
-                trainingRecords = trainingRes.data;
-                totalTrainingHours = trainingRecords.reduce((sum, r) => sum + (r.actualHours || 0), 0);
-            }
-            const coursesRes = await API.getTrainingCourses();
-            if (coursesRes.code === 200) {
-                state.trainingCourses = coursesRes.data;
-            }
-        } catch (error) {
-            console.error('Failed to load training records', error);
-        }
-
-        content.innerHTML = `
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
-                <div class="form-field">
-                    <label style="color: #8ba9c4; font-size: 12px;">姓名</label>
-                    <div style="font-weight: 600; color: #1a3a5c; margin-top: 4px;">${escapeHtml(employee.name)}</div>
-                </div>
-                <div class="form-field">
-                    <label style="color: #8ba9c4; font-size: 12px;">工号</label>
-                    <div style="font-weight: 600; color: #1a3a5c; margin-top: 4px;">${escapeHtml(employee.employeeNo)}</div>
-                </div>
-                <div class="form-field">
-                    <label style="color: #8ba9c4; font-size: 12px;">部门</label>
-                    <div style="font-weight: 600; color: #1a3a5c; margin-top: 4px;">${escapeHtml(employee.department)}</div>
-                </div>
-                <div class="form-field">
-                    <label style="color: #8ba9c4; font-size: 12px;">岗位</label>
-                    <div style="font-weight: 600; color: #1a3a5c; margin-top: 4px;">${escapeHtml(employee.position)}</div>
-                </div>
-                <div class="form-field">
-                    <label style="color: #8ba9c4; font-size: 12px;">手机号</label>
-                    <div style="font-weight: 600; color: #1a3a5c; margin-top: 4px;">${escapeHtml(employee.phone || '-')}</div>
-                </div>
-                <div class="form-field">
-                    <label style="color: #8ba9c4; font-size: 12px;">邮箱</label>
-                    <div style="font-weight: 600; color: #1a3a5c; margin-top: 4px;">${escapeHtml(employee.email || '-')}</div>
-                </div>
-                <div class="form-field">
-                    <label style="color: #8ba9c4; font-size: 12px;">入职日期</label>
-                    <div style="font-weight: 600; color: #1a3a5c; margin-top: 4px;">${escapeHtml(employee.entryDate || '-')}</div>
-                </div>
-                <div class="form-field">
-                    <label style="color: #8ba9c4; font-size: 12px;">状态</label>
-                    <div style="margin-top: 4px;">
-                        <span class="status-tag ${employee.status === 1 ? 'active' : employee.status === 2 ? 'warning' : 'inactive'}">${employee.status === 1 ? '在职' : employee.status === 2 ? '试用期' : '离职'}</span>
-                    </div>
-                </div>
-            </div>
-
-            <div style="margin-top: 24px; padding-top: 24px; border-top: 1px solid rgba(24, 144, 255, 0.1);">
-                <div style="font-weight: 600; color: #1a3a5c; margin-bottom: 16px;">📊 考勤汇总</div>
-                <div class="stats-grid" style="grid-template-columns: repeat(5, 1fr);">
-                    <div class="stat-card">
-                        <div class="stat-icon blue">✅</div>
-                        <div class="stat-info">
-                            <div class="stat-label">正常出勤</div>
-                            <div class="stat-value">${stats.normal}</div>
-                        </div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-icon orange">⏰</div>
-                        <div class="stat-info">
-                            <div class="stat-label">迟到</div>
-                            <div class="stat-value">${stats.late}</div>
-                        </div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-icon purple">🏃</div>
-                        <div class="stat-info">
-                            <div class="stat-label">早退</div>
-                            <div class="stat-value">${stats.earlyLeave}</div>
-                        </div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-icon red">❌</div>
-                        <div class="stat-info">
-                            <div class="stat-label">缺卡</div>
-                            <div class="stat-value">${stats.missing}</div>
-                        </div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-icon green">📋</div>
-                        <div class="stat-info">
-                            <div class="stat-label">请假天数</div>
-                            <div class="stat-value">${stats.leaveDays}</div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <div style="margin-top: 24px; padding-top: 24px; border-top: 1px solid rgba(24, 144, 255, 0.1);">
-                <div style="font-weight: 600; color: #1a3a5c; margin-bottom: 16px;">📚 培训记录</div>
-                <div class="stats-grid" style="grid-template-columns: repeat(3, 1fr); margin-bottom: 16px;">
-                    <div class="stat-card">
-                        <div class="stat-icon blue">🎓</div>
-                        <div class="stat-info">
-                            <div class="stat-label">培训次数</div>
-                            <div class="stat-value">${trainingRecords.length}</div>
-                        </div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-icon green">⏱️</div>
-                        <div class="stat-info">
-                            <div class="stat-label">累计学时</div>
-                            <div class="stat-value">${totalTrainingHours}</div>
-                        </div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-icon orange">⭐</div>
-                        <div class="stat-info">
-                            <div class="stat-label">平均满意度</div>
-                            <div class="stat-value">${trainingRecords.length > 0 ? (trainingRecords.reduce((sum, r) => sum + (r.satisfaction || 0), 0) / trainingRecords.length).toFixed(1) : '0.0'}</div>
-                        </div>
-                    </div>
-                </div>
-                ${trainingRecords.length > 0 ? `
-                    <div class="table-container" style="max-height: 300px; overflow-y: auto;">
-                        <table class="data-table">
-                            <thead>
-                                <tr>
-                                    <th>课程名称</th>
-                                    <th>培训日期</th>
-                                    <th>实际学时</th>
-                                    <th>考核结果</th>
-                                    <th>证书编号</th>
-                                    <th>满意度</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                ${trainingRecords.map(r => {
-                                    const course = state.trainingCourses.find(c => c.id === r.courseId);
-                                    return `
-                                        <tr>
-                                            <td>${course?.name || '未知课程'}</td>
-                                            <td>${r.trainingDate || '-'}</td>
-                                            <td>${r.actualHours || 0}</td>
-                                            <td><span class="status-tag ${r.assessmentResult === '优秀' ? 'active' : r.assessmentResult === '不及格' ? 'inactive' : 'warning'}">${r.assessmentResult || '-'}</span></td>
-                                            <td>${r.certificateNo || '-'}</td>
-                                            <td>${r.satisfaction ? r.satisfaction.toFixed(1) + ' ⭐' : '-'}</td>
-                                        </tr>
-                                    `;
-                                }).join('')}
-                            </tbody>
-                        </table>
-                    </div>
-                ` : `
-                    <div style="text-align: center; padding: 30px; color: #8ba9c4;">
-                        <div style="font-size: 32px; margin-bottom: 8px;">📚</div>
-                        <div>暂无培训记录</div>
-                    </div>
-                `}
-            </div>
-
-            <div style="margin-top: 24px; padding-top: 24px; border-top: 1px solid rgba(24, 144, 255, 0.1);">
-                <div style="font-weight: 600; color: #1a3a5c; margin-bottom: 16px;">📋 合同信息</div>
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
-                    <div class="form-field">
-                        <label style="color: #8ba9c4; font-size: 12px;">合同类型</label>
-                        <div style="color: #1a3a5c; margin-top: 4px;">${employee.contractType || '全职合同'}</div>
-                    </div>
-                    <div class="form-field">
-                        <label style="color: #8ba9c4; font-size: 12px;">合同到期日</label>
-                        <div style="color: #1a3a5c; margin-top: 4px;">${employee.contractEnd || '未设置'}</div>
-                    </div>
-                </div>
-            </div>
-
-            <div style="margin-top: 24px; padding-top: 24px; border-top: 1px solid rgba(24, 144, 255, 0.1);">
-                <div style="font-weight: 600; color: #1a3a5c; margin-bottom: 16px;">📊 人才盘点</div>
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
-                    <div class="form-field">
-                        <label style="color: #8ba9c4; font-size: 12px;">潜力标签</label>
-                        <div style="margin-top: 4px;">
-                            <span class="status-tag ${employee.potentialTag === '高潜' ? 'active' : employee.potentialTag === '待提升' ? 'inactive' : 'info'}">${employee.potentialTag || '中坚'}</span>
-                        </div>
-                    </div>
-                    <div class="form-field">
-                        <label style="color: #8ba9c4; font-size: 12px;">入职年限</label>
-                        <div style="font-weight: 600; color: #1a3a5c; margin-top: 4px;">${this.calculateYearsAtCompany(employee.entryDate)} 年</div>
-                    </div>
-                </div>
-            </div>
-
-            <div style="margin-top: 24px; padding-top: 24px; border-top: 1px solid rgba(24, 144, 255, 0.1);">
-                <div style="font-weight: 600; color: #1a3a5c; margin-bottom: 16px;">📁 档案信息</div>
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
-                    <div class="form-field">
-                        <label style="color: #8ba9c4; font-size: 12px;">身份证号</label>
-                        <div style="color: #1a3a5c; margin-top: 4px;">${employee.idCard || '*******************'}</div>
-                    </div>
-                    <div class="form-field">
-                        <label style="color: #8ba9c4; font-size: 12px;">学历</label>
-                        <div style="color: #1a3a5c; margin-top: 4px;">${employee.education || '本科'}</div>
-                    </div>
-                </div>
-            </div>
-        `;
-
-        drawer.classList.add('show');
+        employeeDetailModule.open(employee);
     },
 
     closeDetailDrawer() {
-        document.getElementById('detailDrawer')?.classList.remove('show');
+        employeeDetailModule.close();
     },
 
     calculateYearsAtCompany(entryDate) {

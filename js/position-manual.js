@@ -819,14 +819,37 @@ function showToast(message) {
 
 // 获取岗位ID（根据岗位名称）
 function getPositionIdByName(positionName) {
-    const nameMap = {
-        '人力资源总监': 'hr1',
-        '人力资源经理': 'hr2',
-        '招聘专员': 'hr3',
-        '培训专员': 'hr4',
-        '绩效专员': 'hr5'
-    };
-    return nameMap[positionName] || 'hr1';
+    // 先尝试从localStorage获取岗位数据
+    let positionId = null;
+    const localData = localStorage.getItem('hrPositions');
+    if (localData) {
+        try {
+            const positions = JSON.parse(localData);
+            // 根据岗位名称查找
+            for (const [id, data] of Object.entries(positions)) {
+                if (data.info && data.info.positionName === positionName) {
+                    positionId = id;
+                    break;
+                }
+            }
+        } catch (e) {
+            console.error('Failed to parse local hrPositions data:', e);
+        }
+    }
+    
+    // 如果从localStorage没找到，使用默认映射
+    if (!positionId) {
+        const nameMap = {
+            '人力资源总监': 'hr1',
+            '人力资源经理': 'hr2',
+            '招聘专员': 'hr3',
+            '培训专员': 'hr4',
+            '绩效专员': 'hr5'
+        };
+        positionId = nameMap[positionName] || 'hr1';
+    }
+    
+    return positionId;
 }
 
 // 导出到全局

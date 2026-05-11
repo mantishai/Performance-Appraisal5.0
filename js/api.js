@@ -104,9 +104,51 @@ const API = {
         return this.request(`/employees/${id}/detail`);
     },
 
+    updateEmployeeDetail(id, data) {
+        return this.request(`/employees/${id}/detail`, {
+            method: 'PUT',
+            body: JSON.stringify(data)
+        });
+    },
+
     getEmployeeByName(name) {
         const encodedName = encodeURIComponent(name);
         return this.request(`/employees/by-name/${encodedName}`);
+    },
+
+    getEmployeeByNo(employeeNo) {
+        const encodedNo = encodeURIComponent(employeeNo);
+        return this.request(`/employees/by-no/${encodedNo}`);
+    },
+
+    changePassword(oldPassword, newPassword) {
+        return this.request('/user/change-password', { 
+            method: 'PUT', 
+            body: JSON.stringify({ oldPassword, newPassword }) 
+        });
+    },
+
+    resetPassword(userId, newPassword) {
+        return this.request(`/admin/reset-password/${userId}`, { 
+            method: 'PUT', 
+            body: JSON.stringify({ newPassword }) 
+        });
+    },
+
+    getUsers(role) {
+        const params = role ? `?role=${role}` : '';
+        return this.request(`/admin/users${params}`);
+    },
+
+    addUser(username, password, displayName, role = 'employee') {
+        return this.request('/admin/users', { 
+            method: 'POST', 
+            body: JSON.stringify({ username, password, displayName, role }) 
+        });
+    },
+
+    deleteUser(userId) {
+        return this.request(`/admin/users/${userId}`, { method: 'DELETE' });
     },
 
     createEmployee(data) {
@@ -485,6 +527,80 @@ const API = {
     
     markAllNotificationsAsRead() {
         return this.request('/notifications/read-all', { method: 'PUT' });
+    },
+
+    getSystemUsers() {
+        return this.request('/admin/users');
+    },
+
+    getSystemRoles() {
+        return this.request('/admin/roles');
+    },
+
+    getSystemPermissions() {
+        return this.request('/admin/permissions');
+    },
+
+    getSystemLogs() {
+        return this.request('/admin/logs');
+    },
+
+    getSystemConfig() {
+        return this.request('/admin/config');
+    },
+
+    getSystemRolePermissions(roleId) {
+        return this.request(`/admin/roles/${roleId}/permissions`);
+    },
+
+    updateSystemRolePermissions(roleId, permissions) {
+        return this.request(`/admin/roles/${roleId}/permissions`, { 
+            method: 'PUT', 
+            body: JSON.stringify({ permissions }) 
+        });
+    },
+
+    resetSystemUserPassword(userId) {
+        return this.request(`/admin/users/${userId}/reset-password`, { 
+            method: 'PUT', 
+            body: JSON.stringify({ newPassword: '123456' }) 
+        });
+    },
+
+    updateSystemUserStatus(userId, status) {
+        return this.request(`/admin/users/${userId}/status`, { 
+            method: 'PUT', 
+            body: JSON.stringify({ status }) 
+        });
+    },
+
+    deleteSystemUser(userId) {
+        return this.request(`/admin/users/${userId}`, { method: 'DELETE' });
+    },
+
+    updateSystemUser(userId, data) {
+        return this.request(`/admin/users/${userId}`, { 
+            method: 'PUT', 
+            body: JSON.stringify(data) 
+        });
+    },
+
+    createSystemUser(data) {
+        return this.request('/admin/users', { 
+            method: 'POST', 
+            body: JSON.stringify(data) 
+        });
+    },
+
+    updateSystemConfig(configs) {
+        return this.request('/admin/config', { 
+            method: 'PUT', 
+            body: JSON.stringify({ configs }) 
+        });
+    },
+
+    clearSystemLogs() {
+        return this.request('/admin/logs', { method: 'DELETE' });
     }
 };
 

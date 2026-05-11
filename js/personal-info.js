@@ -1,7 +1,7 @@
 import API from './api.js';
 import { Toast } from './utils.js';
 
-// 打开个人信息弹窗
+// 打开个人信息弹窗（直接使用员工详情模块的弹窗，只读模式）
 async function openPersonalInfoModal() {
     try {
         // 先获取当前用户信息
@@ -13,86 +13,52 @@ async function openPersonalInfoModal() {
         
         const user = userRes.data;
         
-        // 获取用户姓名
-        const userName = user.name || user.real_name || user.username;
-        if (!userName) {
-            Toast.error('无法获取用户姓名');
-            return;
+        // 查找关联的员工
+        let foundEmployee = null;
+        const empRes = await API.getEmployees();
+        
+        if (empRes.code === 200) {
+            const employees = empRes.data;
+            
+            // 优先按工号匹配
+            if (user.employee_no) {
+                foundEmployee = employees.find(emp => emp.employee_no === user.employee_no || emp.employeeNo === user.employee_no);
+            }
+            
+            // 如果按工号没找到，按姓名匹配
+            if (!foundEmployee) {
+                const userName = user.name || user.real_name || user.username;
+                if (userName) {
+                    foundEmployee = employees.find(emp => emp.name === userName);
+                }
+            }
         }
         
-        // 按姓名查找员工信息
-        const empRes = await API.getEmployeeByName(userName);
-        if (empRes.code === 200) {
-            loadPersonalInfoToModal(empRes.data);
-            document.getElementById('personalInfoModal').classList.add('show');
+        if (foundEmployee && foundEmployee.id) {
+            // 使用员工详情模块的弹窗，设置为只读模式
+            import('./modules/employee-detail.js').then(({ default: employeeDetailModule }) => {
+                // 设置为只读模式
+                employeeDetailModule.setReadOnly(true);
+                // 打开弹窗
+                employeeDetailModule.open(foundEmployee);
+            });
         } else {
-            Toast.error(`未找到姓名为「${userName}」的员工信息`);
-            return;
+            Toast.error('未找到关联的员工信息');
         }
+        
     } catch (error) {
         console.error('加载个人信息失败:', error);
         Toast.error('加载个人信息失败');
         return;
     }
-    
-    document.getElementById('personalInfoModal').classList.add('show');
-}
-
-// 将数据加载到弹窗
-function loadPersonalInfoToModal(data) {
-    // 基本信息
-    document.getElementById('piName').value = data.name || '';
-    document.getElementById('piEmployeeNo').value = data.employeeNo || '';
-    document.getElementById('piGender').value = data.gender || '';
-    document.getElementById('piBirthDate').value = formatDate(data.birthDate) || '';
-    
-    // 身份信息
-    document.getElementById('piIdCard').value = maskIdCard(data.idCard) || '';
-    document.getElementById('piEmploymentType').value = data.employmentType || '';
-    
-    // 联系信息
-    document.getElementById('piPhone').value = data.phone || '';
-    document.getElementById('piEmail').value = data.email || '';
-    document.getElementById('piAddress').value = data.address || '';
-    
-    // 工作信息
-    document.getElementById('piDepartment').value = data.department || '';
-    document.getElementById('piPosition').value = data.position || '';
-    document.getElementById('piJobLevel').value = data.jobLevel || '';
-    document.getElementById('piEntryDate').value = formatDate(data.entryDate) || '';
-    document.getElementById('piRegularDate').value = formatDate(data.regularDate) || '';
-    document.getElementById('piStatus').value = data.status || '';
-}
-
-// 格式化日期
-function formatDate(dateStr) {
-    if (!dateStr) return '';
-    try {
-        const date = new Date(dateStr);
-        if (isNaN(date.getTime())) {
-            return dateStr;
-        }
-        const year = date.getFullYear();
-        const month = String(date.getMonth() + 1).padStart(2, '0');
-        const day = String(date.getDate()).padStart(2, '0');
-        return `${year}-${month}-${day}`;
-    } catch (e) {
-        return dateStr;
-    }
-}
-
-// 身份证号脱敏
-function maskIdCard(idCard) {
-    if (!idCard) return '';
-    if (idCard.length === 18) {
-        return idCard.replace(/(\d{4})\d{10}(\d{4})/, '$1**********$2');
-    }
-    return idCard;
 }
 
 // 关闭弹窗
 function closePersonalInfoModal() {
-    document.getElementById('personalInfoModal').classList.remove('show');
+    // 调用员工详情模块的关闭方法
+    import('./modules/employee-detail.js').then(({ default: employeeDetailModule }) => {
+        employeeDetailModule.close();
+    });
 }
 
 // 导出到全局

@@ -323,6 +323,10 @@ async function initAuth() {
         if (res.code === 200) {
             Utils.setCurrentUser(res.data);
             await renderUserInfo(res.data);
+            // 等待 DOM 更新后更新侧边栏
+            setTimeout(() => {
+                updateSidebarForRole();
+            }, 100);
         }
     } catch (e) {
         console.warn('Failed to init auth:', e);
@@ -452,6 +456,9 @@ function initSidebar() {
         sidebarHeader.appendChild(toggleBtn);
     }
 
+    // 根据用户角色调整侧边栏菜单
+    updateSidebarForRole();
+
     const navContainer = document.querySelector('.sidebar-nav');
     if (navContainer) {
         navContainer.addEventListener('click', (e) => {
@@ -461,6 +468,50 @@ function initSidebar() {
             }
         });
     }
+}
+
+function updateSidebarForRole() {
+    const currentUser = Utils.getCurrentUser();
+    if (!currentUser) return;
+
+    const isAdmin = currentUser.role === 'super_admin' || 
+                    currentUser.role === 'hr_admin' || 
+                    currentUser.role === 'admin';
+
+    // 查找系统管理菜单项
+    const systemNavItem = document.querySelector('.nav-item[data-module="system"]');
+    if (systemNavItem) {
+        if (!isAdmin) {
+            // 普通员工：将系统管理改为修改密码
+            const textSpan = systemNavItem.querySelector('.text');
+            if (textSpan) {
+                textSpan.textContent = '修改密码';
+            }
+            const iconSpan = systemNavItem.querySelector('.icon');
+            if (iconSpan) {
+                iconSpan.textContent = '🔑';
+            }
+        }
+    }
+
+    // 隐藏管理员专属菜单项
+    const adminOnlyModules = ['import', 'openapi', 'security', 'audit'];
+    adminOnlyModules.forEach(module => {
+        const navItem = document.querySelector(`.nav-item[data-module="${module}"]`);
+        if (navItem && !isAdmin) {
+            navItem.style.display = 'none';
+        }
+    });
+
+    // 找到"系统"部分标题
+    const sections = document.querySelectorAll('.nav-section');
+    sections.forEach(section => {
+        const title = section.querySelector('.nav-section-title');
+        if (title && title.textContent === '系统' && !isAdmin) {
+            // 如果是普通员工，系统部分只保留修改密码，或者修改标题
+            title.textContent = '个人设置';
+        }
+    });
 }
 
 let isMobileMode = false;

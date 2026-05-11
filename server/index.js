@@ -27,6 +27,7 @@ import openapiRoutes from './routes/openapi.js';
 import securityRoutes from './routes/security.js';
 import auditRoutes from './routes/audit.js';
 import todosRoutes from './routes/todos.js';
+import userRoutes from './routes/users.js';
 
 dotenv.config();
 
@@ -60,6 +61,7 @@ app.use('/api', openapiRoutes);
 app.use('/api', securityRoutes);
 app.use('/api', auditRoutes);
 app.use('/api', todosRoutes);
+app.use('/api', userRoutes);
 
 // 使用 /api/system/todos 路由 - 直接调用 todos 路由的相同逻辑
 app.get('/api/system/todos', async (req, res) => {

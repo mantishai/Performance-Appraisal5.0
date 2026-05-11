@@ -113,6 +113,9 @@ const positionModule = {
         document.getElementById('content')?.addEventListener('click', (e) => {
             const btn = e.target.closest('.action-btn');
             if (btn) {
+                const table = btn.closest('table');
+                if (!table || !table.classList.contains('data-table')) return;
+                
                 const id = parseInt(btn.dataset.id);
                 const action = btn.dataset.action;
                 self.handleAction(id, action);

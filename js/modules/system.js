@@ -1,4 +1,4 @@
-import { Toast, Modal } from '../utils.js';
+import { Toast, Modal, getCurrentUser, hasRole } from '../utils.js';
 import API from '../api.js';
 
 let charts = {};
@@ -22,11 +22,111 @@ const state = {
 
 const systemModule = {
     async render(container) {
-        await this.loadData();
-        this.renderContent(container);
-        if (state.currentTab === 'monitor') {
-            this.initCharts();
+        const currentUser = getCurrentUser();
+        const isAdmin = hasRole('super_admin') || hasRole('hr_admin') || hasRole('admin');
+        
+        if (!isAdmin) {
+            // 普通员工只能修改密码
+            await this.loadCurrentUser();
+            this.renderEmployeePasswordChange(container);
+            // 更新页面标题
+            const pageTitle = document.getElementById('pageTitle');
+            const breadcrumbCurrent = document.getElementById('breadcrumbCurrent');
+            if (pageTitle) pageTitle.textContent = '修改密码';
+            if (breadcrumbCurrent) breadcrumbCurrent.textContent = '修改密码';
+        } else {
+            // 管理员可以看到所有功能
+            await this.loadData();
+            this.renderContent(container);
+            if (state.currentTab === 'monitor') {
+                this.initCharts();
+            }
         }
+    },
+
+    async loadCurrentUser() {
+        try {
+            const res = await API.getCurrentUser();
+            if (res.code === 200) {
+                state.currentUser = res.data;
+            }
+        } catch (error) {
+            console.error('Failed to load current user:', error);
+        }
+    },
+
+    renderEmployeePasswordChange(container) {
+        const currentUser = getCurrentUser();
+        container.innerHTML = `
+            <div class="page-header">
+                <h1 class="page-title">修改密码</h1>
+            </div>
+            
+            <div class="card" style="max-width: 500px;">
+                <div style="padding: 20px 0;">
+                    <div style="margin-bottom: 20px;">
+                        <label style="display: block; font-size: 14px; color: #1a3a5c; margin-bottom: 8px;">用户名</label>
+                        <input type="text" class="form-control" value="${currentUser?.username || ''}" disabled>
+                    </div>
+                    <div style="margin-bottom: 20px;">
+                        <label style="display: block; font-size: 14px; color: #1a3a5c; margin-bottom: 8px;">旧密码 <span style="color: #e84747;">*</span></label>
+                        <input type="password" class="form-control" id="oldPassword" placeholder="请输入旧密码">
+                    </div>
+                    <div style="margin-bottom: 20px;">
+                        <label style="display: block; font-size: 14px; color: #1a3a5c; margin-bottom: 8px;">新密码 <span style="color: #e84747;">*</span></label>
+                        <input type="password" class="form-control" id="newPassword" placeholder="请输入新密码（至少6位）">
+                    </div>
+                    <div style="margin-bottom: 20px;">
+                        <label style="display: block; font-size: 14px; color: #1a3a5c; margin-bottom: 8px;">确认密码 <span style="color: #e84747;">*</span></label>
+                        <input type="password" class="form-control" id="confirmPassword" placeholder="请再次输入新密码">
+                    </div>
+                    <div style="text-align: right;">
+                        <button class="btn btn-primary" id="changePasswordBtn">保存修改</button>
+                    </div>
+                </div>
+            </div>
+        `;
+
+        // 绑定修改密码事件
+        const changeBtn = document.getElementById('changePasswordBtn');
+        changeBtn?.addEventListener('click', async () => {
+            const oldPassword = document.getElementById('oldPassword')?.value;
+            const newPassword = document.getElementById('newPassword')?.value;
+            const confirmPassword = document.getElementById('confirmPassword')?.value;
+
+            if (!oldPassword) {
+                Toast.error('请输入旧密码');
+                return;
+            }
+            if (!newPassword) {
+                Toast.error('请输入新密码');
+                return;
+            }
+            if (newPassword.length < 6) {
+                Toast.error('新密码长度不能少于6位');
+                return;
+            }
+            if (newPassword !== confirmPassword) {
+                Toast.error('两次输入的密码不一致');
+                return;
+            }
+
+            try {
+                const res = await API.changePassword(oldPassword, newPassword);
+                if (res.code === 200) {
+                    Toast.success('密码修改成功');
+                    // 清空输入框
+                    document.getElementById('oldPassword').value = '';
+                    document.getElementById('newPassword').value = '';
+                    document.getElementById('confirmPassword').value = '';
+                } else {
+                    Toast.error(res.message || '密码修改失败');
+                }
+            } catch (error) {
+                Toast.error('密码修改失败，请稍后重试');
+                console.error('Change password error:', error);
+            }
+        });
     },
 
     async loadData() {

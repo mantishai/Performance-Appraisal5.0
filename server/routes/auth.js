@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import pool from '../db.js';
+import { setCurrentUser } from './users.js';
 
 const router = Router();
 
@@ -24,6 +25,7 @@ router.post('/auth/login', async (req, res) => {
             : (user.permissions || []);
         
         currentLoggedInUser = user;
+        setCurrentUser(user); // 同步到 users.js
         
         res.json({ 
             code: 200, 

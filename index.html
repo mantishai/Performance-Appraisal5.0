@@ -196,6 +196,25 @@
             
             <!-- 内容区域 -->
             <div class="modal-body">
+                <!-- 登录信息 -->
+                <div class="section">
+                    <h3>🔐 登录信息</h3>
+                    <div class="form-grid">
+                        <div class="form-row">
+                            <span class="form-label">登录名</span>
+                            <input type="text" id="piUsername" class="form-input" readonly>
+                        </div>
+                        <div class="form-row">
+                            <span class="form-label">角色</span>
+                            <input type="text" id="piRole" class="form-input" readonly>
+                        </div>
+                        <div class="form-row" style="grid-column: span 2;">
+                            <span class="form-label"></span>
+                            <button class="btn btn-primary" onclick="openChangePasswordModal()">🔄 修改密码</button>
+                        </div>
+                    </div>
+                </div>
+                
                 <!-- 基本信息 -->
                 <div class="section">
                     <h3>📌 基本信息</h3>
@@ -288,6 +307,40 @@
             <!-- 底部按钮 -->
             <div class="modal-actions">
                 <button class="btn-modal btn-modal-secondary" onclick="closePersonalInfoModal()">关闭</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 修改密码弹窗 -->
+    <div id="changePasswordModal" class="modal-overlay">
+        <div class="modal-container">
+            <div class="modal-header">
+                <h2>🔄 修改密码</h2>
+                <button class="modal-close" onclick="closeChangePasswordModal()">×</button>
+            </div>
+            
+            <div class="modal-body">
+                <div class="form-row">
+                    <span class="form-label">当前登录名</span>
+                    <input type="text" id="cpUsername" class="form-input" readonly>
+                </div>
+                <div class="form-row">
+                    <span class="form-label">旧密码 *</span>
+                    <input type="password" id="cpOldPassword" class="form-input" placeholder="请输入旧密码">
+                </div>
+                <div class="form-row">
+                    <span class="form-label">新密码 *</span>
+                    <input type="password" id="cpNewPassword" class="form-input" placeholder="请输入新密码（至少6位）">
+                </div>
+                <div class="form-row">
+                    <span class="form-label">确认新密码 *</span>
+                    <input type="password" id="cpConfirmPassword" class="form-input" placeholder="请再次输入新密码">
+                </div>
+            </div>
+            
+            <div class="modal-actions">
+                <button class="btn-modal btn-modal-secondary" onclick="closeChangePasswordModal()">取消</button>
+                <button class="btn-modal btn-modal-primary" onclick="submitChangePassword()">保存</button>
             </div>
         </div>
     </div>
@@ -633,9 +686,11 @@
         </div>
     </div>
     
-    <script type="module" src="js/app.js?v=10"></script>
-    <script src="js/position-manual.js?v=10"></script>
-    <script type="module" src="js/personal-info.js?v=10"></script>
+    <script type="module" src="js/app.js?v=15"></script>
+    <script src="js/position-manual.js?v=12"></script>
+    <script type="module" src="js/personal-info.js?v=14"></script>
+    <script type="module" src="js/change-password.js?v=12"></script>
+    <script type="module" src="js/modules/employee-detail.js?v=6"></script>
     <script>
         // PWA Service Worker 注册
         if ('serviceWorker' in navigator) {
