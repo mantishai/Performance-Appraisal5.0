@@ -601,6 +601,297 @@ const API = {
 
     clearSystemLogs() {
         return this.request('/admin/logs', { method: 'DELETE' });
+    },
+
+    getOpenapiApps() {
+        return this.request('/openapi/apps');
+    },
+
+    createOpenapiApp(data) {
+        return this.request('/openapi/apps', {
+            method: 'POST',
+            body: JSON.stringify(data)
+        });
+    },
+
+    updateOpenapiApp(id, data) {
+        return this.request(`/openapi/app/${id}`, {
+            method: 'PUT',
+            body: JSON.stringify(data)
+        });
+    },
+
+    deleteOpenapiApp(id) {
+        return this.request(`/openapi/app/${id}`, { method: 'DELETE' });
+    },
+
+    getOpenapiAppPermissions(id) {
+        return this.request(`/openapi/app/${id}/permissions`);
+    },
+
+    updateOpenapiAppPermissions(id, permissions) {
+        return this.request(`/openapi/app/${id}/permissions`, {
+            method: 'PUT',
+            body: JSON.stringify({ permissions })
+        });
+    },
+
+    getOpenapiAPIs() {
+        return this.request('/openapi/apis');
+    },
+
+    getOpenapiLogs(page = 1, limit = 20) {
+        return this.request(`/openapi/logs?page=${page}&limit=${limit}`);
+    },
+
+    getOpenapiStatistics() {
+        return this.request('/openapi/statistics');
+    },
+
+    getOpenapiDoc() {
+        return this.request('/openapi/doc');
+    },
+
+    testOpenapi(data) {
+        return this.request('/openapi/test', {
+            method: 'POST',
+            body: JSON.stringify(data)
+        });
+    },
+
+    getPerformanceKPIs() {
+        return this.request('/performance/kpis');
+    },
+
+    createPerformanceKPI(data) {
+        return this.request('/performance/kpis', {
+            method: 'POST',
+            body: JSON.stringify(data)
+        });
+    },
+
+    updatePerformanceKPI(id, data) {
+        return this.request(`/performance/kpis/${id}`, {
+            method: 'PUT',
+            body: JSON.stringify(data)
+        });
+    },
+
+    deletePerformanceKPI(id) {
+        return this.request(`/performance/kpis/${id}`, { method: 'DELETE' });
+    },
+
+    getPerformancePlans() {
+        return this.request('/performance/plans');
+    },
+
+    createPerformancePlan(data) {
+        return this.request('/performance/plans', {
+            method: 'POST',
+            body: JSON.stringify(data)
+        });
+    },
+
+    updatePerformancePlan(id, data) {
+        return this.request(`/performance/plans/${id}`, {
+            method: 'PUT',
+            body: JSON.stringify(data)
+        });
+    },
+
+    deletePerformancePlan(id) {
+        return this.request(`/performance/plans/${id}`, { method: 'DELETE' });
+    },
+
+    getPerformanceAppeals() {
+        return this.request('/performance/appeals');
+    },
+
+    handlePerformanceAppeal(id, data) {
+        return this.request(`/performance/appeals/${id}/handle`, {
+            method: 'PUT',
+            body: JSON.stringify(data)
+        });
+    },
+
+    getCourseRegistrations(courseId) {
+        return this.request(`/training/registrations/${courseId || 'all'}`);
+    },
+
+    getTrainingStatistics() {
+        return this.request('/training/statistics');
+    },
+
+    updateTrainingCourseStatus(id, status) {
+        return this.request(`/training/courses/${id}/status`, {
+            method: 'PUT',
+            body: JSON.stringify({ status })
+        });
+    },
+
+    createTrainingRecord(data) {
+        return this.request('/training/records', {
+            method: 'POST',
+            body: JSON.stringify(data)
+        });
+    },
+
+    getNineGridData() {
+        return this.request('/talent/nine-grid');
+    },
+
+    updateNineGrid(data) {
+        return this.request('/talent/nine-grid', {
+            method: 'PUT',
+            body: JSON.stringify(data)
+        });
+    },
+
+    getSuccessors(params = {}) {
+        const query = new URLSearchParams(params).toString();
+        return this.request(`/talent/successors${query ? '?' + query : ''}`);
+    },
+
+    updateSuccessor(id, data) {
+        return this.request(`/talent/successors/${id}`, {
+            method: 'PUT',
+            body: JSON.stringify(data)
+        });
+    },
+
+    createKeyPosition(data) {
+        return this.request('/talent/key-positions', {
+            method: 'POST',
+            body: JSON.stringify(data)
+        });
+    },
+
+    updateKeyPositionLevel(id, level) {
+        return this.request(`/talent/key-positions/${id}/level`, {
+            method: 'PUT',
+            body: JSON.stringify({ level })
+        });
+    },
+
+    deleteKeyPosition(id) {
+        return this.request(`/talent/key-positions/${id}`, { method: 'DELETE' });
+    },
+
+    getAlertStatistics() {
+        return this.request('/alert/statistics');
+    },
+
+    getAlertRules() {
+        return this.request('/alert/rules');
+    },
+
+    updateAlertRule(id, data) {
+        return this.request(`/alert/rules/${id}`, {
+            method: 'PUT',
+            body: JSON.stringify(data)
+        });
+    },
+
+    getImportRecords() {
+        return this.request('/import/records');
+    },
+
+    getReportFields() {
+        return this.request('/import/fields');
+    },
+
+    getReportTemplates() {
+        return this.request('/import/templates');
+    },
+
+    deleteReportTemplate(id) {
+        return this.request(`/import/templates/${id}`, { method: 'DELETE' });
+    },
+
+    getImportTemplate(type) {
+        return this.request(`/import/template/${type}`);
+    },
+
+    previewImportData(data) {
+        return this.request('/import/preview', {
+            method: 'POST',
+            body: JSON.stringify(data)
+        });
+    },
+
+    executeImport(data) {
+        return this.request('/import/execute', {
+            method: 'POST',
+            body: JSON.stringify(data)
+        });
+    },
+
+    getArchiveTables() {
+        return this.request('/archive/tables');
+    },
+
+    getArchiveRecords(params = {}) {
+        const query = new URLSearchParams(params).toString();
+        return this.request(`/archive/records${query ? '?' + query : ''}`);
+    },
+
+    previewArchive(data) {
+        return this.request('/archive/preview', {
+            method: 'POST',
+            body: JSON.stringify(data)
+        });
+    },
+
+    executeArchive(data) {
+        return this.request('/archive/execute', {
+            method: 'POST',
+            body: JSON.stringify(data)
+        });
+    },
+
+    restoreArchive(id) {
+        return this.request(`/archive/restore/${id}`, { method: 'POST' });
+    },
+
+    saveReportTemplate(data) {
+        return this.request('/import/templates', {
+            method: 'POST',
+            body: JSON.stringify(data)
+        });
+    },
+
+    previewReport(data) {
+        return this.request('/import/preview-report', {
+            method: 'POST',
+            body: JSON.stringify(data)
+        });
+    },
+
+    exportReport(data) {
+        return this.request('/import/export', {
+            method: 'POST',
+            body: JSON.stringify(data)
+        });
+    },
+
+    getIpWhitelist() {
+        return this.request('/security/ip-whitelist');
+    },
+
+    getSecurityPolicy() {
+        return this.request('/security/policy');
+    },
+
+    getTalentPool() {
+        return this.request('/talent/talent-pool');
+    },
+
+    getTalentCoverage() {
+        return this.request('/talent/coverage-report');
+    },
+
+    getCoverageReport() {
+        return this.request('/talent/coverage-report');
     }
 };
 

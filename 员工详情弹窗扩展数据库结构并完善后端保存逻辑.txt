@@ -1,0 +1,918 @@
+# 任务：为员工详情弹窗扩展数据库结构并完善后端保存逻辑（完整版）
+
+## 一、背景
+当前 HRMS 系统的【员工管理】→【员工详情】弹窗包含大量员工信息字段，但数据库 `employees` 表仅存储基础字段。前端保存时会因字段缺失导致“服务器错误”。
+
+需要：
+1. 扩展 `employees` 主表，添加第1-7类的所有字段
+2. 创建第8-24类对应的子表（共17张子表）
+3. 完善后端 `getEmployeeDetail` 和 `updateEmployeeDetail` API
+
+## 二、需要分析的前端代码文件（已提供）
+- `js/modules/employee-detail.js` - 员工详情弹窗逻辑，包含所有编辑框的 ID 和保存时的数据组装逻辑
+- `js/api.js` - API 调用，已有 `updateEmployeeDetail` 方法
+- `js/modules/employee.js` - 员工管理主模块
+- `index.html` - 弹窗 DOM 结构（参考）
+
+## 三、需要修改的后端文件
+1. `server/routes/employees.js` - 员工路由，需添加 `/employees/:id/detail` 的 GET 和 PUT 处理
+2. `server/controllers/employeeController.js` - 控制器，需实现 `getEmployeeDetail` 和 `updateEmployeeDetail` 方法
+3. `server/db.js` 或 `server/models/Employee.js` - 数据库连接和模型
+4. `sql/update_employee_table.sql` - 数据库迁移脚本
+
+## 四、完整字段清单（第1-24类）
+
+### 第1类：基本信息（基本信息区域）- 存储在主表 employees
+| 字段ID | 字段名 | 类型 | 说明 | 是否已有 |
+|--------|--------|------|------|----------|
+| modalName | name | VARCHAR(50) | 姓名 | ✅ 已有 |
+| modalGender | gender | TINYINT | 性别：1=男，2=女 | ✅ 已有 |
+| modalAge | age | INT | 年龄 | ➕ 新增 |
+| modalNation | nation | VARCHAR(30) | 民族 | ➕ 新增 |
+| - | birth_date | DATE | 出生日期 | ➕ 新增 |
+| - | native_place | VARCHAR(100) | 籍贯 | ➕ 新增 |
+| - | resume_attachment | VARCHAR(500) | 简历附件路径 | ➕ 新增 |
+| - | photo | VARCHAR(500) | 照片路径 | ➕ 新增 |
+
+### 第2类：身份信息（身份信息区域）- 存储在主表 employees
+| 字段ID | 字段名 | 类型 | 说明 | 是否已有 |
+|--------|--------|------|------|----------|
+| modalIdCard | id_card | VARCHAR(18) | 身份证号 | ➕ 新增 |
+| modalPoliticalStatus | political_status | VARCHAR(20) | 政治面貌 | ➕ 新增 |
+| modalArchiveLocation | archive_location | VARCHAR(100) | 档案所在地 | ➕ 新增 |
+| modalHealthReport | health_report | VARCHAR(20) | 体检报告状态 | ➕ 新增 |
+| modalHouseholdType | household_type | VARCHAR(10) | 户口性质(urban/rural) | ➕ 新增 |
+| modalMarriageStatus | marriage_status | VARCHAR(10) | 婚姻状况 | ➕ 新增 |
+| - | id_card_start_date | DATE | 身份证有效期起 | ➕ 新增 |
+| - | id_card_end_date | DATE | 身份证有效期至 | ➕ 新增 |
+| - | id_card_attachment | VARCHAR(500) | 身份证附件路径 | ➕ 新增 |
+
+### 第3类：联系信息（联系信息区域）- 存储在主表 employees
+| 字段ID | 字段名 | 类型 | 说明 | 是否已有 |
+|--------|--------|------|------|----------|
+| modalRegisteredAddress | registered_address | VARCHAR(200) | 户籍地址 | ➕ 新增 |
+| modalCurrentAddress | current_address | VARCHAR(200) | 现住址 | ➕ 新增 |
+| modalPhone | phone | VARCHAR(20) | 手机号码 | ✅ 已有 |
+| modalEmail | email | VARCHAR(100) | 电子邮箱 | ✅ 已有 |
+| modalEmergencyContact | emergency_contact | VARCHAR(50) | 紧急联系人 | ➕ 新增 |
+| modalEmergencyPhone | emergency_phone | VARCHAR(20) | 紧急联系电话 | ➕ 新增 |
+| - | wechat | VARCHAR(50) | 个人微信 | ➕ 新增 |
+| - | qq | VARCHAR(20) | QQ号 | ➕ 新增 |
+| - | postal_code | VARCHAR(10) | 邮编 | ➕ 新增 |
+
+### 第4类：学历与职称信息（学历与职称信息区域）- 存储在主表 employees
+| 字段ID | 字段名 | 类型 | 说明 | 是否已有 |
+|--------|--------|------|------|----------|
+| modalEducation | education | VARCHAR(20) | 最高学历 | ➕ 新增 |
+| modalGraduationDate | graduation_date | DATE | 毕业时间 | ➕ 新增 |
+| modalMajor | major | VARCHAR(50) | 专业 | ➕ 新增 |
+| modalTitle | title | VARCHAR(50) | 现有职称 | ➕ 新增 |
+| modalTitleDate | title_date | DATE | 职称取得时间 | ➕ 新增 |
+| modalWorkYears | work_years | INT | 工龄 | ➕ 新增 |
+| modalWorkField | work_field | VARCHAR(50) | 工作领域 | ➕ 新增 |
+| modalProjectLevel | project_level | VARCHAR(20) | 项目级别 | ➕ 新增 |
+| modalIsManager | is_manager | TINYINT | 是否担任负责人(1=是,0=否) | ➕ 新增 |
+| - | school_name | VARCHAR(100) | 毕业院校 | ➕ 新增 |
+| - | degree | VARCHAR(20) | 学位(学士/硕士/博士) | ➕ 新增 |
+| - | foreign_language | VARCHAR(50) | 外语水平 | ➕ 新增 |
+| - | computer_skill | VARCHAR(50) | 计算机水平 | ➕ 新增 |
+| - | title_attachment | VARCHAR(500) | 职称证书附件 | ➕ 新增 |
+| - | title_expire_date | DATE | 职称到期预警日期 | ➕ 新增 |
+
+### 第5类：工作信息（工作信息区域）- 存储在主表 employees
+| 字段ID | 字段名 | 类型 | 说明 | 是否已有 |
+|--------|--------|------|------|----------|
+| modalEmployeeNo | employee_no | VARCHAR(50) | 工号 | ✅ 已有 |
+| modalDepartment | department_id | INT | 归属部门ID | ✅ 已有 |
+| modalPosition | position_id | INT | 工作岗位ID | ✅ 已有 |
+| modalEntryDate | entry_date | DATE | 入职时间 | ✅ 已有 |
+| modalRegularDate | regular_date | DATE | 转正日期 | ➕ 新增 |
+| modalDepartmentNature | department_nature | VARCHAR(50) | 部门性质 | ➕ 新增 |
+| modalEmployeeType | employee_type | VARCHAR(20) | 人员性质 | ➕ 新增 |
+| modalDirectSuperior | direct_superior | VARCHAR(50) | 直接上级 | ➕ 新增 |
+| modalManager | manager | VARCHAR(50) | 分管领导 | ➕ 新增 |
+| modalAttendanceRequired | attendance_required | TINYINT | 是否考勤(1=是,0=否) | ➕ 新增 |
+| modalHireType | hire_type | VARCHAR(20) | 聘用性质 | ➕ 新增 |
+| modalUnionJoinDate | union_join_date | DATE | 加入工会时间 | ➕ 新增 |
+| modalConfidentialAgreement | confidential_agreement | TINYINT | 保密协议(1=已签订,0=未签订) | ➕ 新增 |
+| - | work_email | VARCHAR(100) | 工作邮箱 | ➕ 新增 |
+| - | office_phone | VARCHAR(20) | 办公电话 | ➕ 新增 |
+| - | office_location | VARCHAR(100) | 办公地点 | ➕ 新增 |
+| - | report_to | VARCHAR(50) | 汇报关系(虚线/实线) | ➕ 新增 |
+| - | work_city | VARCHAR(50) | 工作地 | ➕ 新增 |
+| - | probation_end_date | DATE | 试用期结束日期 | ➕ 新增 |
+| - | probation_reminder | TINYINT | 试用期到期提醒(0=未提醒,1=已提醒) | ➕ 新增 |
+
+### 第6类：薪酬福利（薪酬福利区域）- 存储在主表 employees
+| 字段ID | 字段名 | 类型 | 说明 | 是否已有 |
+|--------|--------|------|------|----------|
+| modalSalary | salary | DECIMAL(10,2) | 月薪标准 | ➕ 新增 |
+| modalAnnualSalary | annual_salary | DECIMAL(10,2) | 参考年薪 | ➕ 新增 |
+| modalSocialSecurityBase | social_security_base | DECIMAL(10,2) | 社保基数 | ➕ 新增 |
+| modalSocialSecurityCompany | social_security_company | VARCHAR(100) | 社保购买单位 | ➕ 新增 |
+| modalSocialSecurityStartDate | social_security_start_date | DATE | 社保开始时间 | ➕ 新增 |
+| modalBankCard | bank_card | VARCHAR(50) | 银行卡号 | ➕ 新增 |
+| - | provident_fund_base | DECIMAL(10,2) | 公积金基数 | ➕ 新增 |
+| - | provident_fund_account | VARCHAR(50) | 公积金账号 | ➕ 新增 |
+| - | performance_bonus_ratio | DECIMAL(5,2) | 绩效奖金比例(%) | ➕ 新增 |
+| - | meal_allowance | DECIMAL(10,2) | 餐补 | ➕ 新增 |
+| - | transport_allowance | DECIMAL(10,2) | 交通补 | ➕ 新增 |
+| - | communication_allowance | DECIMAL(10,2) | 通讯补 | ➕ 新增 |
+| - | salary_security_level | VARCHAR(20) | 薪酬保密等级 | ➕ 新增 |
+| - | bank_name | VARCHAR(100) | 开户行 | ➕ 新增 |
+
+### 第7类：附件（附件区域）- 存储在主表 employees（存储路径）
+| 字段名 | 类型 | 说明 | 是否已有 |
+|--------|------|------|----------|
+| health_report_attachment | VARCHAR(500) | 体检报告附件 | ➕ 新增 |
+| entry_materials_checklist | JSON | 入职材料清单状态 | ➕ 新增 |
+| contract_attachment | VARCHAR(500) | 劳动合同扫描件 | ➕ 新增 |
+| confidentiality_attachment | VARCHAR(500) | 保密协议扫描件 | ➕ 新增 |
+| non_compete_attachment | VARCHAR(500) | 竞业限制协议 | ➕ 新增 |
+| archive_status | VARCHAR(20) | 档案存放状态 | ➕ 新增 |
+
+### 第8类：工作经历 - 存储子表 employee_work_experience
+| 列名 | 类型 | 说明 |
+|------|------|------|
+| employee_id | INT | 员工ID(外键) |
+| period | VARCHAR(50) | 起止时间 |
+| company | VARCHAR(100) | 工作单位 |
+| position | VARCHAR(50) | 职位 |
+| reference | VARCHAR(50) | 证明人 |
+| phone | VARCHAR(20) | 联系电话 |
+| proof_material | VARCHAR(200) | 证明材料路径 |
+| resume_attachment | VARCHAR(200) | 简历附件 |
+| leave_reason | TEXT | 离职原因 |
+| job_description | TEXT | 工作职责描述 |
+| background_check_status | VARCHAR(20) | 背景调查状态 |
+| background_check_date | DATE | 背调完成时间 |
+| sort_order | INT | 排序 |
+
+### 第9类：家庭主要成员 - 存储子表 employee_family_member
+| 列名 | 类型 | 说明 |
+|------|------|------|
+| employee_id | INT | 员工ID(外键) |
+| name | VARCHAR(50) | 姓名 |
+| relation | VARCHAR(20) | 关系 |
+| company | VARCHAR(100) | 工作单位 |
+| phone | VARCHAR(20) | 联系电话 |
+| note | VARCHAR(200) | 备注 |
+| is_emergency | TINYINT | 是否为紧急联系人(1=是,0=否) |
+| political_status | VARCHAR(20) | 政治面貌 |
+| sort_order | INT | 排序 |
+
+### 第10类：本人项目业绩 - 存储子表 employee_project_performance
+| 列名 | 类型 | 说明 |
+|------|------|------|
+| employee_id | INT | 员工ID(外键) |
+| type | VARCHAR(50) | 项目类型 |
+| start_date | DATE | 开始时间 |
+| end_date | DATE | 结束时间 |
+| name | VARCHAR(100) | 项目名称 |
+| level | VARCHAR(50) | 项目级别 |
+| role | VARCHAR(50) | 个人角色 |
+| proof_material | VARCHAR(200) | 证明材料 |
+| amount | DECIMAL(12,2) | 项目金额 |
+| result_description | TEXT | 项目成果描述 |
+| client_name | VARCHAR(100) | 客户名称 |
+| sort_order | INT | 排序 |
+
+### 第11类：部门信息 - 存储子表 employee_department_info
+| 列名 | 类型 | 说明 |
+|------|------|------|
+| employee_id | INT | 员工ID(外键) |
+| department | VARCHAR(100) | 部门名称 |
+| position | VARCHAR(50) | 职位 |
+| entry_date | DATE | 入职时间 |
+| leave_date | DATE | 离职时间 |
+| note | VARCHAR(200) | 备注 |
+| transfer_type | VARCHAR(20) | 异动类型 |
+| transfer_doc_no | VARCHAR(50) | 异动单据号 |
+| approval_status | VARCHAR(20) | 审批状态 |
+| sort_order | INT | 排序 |
+
+### 第12类：教育信息 - 存储子表 employee_education_info
+| 列名 | 类型 | 说明 |
+|------|------|------|
+| employee_id | INT | 员工ID(外键) |
+| education | VARCHAR(20) | 学历 |
+| school | VARCHAR(100) | 学校 |
+| major | VARCHAR(50) | 专业 |
+| entry_date | DATE | 入学时间 |
+| graduation_date | DATE | 毕业时间 |
+| note | VARCHAR(200) | 备注 |
+| is_fulltime | TINYINT | 是否全日制(1=是,0=否) |
+| certificate_attachment | VARCHAR(500) | 学历证书附件 |
+| degree_attachment | VARCHAR(500) | 学位证书附件 |
+| education_verify_status | VARCHAR(20) | 学历认证状态 |
+| sort_order | INT | 排序 |
+
+### 第13类：获奖情况 - 存储子表 employee_award
+| 列名 | 类型 | 说明 |
+|------|------|------|
+| employee_id | INT | 员工ID(外键) |
+| name | VARCHAR(100) | 奖项名称 |
+| issuer | VARCHAR(100) | 颁奖单位 |
+| date | DATE | 获奖时间 |
+| content | VARCHAR(200) | 获奖内容 |
+| note | VARCHAR(200) | 备注 |
+| award_level | VARCHAR(20) | 奖项级别 |
+| certificate_attachment | VARCHAR(500) | 获奖证书附件 |
+| sort_order | INT | 排序 |
+
+### 第14类：职称信息 - 存储子表 employee_title_info
+| 列名 | 类型 | 说明 |
+|------|------|------|
+| employee_id | INT | 员工ID(外键) |
+| name | VARCHAR(50) | 职称名称 |
+| issuer | VARCHAR(100) | 评定机构 |
+| date | DATE | 取得时间 |
+| expire_date | DATE | 有效期至 |
+| note | VARCHAR(200) | 备注 |
+| certificate_attachment | VARCHAR(500) | 职称证书附件 |
+| appointment_date | DATE | 聘任时间 |
+| remind_sent | TINYINT | 是否已发送到期提醒 |
+| sort_order | INT | 排序 |
+
+### 第15类：注册证信息 - 存储子表 employee_registration
+| 列名 | 类型 | 说明 |
+|------|------|------|
+| employee_id | INT | 员工ID(外键) |
+| name | VARCHAR(100) | 证书名称 |
+| number | VARCHAR(50) | 证书编号 |
+| date | DATE | 取得时间 |
+| expire_date | DATE | 有效期至 |
+| note | VARCHAR(200) | 备注 |
+| certificate_attachment | VARCHAR(500) | 证书附件 |
+| continuing_education | VARCHAR(20) | 继续教育完成状态 |
+| remind_sent | TINYINT | 是否已发送到期提醒 |
+| sort_order | INT | 排序 |
+
+### 第16类：岗位证信息 - 存储子表 employee_position_certificate
+| 列名 | 类型 | 说明 |
+|------|------|------|
+| employee_id | INT | 员工ID(外键) |
+| name | VARCHAR(100) | 证书名称 |
+| number | VARCHAR(50) | 证书编号 |
+| date | DATE | 取得时间 |
+| expire_date | DATE | 有效期至 |
+| note | VARCHAR(200) | 备注 |
+| certificate_attachment | VARCHAR(500) | 证书附件 |
+| issuing_authority | VARCHAR(100) | 发证机关 |
+| remind_sent | TINYINT | 是否已发送到期提醒 |
+| sort_order | INT | 排序 |
+
+### 第17类：人事调动情况 - 存储子表 employee_transfer
+| 列名 | 类型 | 说明 |
+|------|------|------|
+| employee_id | INT | 员工ID(外键) |
+| type | VARCHAR(50) | 调动类型 |
+| old_department | VARCHAR(100) | 原部门 |
+| old_position | VARCHAR(50) | 原职位 |
+| new_department | VARCHAR(100) | 新部门 |
+| new_position | VARCHAR(50) | 新职位 |
+| date | DATE | 调动时间 |
+| note | VARCHAR(200) | 备注 |
+| transfer_doc_no | VARCHAR(50) | 异动单据号 |
+| after_salary | DECIMAL(10,2) | 异动后薪资 |
+| reason | TEXT | 异动原因 |
+| approver | VARCHAR(50) | 审批人 |
+| approval_status | VARCHAR(20) | 审批状态 |
+| sort_order | INT | 排序 |
+
+### 第18类：流程记录 - 存储子表 employee_process_record
+| 列名 | 类型 | 说明 |
+|------|------|------|
+| employee_id | INT | 员工ID(外键) |
+| name | VARCHAR(100) | 流程名称 |
+| type | VARCHAR(50) | 流程类型 |
+| start_time | DATETIME | 发起时间 |
+| end_time | DATETIME | 完成时间 |
+| status | VARCHAR(20) | 状态 |
+| note | VARCHAR(200) | 备注 |
+| current_node | VARCHAR(100) | 当前审批节点 |
+| approver | VARCHAR(50) | 审批人 |
+| approval_comment | TEXT | 审批意见 |
+| sort_order | INT | 排序 |
+
+### 第19类：合同信息（新增模块）- 存储子表 employee_contract
+| 列名 | 类型 | 说明 |
+|------|------|------|
+| employee_id | INT | 员工ID(外键) |
+| contract_type | VARCHAR(20) | 合同类型 |
+| contract_no | VARCHAR(50) | 合同编号 |
+| sign_date | DATE | 签订日期 |
+| start_date | DATE | 生效日期 |
+| end_date | DATE | 到期日期 |
+| contract_attachment | VARCHAR(500) | 合同扫描件 |
+| renewal_count | INT | 续签次数 |
+| is_permanent | TINYINT | 是否无固定期限合同(1=是,0=否) |
+| remind_sent | TINYINT | 是否已发送到期提醒 |
+| note | VARCHAR(200) | 备注 |
+| sort_order | INT | 排序 |
+
+### 第20类：培训与发展（新增模块）- 存储子表 employee_training
+| 列名 | 类型 | 说明 |
+|------|------|------|
+| employee_id | INT | 员工ID(外键) |
+| training_name | VARCHAR(100) | 培训名称 |
+| training_org | VARCHAR(100) | 培训机构 |
+| start_date | DATE | 开始日期 |
+| end_date | DATE | 结束日期 |
+| duration | VARCHAR(20) | 培训时长 |
+| result | VARCHAR(50) | 培训结果 |
+| certificate_attachment | VARCHAR(500) | 培训证书附件 |
+| is_continuing_education | TINYINT | 是否计入继续教育学时 |
+| satisfaction_score | INT | 培训满意度(1-5) |
+| note | VARCHAR(200) | 备注 |
+| sort_order | INT | 排序 |
+
+### 第21类：奖惩记录（新增模块）- 存储子表 employee_reward_punishment
+| 列名 | 类型 | 说明 |
+|------|------|------|
+| employee_id | INT | 员工ID(外键) |
+| type | VARCHAR(10) | 奖惩类型(reward/punishment) |
+| name | VARCHAR(100) | 奖惩名称 |
+| date | DATE | 奖惩日期 |
+| amount | DECIMAL(10,2) | 奖惩金额 |
+| reason | TEXT | 原因/事由 |
+| attachment | VARCHAR(500) | 附件 |
+| revoke_date | DATE | 撤销日期 |
+| revoke_reason | TEXT | 撤销原因 |
+| note | VARCHAR(200) | 备注 |
+| sort_order | INT | 排序 |
+
+### 第22类：背调与合规（新增模块）- 存储子表 employee_background_check
+| 列名 | 类型 | 说明 |
+|------|------|------|
+| employee_id | INT | 员工ID(外键) |
+| check_type | VARCHAR(20) | 背调类型 |
+| agency | VARCHAR(100) | 背调机构 |
+| check_date | DATE | 完成日期 |
+| result | VARCHAR(20) | 背调结果 |
+| report_attachment | VARCHAR(500) | 背调报告附件 |
+| compliance_checklist | JSON | 合规检查项 |
+| compliance_status | VARCHAR(20) | 合规文件签署状态 |
+| note | VARCHAR(200) | 备注 |
+| sort_order | INT | 排序 |
+
+### 第23类：员工关怀（新增模块-只读/系统自动）- 存储子表 employee_reminder
+| 列名 | 类型 | 说明 |
+|------|------|------|
+| employee_id | INT | 员工ID(外键) |
+| reminder_type | VARCHAR(20) | 提醒类型 |
+| reminder_date | DATE | 提醒日期 |
+| is_sent | TINYINT | 是否已发送 |
+| sent_at | DATETIME | 发送时间 |
+| note | VARCHAR(200) | 备注 |
+
+> 注：第23类数据由系统自动生成，不需要前端提交
+
+### 第24类：审计追踪（新增模块-只读/系统自动）- 存储子表 employee_audit_log
+| 列名 | 类型 | 说明 |
+|------|------|------|
+| employee_id | INT | 员工ID(外键) |
+| created_by | VARCHAR(50) | 创建人 |
+| created_at | DATETIME | 创建时间 |
+| updated_by | VARCHAR(50) | 最后修改人 |
+| updated_at | DATETIME | 最后修改时间 |
+| change_summary | TEXT | 修改内容摘要 |
+
+> 注：第24类数据由系统自动记录，不需要前端提交
+
+## 五、数据库扩展 SQL（完整版）
+
+请在 `sql/` 目录下创建 `update_employee_table.sql`，内容如下：
+
+```sql
+-- ============================================
+-- 扩展 employees 表结构（完整版）
+-- 执行时间：2026-05-11
+-- 说明：添加员工详情弹窗所需的所有字段（第1-24类）
+-- ============================================
+
+USE hrms;  -- 根据实际数据库名修改
+
+-- ============================================
+-- 第一部分：扩展 employees 主表（第1-7类）
+-- ============================================
+
+ALTER TABLE employees 
+-- 第1类：基本信息
+ADD COLUMN IF NOT EXISTS age INT COMMENT '年龄' AFTER gender,
+ADD COLUMN IF NOT EXISTS nation VARCHAR(30) COMMENT '民族' AFTER age,
+ADD COLUMN IF NOT EXISTS birth_date DATE COMMENT '出生日期' AFTER nation,
+ADD COLUMN IF NOT EXISTS native_place VARCHAR(100) COMMENT '籍贯' AFTER birth_date,
+ADD COLUMN IF NOT EXISTS resume_attachment VARCHAR(500) COMMENT '简历附件路径' AFTER native_place,
+ADD COLUMN IF NOT EXISTS photo VARCHAR(500) COMMENT '照片路径' AFTER resume_attachment,
+
+-- 第2类：身份信息
+ADD COLUMN IF NOT EXISTS id_card VARCHAR(18) COMMENT '身份证号' AFTER photo,
+ADD COLUMN IF NOT EXISTS political_status VARCHAR(20) COMMENT '政治面貌' AFTER id_card,
+ADD COLUMN IF NOT EXISTS archive_location VARCHAR(100) COMMENT '档案所在地' AFTER political_status,
+ADD COLUMN IF NOT EXISTS health_report VARCHAR(20) COMMENT '体检报告状态' AFTER archive_location,
+ADD COLUMN IF NOT EXISTS household_type VARCHAR(10) COMMENT '户口性质(urban/rural)' AFTER health_report,
+ADD COLUMN IF NOT EXISTS marriage_status VARCHAR(10) COMMENT '婚姻状况' AFTER household_type,
+ADD COLUMN IF NOT EXISTS id_card_start_date DATE COMMENT '身份证有效期起' AFTER marriage_status,
+ADD COLUMN IF NOT EXISTS id_card_end_date DATE COMMENT '身份证有效期至' AFTER id_card_start_date,
+ADD COLUMN IF NOT EXISTS id_card_attachment VARCHAR(500) COMMENT '身份证附件路径' AFTER id_card_end_date,
+
+-- 第3类：联系信息
+ADD COLUMN IF NOT EXISTS registered_address VARCHAR(200) COMMENT '户籍地址' AFTER id_card_attachment,
+ADD COLUMN IF NOT EXISTS current_address VARCHAR(200) COMMENT '现住址' AFTER registered_address,
+ADD COLUMN IF NOT EXISTS emergency_contact VARCHAR(50) COMMENT '紧急联系人' AFTER email,
+ADD COLUMN IF NOT EXISTS emergency_phone VARCHAR(20) COMMENT '紧急联系电话' AFTER emergency_contact,
+ADD COLUMN IF NOT EXISTS wechat VARCHAR(50) COMMENT '个人微信' AFTER emergency_phone,
+ADD COLUMN IF NOT EXISTS qq VARCHAR(20) COMMENT 'QQ号' AFTER wechat,
+ADD COLUMN IF NOT EXISTS postal_code VARCHAR(10) COMMENT '邮编' AFTER qq,
+
+-- 第4类：学历与职称信息
+ADD COLUMN IF NOT EXISTS education VARCHAR(20) COMMENT '最高学历' AFTER postal_code,
+ADD COLUMN IF NOT EXISTS graduation_date DATE COMMENT '毕业时间' AFTER education,
+ADD COLUMN IF NOT EXISTS major VARCHAR(50) COMMENT '专业' AFTER graduation_date,
+ADD COLUMN IF NOT EXISTS school_name VARCHAR(100) COMMENT '毕业院校' AFTER major,
+ADD COLUMN IF NOT EXISTS degree VARCHAR(20) COMMENT '学位' AFTER school_name,
+ADD COLUMN IF NOT EXISTS foreign_language VARCHAR(50) COMMENT '外语水平' AFTER degree,
+ADD COLUMN IF NOT EXISTS computer_skill VARCHAR(50) COMMENT '计算机水平' AFTER foreign_language,
+ADD COLUMN IF NOT EXISTS title VARCHAR(50) COMMENT '现有职称' AFTER computer_skill,
+ADD COLUMN IF NOT EXISTS title_date DATE COMMENT '职称取得时间' AFTER title,
+ADD COLUMN IF NOT EXISTS title_attachment VARCHAR(500) COMMENT '职称证书附件' AFTER title_date,
+ADD COLUMN IF NOT EXISTS title_expire_date DATE COMMENT '职称到期预警日期' AFTER title_attachment,
+ADD COLUMN IF NOT EXISTS work_years INT COMMENT '工龄' AFTER title_expire_date,
+ADD COLUMN IF NOT EXISTS work_field VARCHAR(50) COMMENT '工作领域' AFTER work_years,
+ADD COLUMN IF NOT EXISTS project_level VARCHAR(20) COMMENT '项目级别' AFTER work_field,
+ADD COLUMN IF NOT EXISTS is_manager TINYINT DEFAULT 0 COMMENT '是否担任负责人(1=是,0=否)' AFTER project_level,
+
+-- 第5类：工作信息
+ADD COLUMN IF NOT EXISTS regular_date DATE COMMENT '转正日期' AFTER entry_date,
+ADD COLUMN IF NOT EXISTS probation_end_date DATE COMMENT '试用期结束日期' AFTER regular_date,
+ADD COLUMN IF NOT EXISTS probation_reminder TINYINT DEFAULT 0 COMMENT '试用期到期提醒(0=未提醒,1=已提醒)' AFTER probation_end_date,
+ADD COLUMN IF NOT EXISTS department_nature VARCHAR(50) COMMENT '部门性质' AFTER probation_reminder,
+ADD COLUMN IF NOT EXISTS employee_type VARCHAR(20) COMMENT '人员性质' AFTER department_nature,
+ADD COLUMN IF NOT EXISTS direct_superior VARCHAR(50) COMMENT '直接上级' AFTER employee_type,
+ADD COLUMN IF NOT EXISTS manager VARCHAR(50) COMMENT '分管领导' AFTER direct_superior,
+ADD COLUMN IF NOT EXISTS attendance_required TINYINT DEFAULT 1 COMMENT '是否考勤(1=是,0=否)' AFTER manager,
+ADD COLUMN IF NOT EXISTS hire_type VARCHAR(20) COMMENT '聘用性质' AFTER attendance_required,
+ADD COLUMN IF NOT EXISTS union_join_date DATE COMMENT '加入工会时间' AFTER hire_type,
+ADD COLUMN IF NOT EXISTS confidential_agreement TINYINT DEFAULT 0 COMMENT '保密协议(1=已签订,0=未签订)' AFTER union_join_date,
+ADD COLUMN IF NOT EXISTS work_email VARCHAR(100) COMMENT '工作邮箱' AFTER confidential_agreement,
+ADD COLUMN IF NOT EXISTS office_phone VARCHAR(20) COMMENT '办公电话' AFTER work_email,
+ADD COLUMN IF NOT EXISTS office_location VARCHAR(100) COMMENT '办公地点' AFTER office_phone,
+ADD COLUMN IF NOT EXISTS report_to VARCHAR(50) COMMENT '汇报关系' AFTER office_location,
+ADD COLUMN IF NOT EXISTS work_city VARCHAR(50) COMMENT '工作地' AFTER report_to,
+
+-- 第6类：薪酬福利
+ADD COLUMN IF NOT EXISTS annual_salary DECIMAL(10,2) COMMENT '参考年薪' AFTER salary,
+ADD COLUMN IF NOT EXISTS social_security_base DECIMAL(10,2) COMMENT '社保基数' AFTER annual_salary,
+ADD COLUMN IF NOT EXISTS social_security_company VARCHAR(100) COMMENT '社保购买单位' AFTER social_security_base,
+ADD COLUMN IF NOT EXISTS social_security_start_date DATE COMMENT '社保开始时间' AFTER social_security_company,
+ADD COLUMN IF NOT EXISTS provident_fund_base DECIMAL(10,2) COMMENT '公积金基数' AFTER social_security_start_date,
+ADD COLUMN IF NOT EXISTS provident_fund_account VARCHAR(50) COMMENT '公积金账号' AFTER provident_fund_base,
+ADD COLUMN IF NOT EXISTS performance_bonus_ratio DECIMAL(5,2) COMMENT '绩效奖金比例(%)' AFTER provident_fund_account,
+ADD COLUMN IF NOT EXISTS meal_allowance DECIMAL(10,2) COMMENT '餐补' AFTER performance_bonus_ratio,
+ADD COLUMN IF NOT EXISTS transport_allowance DECIMAL(10,2) COMMENT '交通补' AFTER meal_allowance,
+ADD COLUMN IF NOT EXISTS communication_allowance DECIMAL(10,2) COMMENT '通讯补' AFTER transport_allowance,
+ADD COLUMN IF NOT EXISTS salary_security_level VARCHAR(20) COMMENT '薪酬保密等级' AFTER communication_allowance,
+ADD COLUMN IF NOT EXISTS bank_card VARCHAR(50) COMMENT '银行卡号' AFTER salary_security_level,
+ADD COLUMN IF NOT EXISTS bank_name VARCHAR(100) COMMENT '开户行' AFTER bank_card,
+
+-- 第7类：附件
+ADD COLUMN IF NOT EXISTS health_report_attachment VARCHAR(500) COMMENT '体检报告附件' AFTER bank_name,
+ADD COLUMN IF NOT EXISTS entry_materials_checklist JSON COMMENT '入职材料清单状态' AFTER health_report_attachment,
+ADD COLUMN IF NOT EXISTS contract_attachment VARCHAR(500) COMMENT '劳动合同扫描件' AFTER entry_materials_checklist,
+ADD COLUMN IF NOT EXISTS confidentiality_attachment VARCHAR(500) COMMENT '保密协议扫描件' AFTER contract_attachment,
+ADD COLUMN IF NOT EXISTS non_compete_attachment VARCHAR(500) COMMENT '竞业限制协议' AFTER confidentiality_attachment,
+ADD COLUMN IF NOT EXISTS archive_status VARCHAR(20) COMMENT '档案存放状态' AFTER non_compete_attachment;
+
+-- ============================================
+-- 第二部分：创建所有子表（第8-24类）
+-- ============================================
+
+-- 第8类：工作经历
+CREATE TABLE IF NOT EXISTS employee_work_experience (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    employee_id INT NOT NULL COMMENT '员工ID',
+    period VARCHAR(50) COMMENT '起止时间',
+    company VARCHAR(100) COMMENT '工作单位',
+    position VARCHAR(50) COMMENT '职位',
+    reference VARCHAR(50) COMMENT '证明人',
+    phone VARCHAR(20) COMMENT '联系电话',
+    proof_material VARCHAR(500) COMMENT '证明材料路径',
+    resume_attachment VARCHAR(500) COMMENT '简历附件',
+    leave_reason TEXT COMMENT '离职原因',
+    job_description TEXT COMMENT '工作职责描述',
+    background_check_status VARCHAR(20) COMMENT '背景调查状态',
+    background_check_date DATE COMMENT '背调完成时间',
+    sort_order INT DEFAULT 0 COMMENT '排序',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (employee_id) REFERENCES employees(id) ON DELETE CASCADE,
+    INDEX idx_employee_id (employee_id)
+) COMMENT '员工工作经历';
+
+-- 第9类：家庭主要成员
+CREATE TABLE IF NOT EXISTS employee_family_member (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    employee_id INT NOT NULL COMMENT '员工ID',
+    name VARCHAR(50) COMMENT '姓名',
+    relation VARCHAR(20) COMMENT '关系',
+    company VARCHAR(100) COMMENT '工作单位',
+    phone VARCHAR(20) COMMENT '联系电话',
+    note VARCHAR(200) COMMENT '备注',
+    is_emergency TINYINT DEFAULT 0 COMMENT '是否为紧急联系人',
+    political_status VARCHAR(20) COMMENT '政治面貌',
+    sort_order INT DEFAULT 0 COMMENT '排序',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (employee_id) REFERENCES employees(id) ON DELETE CASCADE,
+    INDEX idx_employee_id (employee_id)
+) COMMENT '员工家庭成员';
+
+-- 第10类：本人项目业绩
+CREATE TABLE IF NOT EXISTS employee_project_performance (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    employee_id INT NOT NULL COMMENT '员工ID',
+    type VARCHAR(50) COMMENT '项目类型',
+    start_date DATE COMMENT '开始时间',
+    end_date DATE COMMENT '结束时间',
+    name VARCHAR(100) COMMENT '项目名称',
+    level VARCHAR(50) COMMENT '项目级别',
+    role VARCHAR(50) COMMENT '个人角色',
+    proof_material VARCHAR(500) COMMENT '证明材料',
+    amount DECIMAL(12,2) COMMENT '项目金额',
+    result_description TEXT COMMENT '项目成果描述',
+    client_name VARCHAR(100) COMMENT '客户名称',
+    sort_order INT DEFAULT 0 COMMENT '排序',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (employee_id) REFERENCES employees(id) ON DELETE CASCADE,
+    INDEX idx_employee_id (employee_id)
+) COMMENT '员工项目业绩';
+
+-- 第11类：部门信息
+CREATE TABLE IF NOT EXISTS employee_department_info (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    employee_id INT NOT NULL COMMENT '员工ID',
+    department VARCHAR(100) COMMENT '部门名称',
+    position VARCHAR(50) COMMENT '职位',
+    entry_date DATE COMMENT '入职时间',
+    leave_date DATE COMMENT '离职时间',
+    note VARCHAR(200) COMMENT '备注',
+    transfer_type VARCHAR(20) COMMENT '异动类型',
+    transfer_doc_no VARCHAR(50) COMMENT '异动单据号',
+    approval_status VARCHAR(20) COMMENT '审批状态',
+    sort_order INT DEFAULT 0 COMMENT '排序',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (employee_id) REFERENCES employees(id) ON DELETE CASCADE,
+    INDEX idx_employee_id (employee_id)
+) COMMENT '员工部门信息';
+
+-- 第12类：教育信息
+CREATE TABLE IF NOT EXISTS employee_education_info (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    employee_id INT NOT NULL COMMENT '员工ID',
+    education VARCHAR(20) COMMENT '学历',
+    school VARCHAR(100) COMMENT '学校',
+    major VARCHAR(50) COMMENT '专业',
+    entry_date DATE COMMENT '入学时间',
+    graduation_date DATE COMMENT '毕业时间',
+    note VARCHAR(200) COMMENT '备注',
+    is_fulltime TINYINT DEFAULT 1 COMMENT '是否全日制(1=是,0=否)',
+    certificate_attachment VARCHAR(500) COMMENT '学历证书附件',
+    degree_attachment VARCHAR(500) COMMENT '学位证书附件',
+    education_verify_status VARCHAR(20) COMMENT '学历认证状态',
+    sort_order INT DEFAULT 0 COMMENT '排序',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (employee_id) REFERENCES employees(id) ON DELETE CASCADE,
+    INDEX idx_employee_id (employee_id)
+) COMMENT '员工教育信息';
+
+-- 第13类：获奖情况
+CREATE TABLE IF NOT EXISTS employee_award (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    employee_id INT NOT NULL COMMENT '员工ID',
+    name VARCHAR(100) COMMENT '奖项名称',
+    issuer VARCHAR(100) COMMENT '颁奖单位',
+    date DATE COMMENT '获奖时间',
+    content VARCHAR(500) COMMENT '获奖内容',
+    note VARCHAR(200) COMMENT '备注',
+    award_level VARCHAR(20) COMMENT '奖项级别',
+    certificate_attachment VARCHAR(500) COMMENT '获奖证书附件',
+    sort_order INT DEFAULT 0 COMMENT '排序',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (employee_id) REFERENCES employees(id) ON DELETE CASCADE,
+    INDEX idx_employee_id (employee_id)
+) COMMENT '员工获奖情况';
+
+-- 第14类：职称信息
+CREATE TABLE IF NOT EXISTS employee_title_info (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    employee_id INT NOT NULL COMMENT '员工ID',
+    name VARCHAR(50) COMMENT '职称名称',
+    issuer VARCHAR(100) COMMENT '评定机构',
+    date DATE COMMENT '取得时间',
+    expire_date DATE COMMENT '有效期至',
+    note VARCHAR(200) COMMENT '备注',
+    certificate_attachment VARCHAR(500) COMMENT '职称证书附件',
+    appointment_date DATE COMMENT '聘任时间',
+    remind_sent TINYINT DEFAULT 0 COMMENT '是否已发送到期提醒',
+    sort_order INT DEFAULT 0 COMMENT '排序',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (employee_id) REFERENCES employees(id) ON DELETE CASCADE,
+    INDEX idx_employee_id (employee_id)
+) COMMENT '员工职称信息';
+
+-- 第15类：注册证信息
+CREATE TABLE IF NOT EXISTS employee_registration (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    employee_id INT NOT NULL COMMENT '员工ID',
+    name VARCHAR(100) COMMENT '证书名称',
+    number VARCHAR(50) COMMENT '证书编号',
+    date DATE COMMENT '取得时间',
+    expire_date DATE COMMENT '有效期至',
+    note VARCHAR(200) COMMENT '备注',
+    certificate_attachment VARCHAR(500) COMMENT '证书附件',
+    continuing_education VARCHAR(20) COMMENT '继续教育完成状态',
+    remind_sent TINYINT DEFAULT 0 COMMENT '是否已发送到期提醒',
+    sort_order INT DEFAULT 0 COMMENT '排序',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (employee_id) REFERENCES employees(id) ON DELETE CASCADE,
+    INDEX idx_employee_id (employee_id)
+) COMMENT '员工注册证信息';
+
+-- 第16类：岗位证信息
+CREATE TABLE IF NOT EXISTS employee_position_certificate (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    employee_id INT NOT NULL COMMENT '员工ID',
+    name VARCHAR(100) COMMENT '证书名称',
+    number VARCHAR(50) COMMENT '证书编号',
+    date DATE COMMENT '取得时间',
+    expire_date DATE COMMENT '有效期至',
+    note VARCHAR(200) COMMENT '备注',
+    certificate_attachment VARCHAR(500) COMMENT '证书附件',
+    issuing_authority VARCHAR(100) COMMENT '发证机关',
+    remind_sent TINYINT DEFAULT 0 COMMENT '是否已发送到期提醒',
+    sort_order INT DEFAULT 0 COMMENT '排序',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (employee_id) REFERENCES employees(id) ON DELETE CASCADE,
+    INDEX idx_employee_id (employee_id)
+) COMMENT '员工岗位证信息';
+
+-- 第17类：人事调动情况
+CREATE TABLE IF NOT EXISTS employee_transfer (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    employee_id INT NOT NULL COMMENT '员工ID',
+    type VARCHAR(50) COMMENT '调动类型',
+    old_department VARCHAR(100) COMMENT '原部门',
+    old_position VARCHAR(50) COMMENT '原职位',
+    new_department VARCHAR(100) COMMENT '新部门',
+    new_position VARCHAR(50) COMMENT '新职位',
+    date DATE COMMENT '调动时间',
+    note VARCHAR(200) COMMENT '备注',
+    transfer_doc_no VARCHAR(50) COMMENT '异动单据号',
+    after_salary DECIMAL(10,2) COMMENT '异动后薪资',
+    reason TEXT COMMENT '异动原因',
+    approver VARCHAR(50) COMMENT '审批人',
+    approval_status VARCHAR(20) COMMENT '审批状态',
+    sort_order INT DEFAULT 0 COMMENT '排序',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (employee_id) REFERENCES employees(id) ON DELETE CASCADE,
+    INDEX idx_employee_id (employee_id)
+) COMMENT '员工人事调动记录';
+
+-- 第18类：流程记录
+CREATE TABLE IF NOT EXISTS employee_process_record (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    employee_id INT NOT NULL COMMENT '员工ID',
+    name VARCHAR(100) COMMENT '流程名称',
+    type VARCHAR(50) COMMENT '流程类型',
+    start_time DATETIME COMMENT '发起时间',
+    end_time DATETIME COMMENT '完成时间',
+    status VARCHAR(20) COMMENT '状态',
+    note VARCHAR(200) COMMENT '备注',
+    current_node VARCHAR(100) COMMENT '当前审批节点',
+    approver VARCHAR(50) COMMENT '审批人',
+    approval_comment TEXT COMMENT '审批意见',
+    sort_order INT DEFAULT 0 COMMENT '排序',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (employee_id) REFERENCES employees(id) ON DELETE CASCADE,
+    INDEX idx_employee_id (employee_id)
+) COMMENT '员工流程记录';
+
+-- 第19类：合同信息（新增）
+CREATE TABLE IF NOT EXISTS employee_contract (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    employee_id INT NOT NULL COMMENT '员工ID',
+    contract_type VARCHAR(20) COMMENT '合同类型',
+    contract_no VARCHAR(50) COMMENT '合同编号',
+    sign_date DATE COMMENT '签订日期',
+    start_date DATE COMMENT '生效日期',
+    end_date DATE COMMENT '到期日期',
+    contract_attachment VARCHAR(500) COMMENT '合同扫描件',
+    renewal_count INT DEFAULT 0 COMMENT '续签次数',
+    is_permanent TINYINT DEFAULT 0 COMMENT '是否无固定期限合同(1=是,0=否)',
+    remind_sent TINYINT DEFAULT 0 COMMENT '是否已发送到期提醒',
+    note VARCHAR(200) COMMENT '备注',
+    sort_order INT DEFAULT 0 COMMENT '排序',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (employee_id) REFERENCES employees(id) ON DELETE CASCADE,
+    INDEX idx_employee_id (employee_id)
+) COMMENT '员工合同信息';
+
+-- 第20类：培训与发展（新增）
+CREATE TABLE IF NOT EXISTS employee_training (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    employee_id INT NOT NULL COMMENT '员工ID',
+    training_name VARCHAR(100) COMMENT '培训名称',
+    training_org VARCHAR(100) COMMENT '培训机构',
+    start_date DATE COMMENT '开始日期',
+    end_date DATE COMMENT '结束日期',
+    duration VARCHAR(20) COMMENT '培训时长',
+    result VARCHAR(50) COMMENT '培训结果',
+    certificate_attachment VARCHAR(500) COMMENT '培训证书附件',
+    is_continuing_education TINYINT DEFAULT 0 COMMENT '是否计入继续教育学时',
+    satisfaction_score INT COMMENT '培训满意度(1-5)',
+    note VARCHAR(200) COMMENT '备注',
+    sort_order INT DEFAULT 0 COMMENT '排序',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (employee_id) REFERENCES employees(id) ON DELETE CASCADE,
+    INDEX idx_employee_id (employee_id)
+) COMMENT '员工培训记录';
+
+-- 第21类：奖惩记录（新增）
+CREATE TABLE IF NOT EXISTS employee_reward_punishment (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    employee_id INT NOT NULL COMMENT '员工ID',
+    type VARCHAR(10) COMMENT '奖惩类型(reward/punishment)',
+    name VARCHAR(100) COMMENT '奖惩名称',
+    date DATE COMMENT '奖惩日期',
+    amount DECIMAL(10,2) COMMENT '奖惩金额',
+    reason TEXT COMMENT '原因/事由',
+    attachment VARCHAR(500) COMMENT '附件',
+    revoke_date DATE COMMENT '撤销日期',
+    revoke_reason TEXT COMMENT '撤销原因',
+    note VARCHAR(200) COMMENT '备注',
+    sort_order INT DEFAULT 0 COMMENT '排序',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (employee_id) REFERENCES employees(id) ON DELETE CASCADE,
+    INDEX idx_employee_id (employee_id)
+) COMMENT '员工奖惩记录';
+
+-- 第22类：背调与合规（新增）
+CREATE TABLE IF NOT EXISTS employee_background_check (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    employee_id INT NOT NULL COMMENT '员工ID',
+    check_type VARCHAR(20) COMMENT '背调类型',
+    agency VARCHAR(100) COMMENT '背调机构',
+    check_date DATE COMMENT '完成日期',
+    result VARCHAR(20) COMMENT '背调结果',
+    report_attachment VARCHAR(500) COMMENT '背调报告附件',
+    compliance_checklist JSON COMMENT '合规检查项',
+    compliance_status VARCHAR(20) COMMENT '合规文件签署状态',
+    note VARCHAR(200) COMMENT '备注',
+    sort_order INT DEFAULT 0 COMMENT '排序',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (employee_id) REFERENCES employees(id) ON DELETE CASCADE,
+    INDEX idx_employee_id (employee_id)
+) COMMENT '员工背调与合规记录';
+
+-- 第23类：员工关怀提醒（只读/系统自动）
+CREATE TABLE IF NOT EXISTS employee_reminder (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    employee_id INT NOT NULL COMMENT '员工ID',
+    reminder_type VARCHAR(20) COMMENT '提醒类型(birthday/anniversary/contract/probation/certificate/retirement)',
+    reminder_date DATE COMMENT '提醒日期',
+    is_sent TINYINT DEFAULT 0 COMMENT '是否已发送',
+    sent_at DATETIME COMMENT '发送时间',
+    note VARCHAR(200) COMMENT '备注',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (employee_id) REFERENCES employees(id) ON DELETE CASCADE,
+    INDEX idx_employee_id (employee_id),
+    INDEX idx_reminder_date (reminder_date),
+    INDEX idx_is_sent (is_sent)
+) COMMENT '员工关怀提醒记录';
+
+-- 第24类：审计追踪（只读/系统自动）
+CREATE TABLE IF NOT EXISTS employee_audit_log (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    employee_id INT NOT NULL COMMENT '员工ID',
+    created_by VARCHAR(50) COMMENT '创建人',
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    updated_by VARCHAR(50) COMMENT '最后修改人',
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '最后修改时间',
+    change_summary TEXT COMMENT '修改内容摘要',
+    FOREIGN KEY (employee_id) REFERENCES employees(id) ON DELETE CASCADE,
+    INDEX idx_employee_id (employee_id),
+    INDEX idx_updated_at (updated_at)
+) COMMENT '员工审计日志';
+
+-- 创建触发器：自动记录审计日志
+DELIMITER $$
+CREATE TRIGGER IF NOT EXISTS employees_audit_insert
+AFTER INSERT ON employees
+FOR EACH ROW
+BEGIN
+    INSERT INTO employee_audit_log (employee_id, created_by, created_at, updated_by, updated_at, change_summary)
+    VALUES (NEW.id, USER(), NOW(), USER(), NOW(), '创建员工记录');
+END$$
+
+CREATE TRIGGER IF NOT EXISTS employees_audit_update
+AFTER UPDATE ON employees
+FOR EACH ROW
+BEGIN
+    INSERT INTO employee_audit_log (employee_id, created_by, created_at, updated_by, updated_at, change_summary)
+    VALUES (NEW.id, OLD.created_by, OLD.created_at, USER(), NOW(), '更新员工记录');
+END$$
+DELIMITER ;
+
+-- ============================================
+-- 第三部分：验证
+-- ============================================
+DESCRIBE employees;
+SHOW TABLES LIKE 'employee_%';
+六、后端 API 实现要求
+6.1 在 server/routes/employees.js 中添加路由
+javascript
+// 获取员工详细信息（含所有子表数据）
+router.get('/employees/:id/detail', employeeController.getEmployeeDetail);
+
+// 更新员工详细信息（含所有子表数据）
+router.put('/employees/:id/detail', employeeController.updateEmployeeDetail);
+6.2 在 server/controllers/employeeController.js 中实现以下方法
+方法1：getEmployeeDetail
+功能：根据员工ID查询主表 + 所有17张子表数据
+
+返回格式：
+
+json
+{
+  "code": 200,
+  "data": {
+    "id": 1,
+    "name": "张三",
+    "workExperiences": [...],
+    "familyMembers": [...],
+    "projectPerformances": [...],
+    "departmentInfos": [...],
+    "educationInfos": [...],
+    "awards": [...],
+    "titleInfos": [...],
+    "registrations": [...],
+    "positionCertificates": [...],
+    "transfers": [...],
+    "processRecords": [...],
+    "contracts": [...],
+    "trainings": [...],
+    "rewardPunishments": [...],
+    "backgroundChecks": [...],
+    "reminders": [...],
+    "auditLogs": [...]
+  }
+}
+方法2：updateEmployeeDetail
+功能：更新员工主表 + 同步所有子表数据
+
+处理逻辑：
+
+开启数据库事务
+更新 employees 主表
+对每一张子表：删除该员工原有记录 → 插入前端提交的新数据
+提交事务
+触发提醒检查（合同到期、证书到期、试用期到期、生日等）
+返回成功响应
+七、注意事项
+不要生成前端代码的假数据示例，只需要完成后端数据库和 API 逻辑
+
+所有子表都设有 employee_id 外键，并设置 ON DELETE CASCADE
+
+金额字段统一使用 DECIMAL(10,2)
+
+事务处理：任何一步失败都应回滚
+
+第23、24类数据由系统自动生成，前端不提交
+
+添加适当的错误处理和日志记录
+
+八、执行顺序建议
+执行 SQL 脚本扩展数据库表结构
+
+修改后端路由和控制器
+
+重启后端服务
+
+测试 API 接口
+
+前端保存功能即可正常工作
