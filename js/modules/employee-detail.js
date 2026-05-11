@@ -316,7 +316,7 @@ const employeeDetailModule = {
                         <span class="detail-label">归属部门</span>
                         <select id="modalDepartment" class="detail-input" ${!isEditMode ? 'disabled' : ''}>
                             <option value="">请选择部门</option>
-                            ${state.departments.map(d => `<option value="${d.id}" ${employee.department_id === d.id ? 'selected' : ''}>${d.dept_name}</option>`).join('')}
+                            ${state.departments.map(d => `<option value="${d.id}" ${employee.department_id === d.id ? 'selected' : ''}>${d.name || d.dept_name}</option>`).join('')}
                         </select>
                     </div>
                     <div class="detail-item">
@@ -1178,8 +1178,8 @@ const employeeDetailModule = {
             workField: document.getElementById('modalWorkField').value,
             projectLevel: document.getElementById('modalProjectLevel').value,
             isManager: document.getElementById('modalIsManager').value === '是' ? 1 : 0,
-            department_id: parseInt(document.getElementById('modalDepartment').value) || null,
-            position_id: parseInt(document.getElementById('modalPosition').value) || null,
+            department_id: document.getElementById('modalDepartment').value ? parseInt(document.getElementById('modalDepartment').value) : null,
+            position_id: document.getElementById('modalPosition').value ? parseInt(document.getElementById('modalPosition').value) : null,
             entryDate: document.getElementById('modalEntryDate').value,
             regularDate: document.getElementById('modalRegularDate').value,
             departmentNature: document.getElementById('modalDepartmentNature').value,
