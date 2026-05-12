@@ -184,24 +184,6 @@ const employeeModule = {
                     <button class="batch-delete-btn" id="batchDeleteBtn">🗑️ 批量删除</button>
                 </div>
             </div>
-
-            <div class="modal-overlay" id="detailDrawer">
-                <div class="modal-container-large">
-                    <div class="modal-header">
-                        <h2>👤 员工详情</h2>
-                        <div class="modal-header-actions">
-                            <button class="btn-modal-export" id="exportEmployeePDFBtn">📄 导出PDF</button>
-                            <button class="modal-close">×</button>
-                        </div>
-                    </div>
-                    <div class="modal-body" id="detailContent" style="max-height: 70vh; overflow-y: auto;"></div>
-                    <div class="modal-actions" id="detailActions">
-                        <button class="btn-modal btn-modal-secondary" id="toggleEditBtn">编辑</button>
-                        <button class="btn-modal btn-modal-secondary" id="cancelDetailBtn" style="display: none;">取消</button>
-                        <button class="btn-modal btn-modal-primary" id="saveDetailBtn" style="display: none;">保存</button>
-                    </div>
-                </div>
-            </div>
         `;
 
         this.bindEvents();
@@ -273,28 +255,12 @@ const employeeModule = {
         document.getElementById('batchDeleteBtn')?.addEventListener('click', () => this.handleBatchDelete());
 
         document.getElementById('batchExportBtn')?.addEventListener('click', () => this.handleBatchExport());
-
-        document.getElementById('detailDrawer')?.addEventListener('click', (e) => {
-            if (e.target.classList.contains('modal-overlay')) {
-                this.closeDetailDrawer();
-            }
-        });
-
-        document.querySelector('#detailDrawer .modal-close')?.addEventListener('click', () => {
-            this.closeDetailDrawer();
-        });
     },
 
     orgDataChangeHandler: null,
     hrModuleApprovalHandler: null,
 
     bindGlobalEvents() {
-        document.addEventListener('keydown', (e) => {
-            if (e.key === 'Escape') {
-                this.closeDetailDrawer();
-            }
-        });
-
         this.orgDataChangeHandler = () => {
             this.reloadOrgData();
         };
@@ -397,6 +363,7 @@ const employeeModule = {
     },
 
     handleRowAction(id, action) {
+        console.log('[DEBUG] handleRowAction called:', { id, action });
         const employee = state.employees.find(e => e.id === id);
         if (!employee) return;
 
@@ -666,6 +633,7 @@ const employeeModule = {
     },
 
     async openDetailDrawer(employee) {
+        console.log('[DEBUG] openDetailDrawer called:', employee);
         employeeDetailModule.open(employee);
     },
 

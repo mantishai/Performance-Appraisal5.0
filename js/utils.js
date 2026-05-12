@@ -404,7 +404,7 @@ const Modal = {
             onClose && onClose();
         };
 
-        overlay.querySelector('.modal-close')?.addEventListener('click', close);
+        overlay.querySelector('.modal-close:not(.employee-detail-close-btn)')?.addEventListener('click', close);
         overlay.querySelector('.modal-fullscreen')?.addEventListener('click', () => {
             modal.classList.toggle('fullscreen');
         });

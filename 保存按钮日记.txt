@@ -1,0 +1,3 @@
+employee-detail.js:198 [DEBUG] saveDetailBtn clicked - event fired
+employee-detail.js:201 [DEBUG] About to call saveDetail
+employee-detail.js:203 [DEBUG] saveDetail completed successfully

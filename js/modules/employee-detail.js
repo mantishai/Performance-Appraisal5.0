@@ -40,28 +40,21 @@ const formatDate = (dateStr) => {
 
 const employeeDetailModule = {
     async open(employee) {
-        console.log('=== employeeDetailModule.open START ===');
-        console.log('Employee:', employee);
         
+        if (!employee) {
+            console.error('[ERROR] employee is null or undefined');
+            return;
+        }
         state.currentEmployee = employee;
         
-        console.log('Loading related data...');
         await this.loadRelatedData(employee.id);
-        console.log('Load related data completed');
         
-        console.log('Ensuring modal exists...');
         this.ensureModalExists();
-        console.log('Modal exists check completed');
         
-        console.log('Rendering modal...');
         this.renderModal();
-        console.log('Render modal completed');
         
-        console.log('Binding events...');
         this.bindEvents();
-        console.log('Bind events completed');
         
-        console.log('=== employeeDetailModule.open END ===');
         
         setTimeout(() => {
             const drawer = document.getElementById('detailDrawer');
@@ -73,61 +66,141 @@ const employeeDetailModule = {
             console.log('Final drawer offsetHeight:', drawer?.offsetHeight);
             console.log('Final drawer offsetWidth:', drawer?.offsetWidth);
             
+            // 检查 modal-container-large
+            const modalContainer = drawer?.querySelector('.modal-container-large');
+            console.log('Modal container:', modalContainer);
+            console.log('Modal container computed display:', modalContainer ? window.getComputedStyle(modalContainer).display : 'null');
+            console.log('Modal container computed opacity:', modalContainer ? window.getComputedStyle(modalContainer).opacity : 'null');
+            console.log('Modal container offsetHeight:', modalContainer?.offsetHeight);
+            console.log('Modal container offsetWidth:', modalContainer?.offsetWidth);
+            
+            // 检查 detailContent
+            const detailContent = document.getElementById('detailContent');
+            console.log('Detail content:', detailContent);
+            console.log('Detail content innerHTML length:', detailContent?.innerHTML?.length);
+            
             const bodyChildren = document.body.children;
             console.log('Body children count:', bodyChildren.length);
             console.log('Last body child:', bodyChildren[bodyChildren.length - 1]);
             
-            if (drawer && drawer.offsetHeight === 0) {
-                console.log('Drawer height is 0! Adding test content...');
-                drawer.innerHTML = '<div style="width: 200px; height: 200px; background: red; color: white;">TEST MODAL</div>';
-            }
+            // 检查是否有其他元素遮挡
+            const allOverlays = document.querySelectorAll('.modal-overlay, [class*="modal"], [id*="modal"]');
+            console.log('All modal-like elements found:', allOverlays.length);
+            allOverlays.forEach((el, i) => {
+                console.log(`  [${i}]`, el.tagName, el.id, el.className, window.getComputedStyle(el).display, window.getComputedStyle(el).zIndex);
+            });
         }, 100);
     },
 
     bindEvents() {
         const drawer = document.getElementById('detailDrawer');
-        if (!drawer) {
-            console.error('detailDrawer not found');
-            return;
+        if (!drawer) return;
+        
+        const self = this;
+        
+        // 关闭按钮事件
+        const closeBtn = drawer.querySelector('#employeeDetailCloseBtn');
+        if (closeBtn) {
+            closeBtn.removeEventListener('click', self.handleCloseBtnClick, true);
+            self.handleCloseBtnClick = (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                e.stopImmediatePropagation();
+                self.close();
+            };
+            closeBtn.addEventListener('click', self.handleCloseBtnClick, true);
         }
         
-        const closeBtn = drawer.querySelector('.modal-close');
-        if (closeBtn) {
-            closeBtn.addEventListener('click', () => {
-                drawer.style.display = 'none';
-            });
-        }
+        // 点击遮罩层关闭
+        drawer.removeEventListener('click', self.handleOverlayClick);
+        self.handleOverlayClick = (e) => {
+            if (e.target.classList.contains('modal-overlay')) {
+                self.close();
+            }
+        };
+        drawer.addEventListener('click', self.handleOverlayClick);
+        
 
+        // ESC 键关闭
+        document.removeEventListener('keydown', self.handleEscKey);
+        self.handleEscKey = (e) => {
+            if (e.key === 'Escape') {
+                
+                self.close();
+            }
+        };
+        document.addEventListener('keydown', self.handleEscKey);
+        
+
+        // 编辑按钮
         const toggleEditBtn = drawer.querySelector('#toggleEditBtn');
         if (toggleEditBtn) {
-            toggleEditBtn.addEventListener('click', () => {
+            toggleEditBtn.removeEventListener('click', self.handleToggleEditClick);
+            self.handleToggleEditClick = (e) => {
+                e.preventDefault();
+                e.stopPropagation();
                 state.isEditMode = true;
-                this.renderModal();
-                this.bindEvents();
-            });
+                self.switchToEditMode();
+            };
+            toggleEditBtn.addEventListener('click', self.handleToggleEditClick);
         }
 
+        // 取消按钮
         const cancelDetailBtn = drawer.querySelector('#cancelDetailBtn');
         if (cancelDetailBtn) {
-            cancelDetailBtn.addEventListener('click', () => {
+            cancelDetailBtn.removeEventListener('click', self.handleCancelClick);
+            self.handleCancelClick = (e) => {
+                e.preventDefault();
+                e.stopPropagation();
                 state.isEditMode = false;
-                this.renderModal();
-                this.bindEvents();
-            });
+                self.switchToViewMode();
+            };
+            cancelDetailBtn.addEventListener('click', self.handleCancelClick);
         }
 
+        // 保存按钮
         const saveDetailBtn = drawer.querySelector('#saveDetailBtn');
+        
         if (saveDetailBtn) {
-            saveDetailBtn.addEventListener('click', async () => {
-                await this.saveDetail();
-            });
+            
+            
+            
+            saveDetailBtn.removeEventListener('click', self.handleSaveClick);
+            self.handleSaveClick = async (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                
+                
+                saveDetailBtn.disabled = true;
+                saveDetailBtn.style.opacity = '0.7';
+                
+                try {
+                    
+                    await self.saveDetail();
+                    
+                } catch (error) {
+                    console.error('[ERROR] saveDetailBtn click error:', error);
+                    Toast.error('保存失败：' + error.message);
+                } finally {
+                    saveDetailBtn.disabled = false;
+                    saveDetailBtn.style.opacity = '1';
+                }
+            };
+            saveDetailBtn.addEventListener('click', self.handleSaveClick);
+            
+        } else {
+            console.error('[ERROR] saveDetailBtn NOT FOUND!');
         }
 
+        // 部门-岗位联动
         const departmentSelect = drawer.querySelector('#modalDepartment');
         const positionSelect = drawer.querySelector('#modalPosition');
         
+        
         if (departmentSelect && positionSelect) {
-            departmentSelect.addEventListener('change', (e) => {
+            departmentSelect.removeEventListener('change', self.handleDepartmentChange);
+            self.handleDepartmentChange = (e) => {
+                
                 const selectedDeptId = parseInt(e.target.value);
                 if (isNaN(selectedDeptId)) {
                     positionSelect.innerHTML = '<option value="">请选择岗位</option>';
@@ -136,10 +209,36 @@ const employeeDetailModule = {
                 const filteredPositions = state.positions.filter(p => p.departmentId === selectedDeptId);
                 positionSelect.innerHTML = '<option value="">请选择岗位</option>' + 
                     filteredPositions.map(p => `<option value="${p.id}">${p.name || p.position_name}</option>`).join('');
-            });
+            };
+            departmentSelect.addEventListener('change', self.handleDepartmentChange);
+            
         } else {
             console.error('departmentSelect or positionSelect not found');
         }
+        
+        
+    },
+
+    // 安全获取元素值的辅助函数
+    safeGetValue(drawer, selector) {
+        const element = drawer.querySelector(selector);
+        return element ? element.value : '';
+    },
+
+    // 安全获取数值的辅助函数
+    safeGetNumberValue(drawer, selector) {
+        const element = drawer.querySelector(selector);
+        if (!element || !element.value) return null;
+        const num = parseFloat(element.value);
+        return isNaN(num) ? null : num;
+    },
+
+    // 安全获取整数的辅助函数
+    safeGetIntValue(drawer, selector) {
+        const element = drawer.querySelector(selector);
+        if (!element || !element.value) return null;
+        const num = parseInt(element.value);
+        return isNaN(num) ? null : num;
     },
 
     async saveDetail() {
@@ -148,101 +247,111 @@ const employeeDetailModule = {
         
         try {
             const data = {
-                name: drawer.querySelector('#modalName').value,
-                gender: parseInt(drawer.querySelector('#modalGender').value),
-                age: parseInt(drawer.querySelector('#modalAge').value) || null,
-                nation: drawer.querySelector('#modalNation').value,
-                birthDate: drawer.querySelector('#modalBirthDate').value,
-                nativePlace: drawer.querySelector('#modalNativePlace').value,
-                resumeAttachment: drawer.querySelector('#modalResumeAttachment').value,
+                name: this.safeGetValue(drawer, '#modalName'),
+                gender: this.safeGetIntValue(drawer, '#modalGender'),
+                age: this.safeGetIntValue(drawer, '#modalAge'),
+                nation: this.safeGetValue(drawer, '#modalNation'),
+                birthDate: this.safeGetValue(drawer, '#modalBirthDate'),
+                nativePlace: this.safeGetValue(drawer, '#modalNativePlace'),
+                resumeAttachment: this.safeGetValue(drawer, '#modalResumeAttachment'),
                 
-                idCard: drawer.querySelector('#modalIdCard').value,
-                politicalStatus: drawer.querySelector('#modalPoliticalStatus').value,
-                archiveLocation: drawer.querySelector('#modalArchiveLocation').value,
-                healthReport: drawer.querySelector('#modalHealthReport').value,
-                householdType: drawer.querySelector('#modalHouseholdType').value,
-                marriageStatus: drawer.querySelector('#modalMarriageStatus').value,
-                idCardStartDate: drawer.querySelector('#modalIdCardStartDate').value,
-                idCardEndDate: drawer.querySelector('#modalIdCardEndDate').value,
-                idCardAttachment: drawer.querySelector('#modalIdCardAttachment').value,
+                idCard: this.safeGetValue(drawer, '#modalIdCard'),
+                politicalStatus: this.safeGetValue(drawer, '#modalPoliticalStatus'),
+                archiveLocation: this.safeGetValue(drawer, '#modalArchiveLocation'),
+                healthReport: this.safeGetValue(drawer, '#modalHealthReport'),
+                householdType: this.safeGetValue(drawer, '#modalHouseholdType'),
+                marriageStatus: this.safeGetValue(drawer, '#modalMarriageStatus'),
+                idCardStartDate: this.safeGetValue(drawer, '#modalIdCardStartDate'),
+                idCardEndDate: this.safeGetValue(drawer, '#modalIdCardEndDate'),
+                idCardAttachment: this.safeGetValue(drawer, '#modalIdCardAttachment'),
                 
-                registeredAddress: drawer.querySelector('#modalRegisteredAddress').value,
-                currentAddress: drawer.querySelector('#modalCurrentAddress').value,
-                phone: drawer.querySelector('#modalPhone').value,
-                email: drawer.querySelector('#modalEmail').value,
-                emergencyContact: drawer.querySelector('#modalEmergencyContact').value,
-                emergencyPhone: drawer.querySelector('#modalEmergencyPhone').value,
-                wechat: drawer.querySelector('#modalWechat').value,
-                qq: drawer.querySelector('#modalQq').value,
-                postalCode: drawer.querySelector('#modalPostalCode').value,
+                registeredAddress: this.safeGetValue(drawer, '#modalRegisteredAddress'),
+                currentAddress: this.safeGetValue(drawer, '#modalCurrentAddress'),
+                phone: this.safeGetValue(drawer, '#modalPhone'),
+                email: this.safeGetValue(drawer, '#modalEmail'),
+                emergencyContact: this.safeGetValue(drawer, '#modalEmergencyContact'),
+                emergencyPhone: this.safeGetValue(drawer, '#modalEmergencyPhone'),
+                wechat: this.safeGetValue(drawer, '#modalWechat'),
+                qq: this.safeGetValue(drawer, '#modalQq'),
+                postalCode: this.safeGetValue(drawer, '#modalPostalCode'),
                 
-                education: drawer.querySelector('#modalEducation').value,
-                graduationDate: drawer.querySelector('#modalGraduationDate').value,
-                major: drawer.querySelector('#modalMajor').value,
-                schoolName: drawer.querySelector('#modalSchoolName').value,
-                degree: drawer.querySelector('#modalDegree').value,
-                foreignLanguage: drawer.querySelector('#modalForeignLanguage').value,
-                computerSkill: drawer.querySelector('#modalComputerSkill').value,
-                title: drawer.querySelector('#modalTitle').value,
-                titleDate: drawer.querySelector('#modalTitleDate').value,
-                titleAttachment: drawer.querySelector('#modalTitleAttachment').value,
-                titleExpireDate: drawer.querySelector('#modalTitleExpireDate').value,
-                workYears: parseInt(drawer.querySelector('#modalWorkYears').value) || null,
-                workField: drawer.querySelector('#modalWorkField').value,
-                projectLevel: drawer.querySelector('#modalProjectLevel').value,
-                isManager: parseInt(drawer.querySelector('#modalIsManager').value),
+                education: this.safeGetValue(drawer, '#modalEducation'),
+                graduationDate: this.safeGetValue(drawer, '#modalGraduationDate'),
+                major: this.safeGetValue(drawer, '#modalMajor'),
+                schoolName: this.safeGetValue(drawer, '#modalSchoolName'),
+                degree: this.safeGetValue(drawer, '#modalDegree'),
+                foreignLanguage: this.safeGetValue(drawer, '#modalForeignLanguage'),
+                computerSkill: this.safeGetValue(drawer, '#modalComputerSkill'),
+                title: this.safeGetValue(drawer, '#modalTitle'),
+                titleDate: this.safeGetValue(drawer, '#modalTitleDate'),
+                titleAttachment: this.safeGetValue(drawer, '#modalTitleAttachment'),
+                titleExpireDate: this.safeGetValue(drawer, '#modalTitleExpireDate'),
+                workYears: this.safeGetIntValue(drawer, '#modalWorkYears'),
+                workField: this.safeGetValue(drawer, '#modalWorkField'),
+                projectLevel: this.safeGetValue(drawer, '#modalProjectLevel'),
+                isManager: this.safeGetIntValue(drawer, '#modalIsManager'),
                 
-                employeeNo: drawer.querySelector('#modalEmployeeNo').value,
-                department_id: parseInt(drawer.querySelector('#modalDepartment').value) || null,
-                position_id: parseInt(drawer.querySelector('#modalPosition').value) || null,
-                entryDate: drawer.querySelector('#modalEntryDate').value,
-                regularDate: drawer.querySelector('#modalRegularDate').value,
-                probationEndDate: drawer.querySelector('#modalProbationEndDate').value,
-                departmentNature: drawer.querySelector('#modalDepartmentNature').value,
-                employeeType: drawer.querySelector('#modalEmployeeType').value,
-                directSuperior: drawer.querySelector('#modalDirectSuperior').value,
-                manager: drawer.querySelector('#modalManager').value,
-                attendanceRequired: parseInt(drawer.querySelector('#modalAttendanceRequired').value),
-                hireType: drawer.querySelector('#modalHireType').value,
-                unionJoinDate: drawer.querySelector('#modalUnionJoinDate').value,
-                confidentialAgreement: parseInt(drawer.querySelector('#modalConfidentialAgreement').value),
-                workEmail: drawer.querySelector('#modalWorkEmail').value,
-                officePhone: drawer.querySelector('#modalOfficePhone').value,
-                officeLocation: drawer.querySelector('#modalOfficeLocation').value,
-                reportTo: drawer.querySelector('#modalReportTo').value,
-                workCity: drawer.querySelector('#modalWorkCity').value,
+                employeeNo: this.safeGetValue(drawer, '#modalEmployeeNo'),
+                department_id: this.safeGetIntValue(drawer, '#modalDepartment'),
+                position_id: this.safeGetIntValue(drawer, '#modalPosition'),
+                entryDate: this.safeGetValue(drawer, '#modalEntryDate'),
+                regularDate: this.safeGetValue(drawer, '#modalRegularDate'),
+                probationEndDate: this.safeGetValue(drawer, '#modalProbationEndDate'),
+                departmentNature: this.safeGetValue(drawer, '#modalDepartmentNature'),
+                employeeType: this.safeGetValue(drawer, '#modalEmployeeType'),
+                directSuperior: this.safeGetValue(drawer, '#modalDirectSuperior'),
+                manager: this.safeGetValue(drawer, '#modalManager'),
+                attendanceRequired: this.safeGetIntValue(drawer, '#modalAttendanceRequired'),
+                hireType: this.safeGetValue(drawer, '#modalHireType'),
+                unionJoinDate: this.safeGetValue(drawer, '#modalUnionJoinDate'),
+                confidentialAgreement: this.safeGetIntValue(drawer, '#modalConfidentialAgreement'),
+                workEmail: this.safeGetValue(drawer, '#modalWorkEmail'),
+                officePhone: this.safeGetValue(drawer, '#modalOfficePhone'),
+                officeLocation: this.safeGetValue(drawer, '#modalOfficeLocation'),
+                reportTo: this.safeGetValue(drawer, '#modalReportTo'),
+                workCity: this.safeGetValue(drawer, '#modalWorkCity'),
                 
-                annualSalary: parseFloat(drawer.querySelector('#modalAnnualSalary').value) || null,
-                socialSecurityBase: parseFloat(drawer.querySelector('#modalSocialSecurityBase').value) || null,
-                socialSecurityCompany: parseFloat(drawer.querySelector('#modalSocialSecurityCompany').value) || null,
-                socialSecurityStartDate: drawer.querySelector('#modalSocialSecurityStartDate').value,
-                providentFundBase: parseFloat(drawer.querySelector('#modalProvidentFundBase').value) || null,
-                providentFundAccount: drawer.querySelector('#modalProvidentFundAccount').value,
-                performanceBonusRatio: parseFloat(drawer.querySelector('#modalPerformanceBonusRatio').value) || null,
-                mealAllowance: parseFloat(drawer.querySelector('#modalMealAllowance').value) || null,
-                transportAllowance: parseFloat(drawer.querySelector('#modalTransportAllowance').value) || null,
-                communicationAllowance: parseFloat(drawer.querySelector('#modalCommunicationAllowance').value) || null,
-                salarySecurityLevel: drawer.querySelector('#modalSalarySecurityLevel').value,
-                bankCard: drawer.querySelector('#modalBankCard').value,
-                bankName: drawer.querySelector('#modalBankName').value,
+                annualSalary: this.safeGetNumberValue(drawer, '#modalAnnualSalary'),
+                socialSecurityBase: this.safeGetNumberValue(drawer, '#modalSocialSecurityBase'),
+                socialSecurityCompany: this.safeGetNumberValue(drawer, '#modalSocialSecurityCompany'),
+                socialSecurityStartDate: this.safeGetValue(drawer, '#modalSocialSecurityStartDate'),
+                providentFundBase: this.safeGetNumberValue(drawer, '#modalProvidentFundBase'),
+                providentFundAccount: this.safeGetValue(drawer, '#modalProvidentFundAccount'),
+                performanceBonusRatio: this.safeGetNumberValue(drawer, '#modalPerformanceBonusRatio'),
+                mealAllowance: this.safeGetNumberValue(drawer, '#modalMealAllowance'),
+                transportAllowance: this.safeGetNumberValue(drawer, '#modalTransportAllowance'),
+                communicationAllowance: this.safeGetNumberValue(drawer, '#modalCommunicationAllowance'),
+                salarySecurityLevel: this.safeGetValue(drawer, '#modalSalarySecurityLevel'),
+                bankCard: this.safeGetValue(drawer, '#modalBankCard'),
+                bankName: this.safeGetValue(drawer, '#modalBankName'),
                 
-                healthReportAttachment: drawer.querySelector('#modalHealthReportAttachment').value,
-                entryMaterialsChecklist: drawer.querySelector('#modalEntryMaterialsChecklist').value,
-                contractAttachment: drawer.querySelector('#modalContractAttachment').value,
-                confidentialityAttachment: drawer.querySelector('#modalConfidentialityAttachment').value,
-                nonCompeteAttachment: drawer.querySelector('#modalNonCompeteAttachment').value,
-                archiveStatus: drawer.querySelector('#modalArchiveStatus').value
+                healthReportAttachment: this.safeGetValue(drawer, '#modalHealthReportAttachment'),
+                entryMaterialsChecklist: this.safeGetValue(drawer, '#modalEntryMaterialsChecklist'),
+                contractAttachment: this.safeGetValue(drawer, '#modalContractAttachment'),
+                confidentialityAttachment: this.safeGetValue(drawer, '#modalConfidentialityAttachment'),
+                nonCompeteAttachment: this.safeGetValue(drawer, '#modalNonCompeteAttachment'),
+                archiveStatus: this.safeGetValue(drawer, '#modalArchiveStatus')
             };
 
+            
+            
+            
             const res = await API.updateEmployeeDetail(employee.id, data);
-            if (res.code === 200) {
+            
+            
+            
+            
+            
+            if (res && res.code === 200) {
+                
                 Toast.success('保存成功');
                 state.isEditMode = false;
                 await this.loadRelatedData(employee.id);
                 this.renderModal();
                 this.bindEvents();
             } else {
-                Toast.error(res.message || '保存失败');
+                
+                Toast.error(res?.message || '保存失败');
             }
         } catch (error) {
             console.error('Save error:', error);
@@ -254,34 +363,86 @@ const employeeDetailModule = {
         state.isEditMode = !readOnly;
     },
 
+    switchToEditMode() {
+        const drawer = document.getElementById('detailDrawer');
+        if (!drawer) return;
+
+        // 显示/隐藏按钮
+        const toggleEditBtn = drawer.querySelector('#toggleEditBtn');
+        const cancelDetailBtn = drawer.querySelector('#cancelDetailBtn');
+        const saveDetailBtn = drawer.querySelector('#saveDetailBtn');
+        
+        
+        
+        if (toggleEditBtn) toggleEditBtn.style.display = 'none';
+        if (cancelDetailBtn) cancelDetailBtn.style.display = 'inline-block';
+        if (saveDetailBtn) {
+            saveDetailBtn.style.display = 'inline-block';
+            
+        }
+
+        // 启用所有输入框
+        const inputs = drawer.querySelectorAll('.detail-input');
+        inputs.forEach(input => {
+            input.disabled = false;
+        });
+        
+        // 确保事件已绑定
+        this.bindEvents();
+        
+    },
+
+    switchToViewMode() {
+        const drawer = document.getElementById('detailDrawer');
+        if (!drawer) return;
+
+        // 显示/隐藏按钮
+        const toggleEditBtn = drawer.querySelector('#toggleEditBtn');
+        const cancelDetailBtn = drawer.querySelector('#cancelDetailBtn');
+        const saveDetailBtn = drawer.querySelector('#saveDetailBtn');
+        
+        if (toggleEditBtn) toggleEditBtn.style.display = 'inline-block';
+        if (cancelDetailBtn) cancelDetailBtn.style.display = 'none';
+        if (saveDetailBtn) saveDetailBtn.style.display = 'none';
+
+        // 禁用所有输入框
+        const inputs = drawer.querySelectorAll('.detail-input');
+        inputs.forEach(input => {
+            input.disabled = true;
+        });
+    },
+
     close() {
         const drawer = document.getElementById('detailDrawer');
         if (drawer) {
-            drawer.style.display = 'none';
+            // 移除事件监听器
+            const self = this;
+            drawer.removeEventListener('click', self.handleOverlayClick);
+            document.removeEventListener('keydown', self.handleEscKey);
+            
+            // 使用强制样式隐藏弹窗
+            drawer.style.setProperty('display', 'none', 'important');
+            drawer.style.setProperty('opacity', '0', 'important');
+            drawer.style.setProperty('visibility', 'hidden', 'important');
+            
+            
         }
     },
 
     ensureModalExists() {
-        let drawer = document.getElementById('detailDrawer');
-        if (!drawer) {
-            drawer = document.createElement('div');
-            drawer.id = 'detailDrawer';
-            drawer.className = 'modal-overlay';
-            drawer.style.cssText = `
-                position: fixed !important;
-                top: 0 !important;
-                left: 0 !important;
-                width: 100% !important;
-                height: 100% !important;
-                background: rgba(0, 0, 0, 0.7) !important;
-                z-index: 99999 !important;
-                display: flex !important;
-                align-items: center !important;
-                justify-content: center !important;
-                pointer-events: auto !important;
-                opacity: 1 !important;
-            `;
-            drawer.innerHTML = `
+        // 删除旧的弹窗（如果存在），确保创建全新的弹窗
+        const oldDrawer = document.getElementById('detailDrawer');
+        if (oldDrawer) {
+            
+            oldDrawer.parentNode?.removeChild(oldDrawer);
+        }
+        
+        
+        const drawer = document.createElement('div');
+        drawer.id = 'detailDrawer';
+        drawer.className = 'modal-overlay';
+        
+        drawer.innerHTML = `
                 <style>
                     .modal-overlay {
                         position: fixed !important;
@@ -290,12 +451,13 @@ const employeeDetailModule = {
                         width: 100% !important;
                         height: 100% !important;
                         background: rgba(0, 0, 0, 0.7) !important;
-                        z-index: 99999 !important;
+                        z-index: 2147483647 !important;
                         display: flex !important;
                         align-items: center !important;
                         justify-content: center !important;
                         pointer-events: auto !important;
                         opacity: 1 !important;
+                        visibility: visible !important;
                     }
                     .modal-container-large {
                         background: white !important;
@@ -335,6 +497,23 @@ const employeeDetailModule = {
                         font-size: 0.85rem;
                     }
                     .btn-modal-export:hover {
+                        background: rgba(255,255,255,0.3);
+                    }
+                    .employee-detail-close-btn {
+                        width: 32px;
+                        height: 32px;
+                        border: none;
+                        border-radius: 50%;
+                        background: rgba(255,255,255,0.2);
+                        color: white;
+                        cursor: pointer;
+                        font-size: 1.25rem;
+                        display: flex;
+                        align-items: center;
+                        justify-content: center;
+                        margin-left: 8px;
+                    }
+                    .employee-detail-close-btn:hover {
                         background: rgba(255,255,255,0.3);
                     }
                     .modal-close {
@@ -388,7 +567,7 @@ const employeeDetailModule = {
                         <h2>👤 员工详情</h2>
                         <div class="modal-header-actions">
                             <button class="btn-modal-export" id="exportEmployeePDFBtn">📄 导出PDF</button>
-                            <button class="modal-close">×</button>
+                            <button class="employee-detail-close-btn" id="employeeDetailCloseBtn">×</button>
                         </div>
                     </div>
                     <div class="modal-body" id="detailContent"></div>
@@ -400,18 +579,44 @@ const employeeDetailModule = {
                 </div>
             `;
             document.body.appendChild(drawer);
-            console.log('Modal added to DOM');
-        }
-        console.log('Modal exists:', !!document.getElementById('detailDrawer'));
+            
+            
+            // 设置弹窗样式
+            drawer.style.setProperty('display', 'flex', 'important');
+            drawer.style.setProperty('position', 'fixed', 'important');
+            drawer.style.setProperty('top', '0', 'important');
+            drawer.style.setProperty('left', '0', 'important');
+            drawer.style.setProperty('width', '100%', 'important');
+            drawer.style.setProperty('height', '100%', 'important');
+            drawer.style.setProperty('background', 'rgba(0, 0, 0, 0.7)', 'important');
+            drawer.style.setProperty('z-index', '2147483647', 'important');
+            drawer.style.setProperty('align-items', 'center', 'important');
+            drawer.style.setProperty('justify-content', 'center', 'important');
+            drawer.style.setProperty('opacity', '1', 'important');
+            drawer.style.setProperty('visibility', 'visible', 'important');
+            drawer.style.setProperty('pointer-events', 'auto', 'important');
+            drawer.style.setProperty('overflow', 'hidden', 'important');
+            
+            // 添加 show 类
+            drawer.classList.add('show');
+            
+            
+            
     },
 
-    async loadRelatedData(employeeId) {
+    loadRelatedData: async function(employeeId) {
+        
         try {
+            
             const [detailRes, deptRes, posRes] = await Promise.all([
                 API.getEmployeeDetail(employeeId),
                 API.getDepartments(),
                 API.getPositions()
             ]);
+            
+            
+            
+            
             
             if (detailRes.code === 200) {
                 const data = detailRes.data;
@@ -448,7 +653,13 @@ const employeeDetailModule = {
     },
 
     renderModal() {
+        
         const employee = state.currentEmployee;
+        
+        if (!employee) {
+            console.error('[ERROR] currentEmployee is null, cannot render');
+            return;
+        }
         const isEditMode = state.isEditMode;
 
         const nations = ['汉族', '蒙古族', '回族', '藏族', '维吾尔族', '苗族', '彝族', '壮族', '布依族', '朝鲜族', '满族', '侗族', '瑶族', '白族', '土家族', '哈尼族', '哈萨克族', '傣族', '黎族', '傈僳族', '佤族', '畲族', '高山族', '拉祜族', '水族', '东乡族', '纳西族', '景颇族', '柯尔克孜族', '土族', '达斡尔族', '仫佬族', '羌族', '布朗族', '撒拉族', '毛南族', '仡佬族', '锡伯族', '阿昌族', '普米族', '塔吉克族', '怒族', '乌孜别克族', '俄罗斯族', '鄂温克族', '德昂族', '保安族', '裕固族', '京族', '塔塔尔族', '独龙族', '鄂伦春族', '赫哲族', '门巴族', '珞巴族', '基诺族'];
@@ -470,6 +681,7 @@ const employeeDetailModule = {
         console.log('Drawer element in renderModal:', drawer);
         console.log('Content element:', content);
         console.log('Content innerHTML before:', content?.innerHTML?.substring(0, 100));
+        console.log('Content element exists:', !!content);
 
         content.innerHTML = `
             <style>
@@ -625,6 +837,7 @@ const employeeDetailModule = {
                     <div class="detail-item"><span class="detail-label">劳动合同扫描件</span><input type="text" id="modalContractAttachment" class="detail-input" value="${employee.contractAttachment || ''}" ${!isEditMode ? 'disabled' : ''}></div>
                     <div class="detail-item"><span class="detail-label">保密协议扫描件</span><input type="text" id="modalConfidentialityAttachment" class="detail-input" value="${employee.confidentialityAttachment || ''}" ${!isEditMode ? 'disabled' : ''}></div>
                     <div class="detail-item"><span class="detail-label">竞业限制协议</span><input type="text" id="modalNonCompeteAttachment" class="detail-input" value="${employee.nonCompeteAttachment || ''}" ${!isEditMode ? 'disabled' : ''}></div>
+                    <div class="detail-item"><span class="detail-label">入职材料清单</span><input type="text" id="modalEntryMaterialsChecklist" class="detail-input" value="${employee.entryMaterialsChecklist || ''}" ${!isEditMode ? 'disabled' : ''}></div>
                     <div class="detail-item"><span class="detail-label">档案存放状态</span><select id="modalArchiveStatus" class="detail-input" ${!isEditMode ? 'disabled' : ''}><option value="">请选择</option><option value="公司" ${employee.archiveStatus === '公司' ? 'selected' : ''}>公司</option><option value="人才市场" ${employee.archiveStatus === '人才市场' ? 'selected' : ''}>人才市场</option><option value="个人" ${employee.archiveStatus === '个人' ? 'selected' : ''}>个人</option></select></div>
                 </div>
             </div>
@@ -1032,20 +1245,11 @@ const employeeDetailModule = {
             </div>
         `;
 
-        drawer.style.setProperty('display', 'flex', 'important');
-        drawer.style.setProperty('position', 'fixed', 'important');
-        drawer.style.setProperty('top', '0', 'important');
-        drawer.style.setProperty('left', '0', 'important');
-        drawer.style.setProperty('width', '100%', 'important');
-        drawer.style.setProperty('height', '100%', 'important');
-        drawer.style.setProperty('background', 'rgba(0, 0, 0, 0.7)', 'important');
-        drawer.style.setProperty('z-index', '99999', 'important');
-        drawer.style.setProperty('align-items', 'center', 'important');
-        drawer.style.setProperty('justify-content', 'center', 'important');
-        drawer.style.setProperty('opacity', '1', 'important');
-        drawer.style.setProperty('pointer-events', 'auto', 'important');
-        drawer.style.setProperty('overflow', 'hidden', 'important');
-
+        console.log('Content innerHTML after length:', content.innerHTML.length);
+        console.log('Content innerHTML after preview:', content.innerHTML.substring(0, 200));
+        
+        console.log('RenderModal complete, drawer should be visible');
+        
         const toggleEditBtn = drawer.querySelector('#toggleEditBtn');
         const cancelDetailBtn = drawer.querySelector('#cancelDetailBtn');
         const saveDetailBtn = drawer.querySelector('#saveDetailBtn');

@@ -1,0 +1,2 @@
+employee-detail.js:111 [DEBUG] closeBtn clicked
+employee-detail.js:386 [DEBUG] drawer closed

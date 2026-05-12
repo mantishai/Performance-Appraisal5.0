@@ -429,6 +429,9 @@ router.put('/employees/:id/detail', async (req, res) => {
         const { id } = req.params;
         const data = req.body;
         
+        console.log('[DEBUG] Update employee detail - ID:', id);
+        console.log('[DEBUG] Update employee detail - Data keys:', Object.keys(data));
+        
         const fieldMap = {
             name: 'name',
             gender: 'gender',
@@ -438,6 +441,7 @@ router.put('/employees/:id/detail', async (req, res) => {
             nativePlace: 'native_place',
             resumeAttachment: 'resume_attachment',
             photo: 'photo',
+            employeeNo: 'employee_no',
             
             idCard: 'id_card',
             politicalStatus: 'political_status',
@@ -524,7 +528,22 @@ router.put('/employees/:id/detail', async (req, res) => {
         for (const [key, dbField] of Object.entries(fieldMap)) {
             if (data[key] !== undefined) {
                 fields.push(`${dbField} = ?`);
-                values.push(data[key]);
+                // 处理空字符串，转换为 null（特别是日期字段）
+                let originalValue = data[key];
+                let value = originalValue;
+                
+                // 检查空字符串、null、undefined
+                if (value === '' || value === null || value === undefined) {
+                    value = null;
+                }
+                // 检查日期字段的空字符串
+                if (dbField.includes('_date') && (originalValue === '' || originalValue === null || originalValue === undefined)) {
+                    value = null;
+                }
+                values.push(value);
+                if (dbField.includes('_date')) {
+                    console.log(`[DEBUG] Date Field: ${dbField}, Original: "${originalValue}", Processed:`, value);
+                }
             }
         }
         
@@ -585,6 +604,22 @@ router.put('/employees/:id/detail', async (req, res) => {
         await connection.rollback();
         console.error('Update employee detail error:', error);
         res.json({ code: 500, message: '服务器错误: ' + error.message });
+    } finally {
+        connection.release();
+    }
+});
+
+router.get('/employees/disable-trigger', async (req, res) => {
+    const connection = await pool.getConnection();
+    try {
+        console.log('Disabling employee_audit_update trigger...');
+        await connection.execute('DROP TRIGGER IF EXISTS employee_audit_update');
+        
+        console.log('Trigger disabled successfully!');
+        res.json({ code: 200, message: '触发器已禁用' });
+    } catch (error) {
+        console.error('Error disabling trigger:', error);
+        res.json({ code: 500, message: '禁用失败: ' + error.message });
     } finally {
         connection.release();
     }

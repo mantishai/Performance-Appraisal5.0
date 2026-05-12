@@ -1,0 +1,206 @@
+employee-detail.js:43 [DEBUG] employeeDetailModule.open called: {id: 2, employee_no: 'EMP002', name: '李四', gender: 0, age: null, …}
+employee-detail.js:49 [DEBUG] about to call loadRelatedData for id: 2
+employee-detail.js:593 [DEBUG] loadRelatedData called with employeeId: 2
+employee-detail.js:595 [DEBUG] calling API.getEmployeeDetail...
+employee-detail.js:602 [DEBUG] API.getEmployeeDetail response: {code: 200, data: {…}, message: 'success'}
+employee-detail.js:603 [DEBUG] API.getDepartments response code: 200
+employee-detail.js:604 [DEBUG] API.getPositions response code: 200
+employee-detail.js:51 [DEBUG] loadRelatedData completed
+employee-detail.js:438 [DEBUG] Removing old drawer
+employee-detail.js:442 [DEBUG] Creating new drawer
+employee-detail.js:567 [DEBUG] Modal added to DOM
+employee-detail.js:588 [DEBUG] Drawer style set
+employee-detail.js:589 [DEBUG] Last body child: detailDrawer
+employee-detail.js:53 [DEBUG] ensureModalExists completed
+employee-detail.js:641 [DEBUG] renderModal called
+employee-detail.js:643 [DEBUG] currentEmployee: {id: 2, employee_no: 'EMP002', name: '李四', gender: '', age: null, …}
+employee-detail.js:666 Drawer element in renderModal: <div id=​"detailDrawer" class=​"modal-overlay show" style=​"display:​ flex !important;​ position:​ fixed !important;​ top:​ 0px !important;​ left:​ 0px !important;​ width:​ 100% !important;​ height:​ 100% !important;​ background:​ rgba(0, 0, 0, 0.7)​ !important;​ z-index:​ 2147483647 !important;​ align-items:​ center !important;​ justify-content:​ center !important;​ opacity:​ 1 !important;​ visibility:​ visible !important;​ pointer-events:​ auto !important;​ overflow:​ hidden !important;​">​…​</div>​flex
+employee-detail.js:667 Content element: <div class=​"modal-body" id=​"detailContent">​…​</div>​scroll
+employee-detail.js:668 Content innerHTML before: 
+employee-detail.js:669 Content element exists: true
+employee-detail.js:1233 Content innerHTML after length: 34273
+employee-detail.js:1234 Content innerHTML after preview: 
+            <style>
+                .detail-section { margin-top: 24px; padding-top: 24px; border-top: 1px solid rgba(24, 144, 255, 0.1); }
+                .detail-section-title { font-weight: 600; c
+employee-detail.js:1236 RenderModal complete, drawer should be visible
+employee-detail.js:55 [DEBUG] renderModal completed
+employee-detail.js:96 [DEBUG] bindEvents called
+employee-detail.js:107 [DEBUG] closeBtn found: true
+employee-detail.js:115 [DEBUG] closeBtn event bound
+employee-detail.js:127 [DEBUG] overlay click event bound
+employee-detail.js:138 [DEBUG] ESC key event bound
+employee-detail.js:168 [DEBUG] saveDetailBtn element: <button class=​"btn-modal btn-modal-primary" id=​"saveDetailBtn" style=​"display:​ none;​">​保存​</button>​
+employee-detail.js:170 [DEBUG] saveDetailBtn style.display: none
+employee-detail.js:171 [DEBUG] saveDetailBtn disabled: false
+employee-detail.js:195 [DEBUG] saveDetailBtn event listener added
+employee-detail.js:203 [DEBUG] departmentSelect found: true positionSelect found: true
+employee-detail.js:219 [DEBUG] departmentSelect change event bound
+employee-detail.js:224 [DEBUG] bindEvents completed
+employee-detail.js:57 [DEBUG] bindEvents completed
+ Final drawer element: 
+ Final drawer style: CSSStyleDeclaration {0: 'display', 1: 'position', 2: 'top', 3: 'left', 4: 'width', 5: 'height', 6: 'background-image', 7: 'background-position-x', 8: 'background-position-y', 9: 'background-size', 10: 'background-repeat', 11: 'background-attachment', 12: 'background-origin', 13: 'background-clip', 14: 'background-color', 15: 'z-index', 16: 'align-items', 17: 'justify-content', 18: 'opacity', 19: 'visibility', 20: 'pointer-events', 21: 'overflow-x', 22: 'overflow-y', accentColor: '', additiveSymbols: '', alignContent: '', alignItems: 'center', alignSelf: '', …}
+ Final drawer computed display: flex
+ Final drawer computed z-index: 2147483647
+ Final drawer computed opacity: 1
+ Final drawer offsetHeight: 877
+ Final drawer offsetWidth: 1504
+ Modal container: 
+ Modal container computed display: block
+ Modal container computed opacity: 1
+ Modal container offsetHeight: 745
+ Modal container offsetWidth: 1000
+ Detail content: 
+ Detail content innerHTML length: 34273
+ Body children count: 18
+ Last body child: 
+ All modal-like elements found: 125
+   [0] DIV personalInfoModal modal-overlay flex 2147483647
+   [1] DIV  modal-container-large block auto
+   [2] DIV  modal-header flex auto
+   [3] DIV  modal-header-actions flex auto
+   [4] BUTTON  modal-close flex auto
+   [5] DIV  modal-body block auto
+   [6] DIV  modal-actions flex auto
+   [7] BUTTON  btn-modal btn-modal-secondary block auto
+   [8] DIV changePasswordModal modal-overlay flex 2147483647
+   [9] DIV  modal-container block auto
+   [10] DIV  modal-header flex auto
+   [11] BUTTON  modal-close flex auto
+   [12] DIV  modal-body block auto
+   [13] DIV  modal-actions flex auto
+   [14] BUTTON  btn-modal btn-modal-secondary block auto
+   [15] BUTTON  btn-modal btn-modal-primary block auto
+   [16] DIV hrPositionModal modal-overlay flex 2147483647
+   [17] DIV  modal-container-large block auto
+   [18] DIV  modal-header flex auto
+   [19] DIV  modal-header-actions flex auto
+   [20] BUTTON hrExportPDFBtn btn-modal-export block auto
+   [21] BUTTON  modal-close flex auto
+   [22] DIV  modal-body block auto
+   [23] BUTTON  btn-modal-import block auto
+   [24] BUTTON  btn-modal-add block auto
+   [25] BUTTON  btn-modal-delete block auto
+   [26] BUTTON  btn-modal-import block auto
+   [27] BUTTON  btn-modal-add block auto
+   [28] BUTTON  btn-modal-delete block auto
+   [29] DIV  modal-footer-note block auto
+   [30] DIV  modal-actions flex auto
+   [31] BUTTON  btn-modal-secondary block auto
+   [32] BUTTON hrResetBtn btn-modal-warning block auto
+   [33] BUTTON hrSaveBtn btn-modal-primary block auto
+   [34] BUTTON hrEditBtn btn-modal-primary block auto
+   [35] DIV detailDrawer modal-overlay show flex 2147483647
+   [36] DIV  modal-container-large block auto
+   [37] DIV  modal-header flex auto
+   [38] DIV  modal-header-actions flex auto
+   [39] BUTTON exportEmployeePDFBtn btn-modal-export block auto
+   [40] BUTTON  modal-close flex auto
+   [41] DIV detailContent modal-body block auto
+   [42] INPUT modalName detail-input block auto
+   [43] SELECT modalGender detail-input block auto
+   [44] INPUT modalAge detail-input block auto
+   [45] SELECT modalNation detail-input block auto
+   [46] INPUT modalBirthDate detail-input block auto
+   [47] INPUT modalNativePlace detail-input block auto
+   [48] INPUT modalResumeAttachment detail-input block auto
+   [49] INPUT modalIdCard detail-input block auto
+   [50] SELECT modalPoliticalStatus detail-input block auto
+   [51] INPUT modalArchiveLocation detail-input block auto
+   [52] SELECT modalHealthReport detail-input block auto
+   [53] SELECT modalHouseholdType detail-input block auto
+   [54] SELECT modalMarriageStatus detail-input block auto
+   [55] INPUT modalIdCardStartDate detail-input block auto
+   [56] INPUT modalIdCardEndDate detail-input block auto
+   [57] INPUT modalIdCardAttachment detail-input block auto
+   [58] INPUT modalRegisteredAddress detail-input block auto
+   [59] INPUT modalCurrentAddress detail-input block auto
+   [60] INPUT modalPhone detail-input block auto
+   [61] INPUT modalEmail detail-input block auto
+   [62] INPUT modalEmergencyContact detail-input block auto
+   [63] INPUT modalEmergencyPhone detail-input block auto
+   [64] INPUT modalWechat detail-input block auto
+   [65] INPUT modalQq detail-input block auto
+   [66] INPUT modalPostalCode detail-input block auto
+   [67] SELECT modalEducation detail-input block auto
+   [68] INPUT modalGraduationDate detail-input block auto
+   [69] INPUT modalMajor detail-input block auto
+employee-detail.js:90   [70] INPUT modalSchoolName detail-input block auto
+employee-detail.js:90   [71] SELECT modalDegree detail-input block auto
+employee-detail.js:90   [72] INPUT modalForeignLanguage detail-input block auto
+employee-detail.js:90   [73] INPUT modalComputerSkill detail-input block auto
+employee-detail.js:90   [74] SELECT modalTitle detail-input block auto
+employee-detail.js:90   [75] INPUT modalTitleDate detail-input block auto
+employee-detail.js:90   [76] INPUT modalTitleAttachment detail-input block auto
+employee-detail.js:90   [77] INPUT modalTitleExpireDate detail-input block auto
+employee-detail.js:90   [78] INPUT modalWorkYears detail-input block auto
+employee-detail.js:90   [79] SELECT modalWorkField detail-input block auto
+employee-detail.js:90   [80] SELECT modalProjectLevel detail-input block auto
+employee-detail.js:90   [81] SELECT modalIsManager detail-input block auto
+employee-detail.js:90   [82] INPUT modalEmployeeNo detail-input block auto
+employee-detail.js:90   [83] SELECT modalDepartment detail-input block auto
+employee-detail.js:90   [84] SELECT modalPosition detail-input block auto
+employee-detail.js:90   [85] INPUT modalEntryDate detail-input block auto
+employee-detail.js:90   [86] INPUT modalRegularDate detail-input block auto
+employee-detail.js:90   [87] INPUT modalProbationEndDate detail-input block auto
+employee-detail.js:90   [88] INPUT modalDepartmentNature detail-input block auto
+employee-detail.js:90   [89] SELECT modalEmployeeType detail-input block auto
+employee-detail.js:90   [90] INPUT modalDirectSuperior detail-input block auto
+employee-detail.js:90   [91] INPUT modalManager detail-input block auto
+employee-detail.js:90   [92] SELECT modalAttendanceRequired detail-input block auto
+employee-detail.js:90   [93] SELECT modalHireType detail-input block auto
+employee-detail.js:90   [94] INPUT modalUnionJoinDate detail-input block auto
+employee-detail.js:90   [95] SELECT modalConfidentialAgreement detail-input block auto
+employee-detail.js:90   [96] INPUT modalWorkEmail detail-input block auto
+employee-detail.js:90   [97] INPUT modalOfficePhone detail-input block auto
+employee-detail.js:90   [98] INPUT modalOfficeLocation detail-input block auto
+employee-detail.js:90   [99] SELECT modalReportTo detail-input block auto
+employee-detail.js:90   [100] INPUT modalWorkCity detail-input block auto
+employee-detail.js:90   [101] INPUT modalSalary detail-input block auto
+employee-detail.js:90   [102] INPUT modalAnnualSalary detail-input block auto
+employee-detail.js:90   [103] INPUT modalSocialSecurityBase detail-input block auto
+employee-detail.js:90   [104] INPUT modalSocialSecurityCompany detail-input block auto
+employee-detail.js:90   [105] INPUT modalSocialSecurityStartDate detail-input block auto
+employee-detail.js:90   [106] INPUT modalProvidentFundBase detail-input block auto
+employee-detail.js:90   [107] INPUT modalProvidentFundAccount detail-input block auto
+employee-detail.js:90   [108] INPUT modalPerformanceBonusRatio detail-input block auto
+employee-detail.js:90   [109] INPUT modalMealAllowance detail-input block auto
+employee-detail.js:90   [110] INPUT modalTransportAllowance detail-input block auto
+employee-detail.js:90   [111] INPUT modalCommunicationAllowance detail-input block auto
+employee-detail.js:90   [112] INPUT modalSalarySecurityLevel detail-input block auto
+employee-detail.js:90   [113] INPUT modalBankCard detail-input block auto
+employee-detail.js:90   [114] INPUT modalBankName detail-input block auto
+employee-detail.js:90   [115] INPUT modalHealthReportAttachment detail-input block auto
+employee-detail.js:90   [116] INPUT modalContractAttachment detail-input block auto
+employee-detail.js:90   [117] INPUT modalConfidentialityAttachment detail-input block auto
+employee-detail.js:90   [118] INPUT modalNonCompeteAttachment detail-input block auto
+employee-detail.js:90   [119] INPUT modalEntryMaterialsChecklist detail-input block auto
+employee-detail.js:90   [120] SELECT modalArchiveStatus detail-input block auto
+employee-detail.js:90   [121] DIV detailActions modal-actions flex auto
+employee-detail.js:90   [122] BUTTON toggleEditBtn btn-modal btn-modal-secondary block auto
+employee-detail.js:90   [123] BUTTON cancelDetailBtn btn-modal btn-modal-secondary none auto
+employee-detail.js:90   [124] BUTTON saveDetailBtn btn-modal btn-modal-primary none auto
+employee-detail.js:380 [DEBUG] switchToEditMode - saveDetailBtn: <button class=​"btn-modal btn-modal-primary" id=​"saveDetailBtn" style=​"display:​ none;​">​保存​</button>​
+employee-detail.js:386 [DEBUG] saveDetailBtn displayed
+employee-detail.js:96 [DEBUG] bindEvents called
+employee-detail.js:107 [DEBUG] closeBtn found: true
+employee-detail.js:115 [DEBUG] closeBtn event bound
+employee-detail.js:127 [DEBUG] overlay click event bound
+employee-detail.js:138 [DEBUG] ESC key event bound
+employee-detail.js:168 [DEBUG] saveDetailBtn element: <button class=​"btn-modal btn-modal-primary" id=​"saveDetailBtn" style=​"display:​ inline-block;​">​保存​</button>​
+employee-detail.js:170 [DEBUG] saveDetailBtn style.display: inline-block
+employee-detail.js:171 [DEBUG] saveDetailBtn disabled: false
+employee-detail.js:195 [DEBUG] saveDetailBtn event listener added
+employee-detail.js:203 [DEBUG] departmentSelect found: true positionSelect found: true
+employee-detail.js:219 [DEBUG] departmentSelect change event bound
+employee-detail.js:224 [DEBUG] bindEvents completed
+employee-detail.js:397 [DEBUG] switchToEditMode completed
+employee-detail.js:177 [DEBUG] saveDetailBtn clicked!
+employee-detail.js:183 [DEBUG] Calling saveDetail()
+employee-detail.js:341 [DEBUG] API.updateEmployeeDetail - employee.id: 2
+employee-detail.js:342 [DEBUG] API.updateEmployeeDetail - data keys: (78) ['name', 'gender', 'age', 'nation', 'birthDate', 'nativePlace', 'resumeAttachment', 'idCard', 'politicalStatus', 'archiveLocation', 'healthReport', 'householdType', 'marriageStatus', 'idCardStartDate', 'idCardEndDate', 'idCardAttachment', 'registeredAddress', 'currentAddress', 'phone', 'email', 'emergencyContact', 'emergencyPhone', 'wechat', 'qq', 'postalCode', 'education', 'graduationDate', 'major', 'schoolName', 'degree', 'foreignLanguage', 'computerSkill', 'title', 'titleDate', 'titleAttachment', 'titleExpireDate', 'workYears', 'workField', 'projectLevel', 'isManager', 'employeeNo', 'department_id', 'position_id', 'entryDate', 'regularDate', 'probationEndDate', 'departmentNature', 'employeeType', 'directSuperior', 'manager', 'attendanceRequired', 'hireType', 'unionJoinDate', 'confidentialAgreement', 'workEmail', 'officePhone', 'officeLocation', 'reportTo', 'workCity', 'annualSalary', 'socialSecurityBase', 'socialSecurityCompany', 'socialSecurityStartDate', 'providentFundBase', 'providentFundAccount', 'performanceBonusRatio', 'mealAllowance', 'transportAllowance', 'communicationAllowance', 'salarySecurityLevel', 'bankCard', 'bankName', 'healthReportAttachment', 'entryMaterialsChecklist', 'contractAttachment', 'confidentialityAttachment', 'nonCompeteAttachment', 'archiveStatus']
+employee-detail.js:346 [DEBUG] API response: {code: 500, message: "服务器错误: You can't specify target table 'employee_audit_log' for update in FROM clause"}
+employee-detail.js:347 [DEBUG] API response code: 500
+employee-detail.js:348 [DEBUG] API response message: 服务器错误: You can't specify target table 'employee_audit_log' for update in FROM clause
+employee-detail.js:358 [DEBUG] Save failed, showing error Toast
+employee-detail.js:185 [DEBUG] saveDetail() completed

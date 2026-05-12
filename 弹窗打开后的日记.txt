@@ -1,0 +1,192 @@
+employee-detail.js:43 [DEBUG] employeeDetailModule.open called: {id: 2, employee_no: 'EMP002', name: '李四', gender: 0, age: null, …}
+employee-detail.js:49 [DEBUG] about to call loadRelatedData for id: 2
+employee-detail.js:549 [DEBUG] loadRelatedData called with employeeId: 2
+employee-detail.js:551 [DEBUG] calling API.getEmployeeDetail...
+employee-detail.js:558 [DEBUG] API.getEmployeeDetail response: {code: 200, data: {…}, message: 'success'}
+employee-detail.js:559 [DEBUG] API.getDepartments response code: 200
+employee-detail.js:560 [DEBUG] API.getPositions response code: 200
+employee-detail.js:51 [DEBUG] loadRelatedData completed
+employee-detail.js:394 [DEBUG] Removing old drawer
+employee-detail.js:398 [DEBUG] Creating new drawer
+employee-detail.js:523 [DEBUG] Modal added to DOM
+employee-detail.js:544 [DEBUG] Drawer style set
+employee-detail.js:545 [DEBUG] Last body child: detailDrawer
+employee-detail.js:53 [DEBUG] ensureModalExists completed
+employee-detail.js:597 [DEBUG] renderModal called
+employee-detail.js:599 [DEBUG] currentEmployee: {id: 2, employee_no: 'EMP002', name: '李四', gender: '', age: null, …}
+employee-detail.js:622 Drawer element in renderModal: <div id=​"detailDrawer" class=​"modal-overlay show" style=​"display:​ flex !important;​ position:​ fixed !important;​ top:​ 0px !important;​ left:​ 0px !important;​ width:​ 100% !important;​ height:​ 100% !important;​ background:​ rgba(0, 0, 0, 0.7)​ !important;​ z-index:​ 2147483647 !important;​ align-items:​ center !important;​ justify-content:​ center !important;​ opacity:​ 1 !important;​ visibility:​ visible !important;​ pointer-events:​ auto !important;​ overflow:​ hidden !important;​">​…​</div>​flex
+employee-detail.js:623 Content element: <div class=​"modal-body" id=​"detailContent">​…​</div>​scroll
+employee-detail.js:624 Content innerHTML before: 
+employee-detail.js:625 Content element exists: true
+employee-detail.js:1189 Content innerHTML after length: 34273
+employee-detail.js:1190 Content innerHTML after preview: 
+            <style>
+                .detail-section { margin-top: 24px; padding-top: 24px; border-top: 1px solid rgba(24, 144, 255, 0.1); }
+                .detail-section-title { font-weight: 600; c
+employee-detail.js:1192 RenderModal complete, drawer should be visible
+employee-detail.js:55 [DEBUG] renderModal completed
+employee-detail.js:96 [DEBUG] bindEvents called
+employee-detail.js:107 [DEBUG] closeBtn found: true
+employee-detail.js:115 [DEBUG] closeBtn event bound
+employee-detail.js:127 [DEBUG] overlay click event bound
+employee-detail.js:138 [DEBUG] ESC key event bound
+employee-detail.js:142 [DEBUG] toggleEditBtn found: true
+employee-detail.js:143 [DEBUG] toggleEditBtn element: <button class=​"btn-modal btn-modal-secondary" id=​"toggleEditBtn" style=​"display:​ inline-block;​">​编辑​</button>​
+employee-detail.js:145 [DEBUG] toggleEditBtn display: inline-block
+employee-detail.js:156 [DEBUG] toggleEditBtn event bound
+employee-detail.js:157 [DEBUG] toggleEditBtn computed style: CSSStyleDeclaration {0: 'accent-color', 1: 'align-content', 2: 'align-items', 3: 'align-self', 4: 'alignment-baseline', 5: 'anchor-name', 6: 'anchor-scope', 7: 'animation-composition', 8: 'animation-delay', 9: 'animation-direction', 10: 'animation-duration', 11: 'animation-fill-mode', 12: 'animation-iteration-count', 13: 'animation-name', 14: 'animation-play-state', 15: 'animation-range-end', 16: 'animation-range-start', 17: 'animation-timeline', 18: 'animation-timing-function', 19: 'app-region', 20: 'appearance', 21: 'backdrop-filter', 22: 'backface-visibility', 23: 'background-attachment', 24: 'background-blend-mode', 25: 'background-clip', 26: 'background-color', 27: 'background-image', 28: 'background-origin', 29: 'background-position', 30: 'background-repeat', 31: 'background-size', 32: 'baseline-shift', 33: 'baseline-source', 34: 'block-size', 35: 'border-block-end-color', 36: 'border-block-end-style', 37: 'border-block-end-width', 38: 'border-block-start-color', 39: 'border-block-start-style', 40: 'border-block-start-width', 41: 'border-bottom-color', 42: 'border-bottom-left-radius', 43: 'border-bottom-right-radius', 44: 'border-bottom-style', 45: 'border-bottom-width', 46: 'border-collapse', 47: 'border-end-end-radius', 48: 'border-end-start-radius', 49: 'border-image-outset', 50: 'border-image-repeat', 51: 'border-image-slice', 52: 'border-image-source', 53: 'border-image-width', 54: 'border-inline-end-color', 55: 'border-inline-end-style', 56: 'border-inline-end-width', 57: 'border-inline-start-color', 58: 'border-inline-start-style', 59: 'border-inline-start-width', 60: 'border-left-color', 61: 'border-left-style', 62: 'border-left-width', 63: 'border-right-color', 64: 'border-right-style', 65: 'border-right-width', 66: 'border-start-end-radius', 67: 'border-start-start-radius', 68: 'border-top-color', 69: 'border-top-left-radius', 70: 'border-top-right-radius', 71: 'border-top-style', 72: 'border-top-width', 73: 'bottom', 74: 'box-decoration-break', 75: 'box-shadow', 76: 'box-sizing', 77: 'break-after', 78: 'break-before', 79: 'break-inside', 80: 'buffered-rendering', 81: 'caption-side', 82: 'caret-animation', 83: 'caret-color', 84: 'clear', 85: 'clip', 86: 'clip-path', 87: 'clip-rule', 88: 'color', 89: 'color-interpolation', 90: 'color-interpolation-filters', 91: 'color-rendering', 92: 'column-count', 93: 'column-gap', 94: 'column-rule-color', 95: 'column-rule-style', 96: 'column-rule-width', 97: 'column-span', 98: 'column-width', 99: 'contain-intrinsic-block-size', …}
+employee-detail.js:164 [DEBUG] cancelDetailBtn found: true
+employee-detail.js:165 [DEBUG] cancelDetailBtn element: <button class=​"btn-modal btn-modal-secondary" id=​"cancelDetailBtn" style=​"display:​ none;​">​取消​</button>​
+employee-detail.js:167 [DEBUG] cancelDetailBtn display: none
+employee-detail.js:178 [DEBUG] cancelDetailBtn event bound
+employee-detail.js:185 [DEBUG] saveDetailBtn found: true
+employee-detail.js:186 [DEBUG] saveDetailBtn element: <button class=​"btn-modal btn-modal-primary" id=​"saveDetailBtn" style=​"display:​ none;​">​保存​</button>​
+employee-detail.js:188 [DEBUG] saveDetailBtn style: CSSStyleDeclaration {0: 'accent-color', 1: 'align-content', 2: 'align-items', 3: 'align-self', 4: 'alignment-baseline', 5: 'anchor-name', 6: 'anchor-scope', 7: 'animation-composition', 8: 'animation-delay', 9: 'animation-direction', 10: 'animation-duration', 11: 'animation-fill-mode', 12: 'animation-iteration-count', 13: 'animation-name', 14: 'animation-play-state', 15: 'animation-range-end', 16: 'animation-range-start', 17: 'animation-timeline', 18: 'animation-timing-function', 19: 'app-region', 20: 'appearance', 21: 'backdrop-filter', 22: 'backface-visibility', 23: 'background-attachment', 24: 'background-blend-mode', 25: 'background-clip', 26: 'background-color', 27: 'background-image', 28: 'background-origin', 29: 'background-position', 30: 'background-repeat', 31: 'background-size', 32: 'baseline-shift', 33: 'baseline-source', 34: 'block-size', 35: 'border-block-end-color', 36: 'border-block-end-style', 37: 'border-block-end-width', 38: 'border-block-start-color', 39: 'border-block-start-style', 40: 'border-block-start-width', 41: 'border-bottom-color', 42: 'border-bottom-left-radius', 43: 'border-bottom-right-radius', 44: 'border-bottom-style', 45: 'border-bottom-width', 46: 'border-collapse', 47: 'border-end-end-radius', 48: 'border-end-start-radius', 49: 'border-image-outset', 50: 'border-image-repeat', 51: 'border-image-slice', 52: 'border-image-source', 53: 'border-image-width', 54: 'border-inline-end-color', 55: 'border-inline-end-style', 56: 'border-inline-end-width', 57: 'border-inline-start-color', 58: 'border-inline-start-style', 59: 'border-inline-start-width', 60: 'border-left-color', 61: 'border-left-style', 62: 'border-left-width', 63: 'border-right-color', 64: 'border-right-style', 65: 'border-right-width', 66: 'border-start-end-radius', 67: 'border-start-start-radius', 68: 'border-top-color', 69: 'border-top-left-radius', 70: 'border-top-right-radius', 71: 'border-top-style', 72: 'border-top-width', 73: 'bottom', 74: 'box-decoration-break', 75: 'box-shadow', 76: 'box-sizing', 77: 'break-after', 78: 'break-before', 79: 'break-inside', 80: 'buffered-rendering', 81: 'caption-side', 82: 'caret-animation', 83: 'caret-color', 84: 'clear', 85: 'clip', 86: 'clip-path', 87: 'clip-rule', 88: 'color', 89: 'color-interpolation', 90: 'color-interpolation-filters', 91: 'color-rendering', 92: 'column-count', 93: 'column-gap', 94: 'column-rule-color', 95: 'column-rule-style', 96: 'column-rule-width', 97: 'column-span', 98: 'column-width', 99: 'contain-intrinsic-block-size', …}
+employee-detail.js:189 [DEBUG] saveDetailBtn display: none
+employee-detail.js:210 [DEBUG] saveDetailBtn event bound successfully
+employee-detail.js:218 [DEBUG] departmentSelect found: true positionSelect found: true
+employee-detail.js:234 [DEBUG] departmentSelect change event bound
+employee-detail.js:239 [DEBUG] bindEvents completed
+employee-detail.js:57 [DEBUG] bindEvents completed
+employee-detail.js:61 Final drawer element: <div id=​"detailDrawer" class=​"modal-overlay show" style=​"display:​ flex !important;​ position:​ fixed !important;​ top:​ 0px !important;​ left:​ 0px !important;​ width:​ 100% !important;​ height:​ 100% !important;​ background:​ rgba(0, 0, 0, 0.7)​ !important;​ z-index:​ 2147483647 !important;​ align-items:​ center !important;​ justify-content:​ center !important;​ opacity:​ 1 !important;​ visibility:​ visible !important;​ pointer-events:​ auto !important;​ overflow:​ hidden !important;​">​…​</div>​flex
+employee-detail.js:62 Final drawer style: CSSStyleDeclaration {0: 'display', 1: 'position', 2: 'top', 3: 'left', 4: 'width', 5: 'height', 6: 'background-image', 7: 'background-position-x', 8: 'background-position-y', 9: 'background-size', 10: 'background-repeat', 11: 'background-attachment', 12: 'background-origin', 13: 'background-clip', 14: 'background-color', 15: 'z-index', 16: 'align-items', 17: 'justify-content', 18: 'opacity', 19: 'visibility', 20: 'pointer-events', 21: 'overflow-x', 22: 'overflow-y', accentColor: '', additiveSymbols: '', alignContent: '', alignItems: 'center', alignSelf: '', …}
+employee-detail.js:63 Final drawer computed display: flex
+employee-detail.js:64 Final drawer computed z-index: 2147483647
+employee-detail.js:65 Final drawer computed opacity: 1
+employee-detail.js:66 Final drawer offsetHeight: 877
+employee-detail.js:67 Final drawer offsetWidth: 1504
+employee-detail.js:71 Modal container: <div class=​"modal-container-large">​…​</div>​
+employee-detail.js:72 Modal container computed display: block
+employee-detail.js:73 Modal container computed opacity: 1
+employee-detail.js:74 Modal container offsetHeight: 745
+employee-detail.js:75 Modal container offsetWidth: 1000
+employee-detail.js:79 Detail content: <div class=​"modal-body" id=​"detailContent">​…​</div>​scroll
+employee-detail.js:80 Detail content innerHTML length: 34273
+employee-detail.js:83 Body children count: 18
+employee-detail.js:84 Last body child: <div id=​"detailDrawer" class=​"modal-overlay show" style=​"display:​ flex !important;​ position:​ fixed !important;​ top:​ 0px !important;​ left:​ 0px !important;​ width:​ 100% !important;​ height:​ 100% !important;​ background:​ rgba(0, 0, 0, 0.7)​ !important;​ z-index:​ 2147483647 !important;​ align-items:​ center !important;​ justify-content:​ center !important;​ opacity:​ 1 !important;​ visibility:​ visible !important;​ pointer-events:​ auto !important;​ overflow:​ hidden !important;​">​…​</div>​flex
+employee-detail.js:88 All modal-like elements found: 125
+employee-detail.js:90   [0] DIV personalInfoModal modal-overlay flex 2147483647
+employee-detail.js:90   [1] DIV  modal-container-large block auto
+employee-detail.js:90   [2] DIV  modal-header flex auto
+employee-detail.js:90   [3] DIV  modal-header-actions flex auto
+employee-detail.js:90   [4] BUTTON  modal-close flex auto
+employee-detail.js:90   [5] DIV  modal-body block auto
+employee-detail.js:90   [6] DIV  modal-actions flex auto
+employee-detail.js:90   [7] BUTTON  btn-modal btn-modal-secondary block auto
+employee-detail.js:90   [8] DIV changePasswordModal modal-overlay flex 2147483647
+employee-detail.js:90   [9] DIV  modal-container block auto
+employee-detail.js:90   [10] DIV  modal-header flex auto
+employee-detail.js:90   [11] BUTTON  modal-close flex auto
+employee-detail.js:90   [12] DIV  modal-body block auto
+employee-detail.js:90   [13] DIV  modal-actions flex auto
+employee-detail.js:90   [14] BUTTON  btn-modal btn-modal-secondary block auto
+employee-detail.js:90   [15] BUTTON  btn-modal btn-modal-primary block auto
+employee-detail.js:90   [16] DIV hrPositionModal modal-overlay flex 2147483647
+employee-detail.js:90   [17] DIV  modal-container-large block auto
+employee-detail.js:90   [18] DIV  modal-header flex auto
+employee-detail.js:90   [19] DIV  modal-header-actions flex auto
+employee-detail.js:90   [20] BUTTON hrExportPDFBtn btn-modal-export block auto
+employee-detail.js:90   [21] BUTTON  modal-close flex auto
+employee-detail.js:90   [22] DIV  modal-body block auto
+employee-detail.js:90   [23] BUTTON  btn-modal-import block auto
+employee-detail.js:90   [24] BUTTON  btn-modal-add block auto
+employee-detail.js:90   [25] BUTTON  btn-modal-delete block auto
+employee-detail.js:90   [26] BUTTON  btn-modal-import block auto
+employee-detail.js:90   [27] BUTTON  btn-modal-add block auto
+employee-detail.js:90   [28] BUTTON  btn-modal-delete block auto
+employee-detail.js:90   [29] DIV  modal-footer-note block auto
+employee-detail.js:90   [30] DIV  modal-actions flex auto
+employee-detail.js:90   [31] BUTTON  btn-modal-secondary block auto
+employee-detail.js:90   [32] BUTTON hrResetBtn btn-modal-warning block auto
+employee-detail.js:90   [33] BUTTON hrSaveBtn btn-modal-primary block auto
+employee-detail.js:90   [34] BUTTON hrEditBtn btn-modal-primary block auto
+employee-detail.js:90   [35] DIV detailDrawer modal-overlay show flex 2147483647
+employee-detail.js:90   [36] DIV  modal-container-large block auto
+employee-detail.js:90   [37] DIV  modal-header flex auto
+employee-detail.js:90   [38] DIV  modal-header-actions flex auto
+   [39] BUTTON exportEmployeePDFBtn btn-modal-export block auto
+   [40] BUTTON  modal-close flex auto
+   [41] DIV detailContent modal-body block auto
+   [42] INPUT modalName detail-input block auto
+   [43] SELECT modalGender detail-input block auto
+   [44] INPUT modalAge detail-input block auto
+   [45] SELECT modalNation detail-input block auto
+   [46] INPUT modalBirthDate detail-input block auto
+   [47] INPUT modalNativePlace detail-input block auto
+   [48] INPUT modalResumeAttachment detail-input block auto
+   [49] INPUT modalIdCard detail-input block auto
+   [50] SELECT modalPoliticalStatus detail-input block auto
+   [51] INPUT modalArchiveLocation detail-input block auto
+   [52] SELECT modalHealthReport detail-input block auto
+   [53] SELECT modalHouseholdType detail-input block auto
+   [54] SELECT modalMarriageStatus detail-input block auto
+   [55] INPUT modalIdCardStartDate detail-input block auto
+   [56] INPUT modalIdCardEndDate detail-input block auto
+   [57] INPUT modalIdCardAttachment detail-input block auto
+   [58] INPUT modalRegisteredAddress detail-input block auto
+   [59] INPUT modalCurrentAddress detail-input block auto
+   [60] INPUT modalPhone detail-input block auto
+   [61] INPUT modalEmail detail-input block auto
+   [62] INPUT modalEmergencyContact detail-input block auto
+   [63] INPUT modalEmergencyPhone detail-input block auto
+   [64] INPUT modalWechat detail-input block auto
+   [65] INPUT modalQq detail-input block auto
+   [66] INPUT modalPostalCode detail-input block auto
+   [67] SELECT modalEducation detail-input block auto
+   [68] INPUT modalGraduationDate detail-input block auto
+   [69] INPUT modalMajor detail-input block auto
+   [70] INPUT modalSchoolName detail-input block auto
+   [71] SELECT modalDegree detail-input block auto
+   [72] INPUT modalForeignLanguage detail-input block auto
+   [73] INPUT modalComputerSkill detail-input block auto
+   [74] SELECT modalTitle detail-input block auto
+   [75] INPUT modalTitleDate detail-input block auto
+   [76] INPUT modalTitleAttachment detail-input block auto
+   [77] INPUT modalTitleExpireDate detail-input block auto
+   [78] INPUT modalWorkYears detail-input block auto
+   [79] SELECT modalWorkField detail-input block auto
+   [80] SELECT modalProjectLevel detail-input block auto
+   [81] SELECT modalIsManager detail-input block auto
+   [82] INPUT modalEmployeeNo detail-input block auto
+   [83] SELECT modalDepartment detail-input block auto
+   [84] SELECT modalPosition detail-input block auto
+   [85] INPUT modalEntryDate detail-input block auto
+   [86] INPUT modalRegularDate detail-input block auto
+   [87] INPUT modalProbationEndDate detail-input block auto
+   [88] INPUT modalDepartmentNature detail-input block auto
+   [89] SELECT modalEmployeeType detail-input block auto
+employee-detail.js:90   [90] INPUT modalDirectSuperior detail-input block auto
+employee-detail.js:90   [91] INPUT modalManager detail-input block auto
+employee-detail.js:90   [92] SELECT modalAttendanceRequired detail-input block auto
+employee-detail.js:90   [93] SELECT modalHireType detail-input block auto
+employee-detail.js:90   [94] INPUT modalUnionJoinDate detail-input block auto
+employee-detail.js:90   [95] SELECT modalConfidentialAgreement detail-input block auto
+employee-detail.js:90   [96] INPUT modalWorkEmail detail-input block auto
+employee-detail.js:90   [97] INPUT modalOfficePhone detail-input block auto
+employee-detail.js:90   [98] INPUT modalOfficeLocation detail-input block auto
+employee-detail.js:90   [99] SELECT modalReportTo detail-input block auto
+employee-detail.js:90   [100] INPUT modalWorkCity detail-input block auto
+employee-detail.js:90   [101] INPUT modalSalary detail-input block auto
+employee-detail.js:90   [102] INPUT modalAnnualSalary detail-input block auto
+employee-detail.js:90   [103] INPUT modalSocialSecurityBase detail-input block auto
+employee-detail.js:90   [104] INPUT modalSocialSecurityCompany detail-input block auto
+employee-detail.js:90   [105] INPUT modalSocialSecurityStartDate detail-input block auto
+employee-detail.js:90   [106] INPUT modalProvidentFundBase detail-input block auto
+employee-detail.js:90   [107] INPUT modalProvidentFundAccount detail-input block auto
+employee-detail.js:90   [108] INPUT modalPerformanceBonusRatio detail-input block auto
+employee-detail.js:90   [109] INPUT modalMealAllowance detail-input block auto
+employee-detail.js:90   [110] INPUT modalTransportAllowance detail-input block auto
+employee-detail.js:90   [111] INPUT modalCommunicationAllowance detail-input block auto
+employee-detail.js:90   [112] INPUT modalSalarySecurityLevel detail-input block auto
+employee-detail.js:90   [113] INPUT modalBankCard detail-input block auto
+employee-detail.js:90   [114] INPUT modalBankName detail-input block auto
+employee-detail.js:90   [115] INPUT modalHealthReportAttachment detail-input block auto
+employee-detail.js:90   [116] INPUT modalContractAttachment detail-input block auto
+employee-detail.js:90   [117] INPUT modalConfidentialityAttachment detail-input block auto
+employee-detail.js:90   [118] INPUT modalNonCompeteAttachment detail-input block auto
+employee-detail.js:90   [119] INPUT modalEntryMaterialsChecklist detail-input block auto
+employee-detail.js:90   [120] SELECT modalArchiveStatus detail-input block auto
+employee-detail.js:90   [121] DIV detailActions modal-actions flex auto
+employee-detail.js:90   [122] BUTTON toggleEditBtn btn-modal btn-modal-secondary block auto
+employee-detail.js:90   [123] BUTTON cancelDetailBtn btn-modal btn-modal-secondary none auto
+employee-detail.js:90   [124] BUTTON saveDetailBtn btn-modal btn-modal-primary none auto
