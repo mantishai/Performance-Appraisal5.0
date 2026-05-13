@@ -1,464 +1,614 @@
-import { Toast, Modal, Pagination, Skeleton } from '../utils.js';
-import API from '../api.js';
+var API;
 
-const state = {
-    departments: [],
-    positions: [],
-    keyPositions: [],
-    expandedIds: [],
-    selectedDept: null,
-    loading: false
-};
+function loadAPI(callback) {
+    import('../api.js').then(function(m) {
+        API = m.default || m;
+        if (callback) callback();
+    }).catch(function(e) {
+        console.error('Failed to load API:', e);
+        if (callback) callback();
+    });
+}
 
-const orgModule = {
-    async render(container) {
-        container.innerHTML = Skeleton.renderCard();
-        await this.loadData();
-        this.renderContent(container);
+var state = { departments: [], positions: [], employees: [], statistics: {} };
+
+var orgModule = {
+    render: function(container) {
+        var self = this;
+        window.orgModule = self;
+        container.innerHTML = '<div class="loading-container"><div class="loading-spinner"></div><div class="loading-text">加载数据...</div></div>';
+        
+        loadAPI(function() {
+            self.loadInitialData(function() {
+                var selectedType = window.orgSelectedType || 'dashboard';
+                var selectedId = window.orgSelectedId || null;
+                
+                if (selectedType === 'dept' && selectedId) {
+                    container.innerHTML = self.renderDeptDetail(selectedId);
+                    self.bindDeptDetailEvents(selectedId);
+                } else if (selectedType === 'position' && selectedId) {
+                    window.currentHrPositionId = 'pos_' + selectedId;
+                    window.openReadOnlyPositionModal('pos_' + selectedId);
+                    container.innerHTML = self.renderDashboard();
+                } else if (selectedType === 'employee' && selectedId) {
+                    var emp = state.employees.find(function(e) { return e.id === selectedId; });
+                    if (emp) {
+                        import('./employee-detail.js').then(function(m) {
+                            m.default.open(emp);
+                        });
+                    }
+                    container.innerHTML = self.renderDashboard();
+                } else {
+                    container.innerHTML = self.renderDashboard();
+                }
+                
+                window.orgSelectedType = null;
+                window.orgSelectedId = null;
+            });
+        });
     },
 
-    async loadData() {
-        state.loading = true;
-        try {
-            const [deptRes, posRes, keyPosRes] = await Promise.all([
-                API.getOrgDepartments(),
-                API.getOrgPositions(),
-                API.getKeyPositions()
-            ]);
+    loadInitialData: function(callback) {
+        var completed = 0;
+        var total = 4;
 
-            if (deptRes.code === 200) {
-                state.departments = deptRes.data;
-            }
-            if (posRes.code === 200) {
-                state.positions = posRes.data;
-            }
-            if (keyPosRes.code === 200) {
-                state.keyPositions = keyPosRes.data;
-            }
-
-            if (state.expandedIds.length === 0 && state.departments.length > 0) {
-                state.expandedIds = state.departments.filter(d => !d.parentId).map(d => d.id);
-            }
-        } catch (error) {
-            console.error('Failed to load org data:', error);
-            Toast.error('组织架构数据加载失败');
+        function checkComplete() {
+            completed++;
+            if (completed >= total && callback) callback();
         }
-        state.loading = false;
+
+        API.getOrgDepartments().then(function(r) {
+            if (r.code === 200) state.departments = r.data;
+            checkComplete();
+        }).catch(checkComplete);
+
+        API.getOrgStatistics().then(function(r) {
+            if (r.code === 200) state.statistics = r.data;
+            checkComplete();
+        }).catch(checkComplete);
+
+        API.getOrgPositions().then(function(r) {
+            if (r.code === 200) state.positions = r.data.list || r.data || [];
+            checkComplete();
+        }).catch(checkComplete);
+
+        API.getOrgEmployees().then(function(r) {
+            if (r.code === 200) state.employees = r.data;
+            checkComplete();
+        }).catch(checkComplete);
     },
 
-    renderContent(container) {
-        const selectedDept = state.selectedDept ? state.departments.find(d => d.id === state.selectedDept) : null;
-        const deptPositions = selectedDept ? state.positions.filter(p => p.departmentId === selectedDept.id) : [];
+    renderDashboard: function() {
+        var depts = state.departments;
+        var stats = state.statistics;
+        var totalHeadcount = 0;
+        var totalOnboard = state.employees.length;
+        
+        for (var i = 0; i < state.positions.length; i++) {
+            totalHeadcount += (state.positions[i].headcount || 0);
+        }
 
-        container.innerHTML = `
-            <div class="page-header">
-                <h1 class="page-title">组织架构</h1>
-                <button class="btn btn-primary" id="addDeptBtn">+ 新增部门</button>
-            </div>
+        var statsHtml = '<div class="dashboard-stats-grid">';
+        statsHtml += '<div class="stat-card"><div class="stat-icon">🏢</div><div class="stat-info"><div class="stat-value">' + (stats.totalDepartments || depts.length) + '</div><div class="stat-label">部门总数</div></div></div>';
+        statsHtml += '<div class="stat-card"><div class="stat-icon">👤</div><div class="stat-info"><div class="stat-value">' + (stats.totalEmployees || totalOnboard) + '</div><div class="stat-label">员工总数</div></div></div>';
+        statsHtml += '<div class="stat-card"><div class="stat-icon">📋</div><div class="stat-info"><div class="stat-value">' + (stats.totalPositions || state.positions.length) + '</div><div class="stat-label">岗位总数</div></div></div>';
+        statsHtml += '<div class="stat-card"><div class="stat-icon">📊</div><div class="stat-info"><div class="stat-value">' + totalOnboard + '/' + totalHeadcount + '</div><div class="stat-label">编制情况</div></div></div>';
+        statsHtml += '</div>';
 
-            <div style="display: grid; grid-template-columns: 1fr 1.2fr; gap: 24px;">
-                <div class="card" style="padding: 20px;">
-                    <div class="card-header">部门结构</div>
-                    <div style="max-height: 600px; overflow-y: auto; padding: 8px;">
-                        ${this.renderDeptTree(state.departments.filter(d => !d.parentId))}
+        var treeHtml = '<div class="dashboard-sidebar"><div class="org-tree-wrapper"><div class="tree-header"><h3>组织架构</h3><button class="add-dept-btn" onclick="orgModule.showAddDeptModal()">+ 新增部门</button></div><div class="tree-content">';
+        treeHtml += this.renderOrgTree(depts, 0);
+        treeHtml += '</div></div></div>';
+
+        var positionsHtml = '<div class="section-card"><div class="section-header"><h2>岗位情况</h2><span class="section-count">' + state.positions.length + ' 个岗位</span></div><div class="positions-grid">';
+        for (var k = 0; k < state.positions.length; k++) {
+            var pos = state.positions[k];
+            var d = depts.find(function(d) { return d.id === pos.departmentId; });
+            var emps = state.employees.filter(function(e) { return e.positionId === pos.id || e.position_id === pos.id; });
+            var empCount = emps.length;
+            var headcount = pos.headcount || 0;
+            var percent = headcount > 0 ? Math.round((empCount / headcount) * 100) : 0;
+            positionsHtml += '<div class="position-card" onclick="window.orgSelectedType=\'position\';window.orgSelectedId=' + pos.id + ';switchModule(\'org\')"><div class="card-header"><span class="position-name">' + pos.name + '</span><span class="position-badge' + (empCount < headcount ? ' vacant' : '') + '">' + (empCount < headcount ? '有空缺' : '已满编') + '</span></div><div class="card-body"><div class="info-row"><span class="info-label">所属部门</span><span class="info-value">' + (d ? d.name : '-') + '</span></div><div class="info-row"><span class="info-label">岗位编码</span><span class="info-value">' + (pos.code || '-') + '</span></div></div><div class="card-footer"><div class="progress-bar"><div class="progress-fill" style="width:' + percent + '%"></div></div><span class="progress-text">' + empCount + '/' + headcount + '</span></div></div>';
+        }
+        positionsHtml += '</div></div>';
+
+        var employeesHtml = '<div class="section-card"><div class="section-header"><h2>人员情况</h2><span class="section-count">' + state.employees.length + ' 名员工</span></div><div class="employees-grid">';
+        for (var m = 0; m < state.employees.length; m++) {
+            var emp = state.employees[m];
+            var d = depts.find(function(d) { return d.id === emp.departmentId; });
+            var p = state.positions.find(function(p) { return p.id === emp.positionId || p.id === emp.position_id; });
+            var avatarColor = '#' + Math.floor(Math.random()*16777215).toString(16).padStart(6, '0');
+            employeesHtml += '<div class="employee-card" onclick="window.orgSelectedType=\'employee\';window.orgSelectedId=' + emp.id + ';switchModule(\'org\')"><div class="emp-avatar" style="background:' + avatarColor + '">' + (emp.name ? emp.name.charAt(0) : '?') + '</div><div class="emp-info"><div class="emp-name">' + emp.name + '</div><div class="emp-position">' + (p ? p.name : '-') + '</div><div class="emp-department">' + (d ? d.name : '-') + '</div></div><span class="emp-status ' + (emp.status === 1 ? 'active' : 'inactive') + '">' + (emp.status === 1 ? '在职' : '离职') + '</span></div>';
+        }
+        employeesHtml += '</div></div>';
+
+        return '<div class="org-dashboard"><div class="dashboard-header"><div class="header-left"><h1>组织架构看板</h1><p class="header-desc">查看公司部门、岗位和人员的整体架构</p></div></div>' + statsHtml + '<div class="dashboard-main">' + treeHtml + '<div class="dashboard-content">' + positionsHtml + employeesHtml + '</div></div></div>';
+    },
+
+    renderOrgTree: function(departments, level) {
+        var html = '';
+        for (var i = 0; i < departments.length; i++) {
+            var dept = departments[i];
+            var deptPositions = state.positions.filter(function(p) { return p.departmentId === dept.id; });
+            
+            html += '<div class="dept-node"><div class="dept-header"><span class="dept-icon">🏢</span><span class="dept-name" onclick="window.orgSelectedType=\'dept\';window.orgSelectedId=' + dept.id + ';switchModule(\'org\')">' + dept.name + '</span><span class="dept-badge">' + deptPositions.length + '</span><div class="dept-actions"><button class="dept-action-btn edit-btn" onclick="event.stopPropagation();orgModule.showDeptEditModal(' + dept.id + ')" title="编辑"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/></svg></button><button class="dept-action-btn delete-btn" onclick="event.stopPropagation();orgModule.confirmDeleteDept(' + dept.id + ')" title="删除"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg></button><button class="dept-action-btn add-btn" onclick="event.stopPropagation();orgModule.showAddDeptModal(' + dept.id + ')" title="新增子部门"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg></button></div></div>';
+            
+            if (deptPositions.length > 0) {
+                html += '<div class="dept-positions">';
+                for (var j = 0; j < deptPositions.length; j++) {
+                    var pos = deptPositions[j];
+                    var posEmps = state.employees.filter(function(e) { return e.positionId === pos.id || e.position_id === pos.id; });
+                    html += '<div class="position-mini" onclick="event.stopPropagation();window.orgSelectedType=\'position\';window.orgSelectedId=' + pos.id + ';switchModule(\'org\')"><span class="pos-icon">📋</span><span class="pos-name">' + pos.name + '</span><span class="pos-count">' + posEmps.length + '/' + (pos.headcount || 0) + '</span></div>';
+                }
+                html += '</div>';
+            }
+            
+            if (dept.children && dept.children.length > 0) {
+                html += this.renderOrgTree(dept.children, level + 1);
+            }
+            html += '</div>';
+        }
+        return html;
+    },
+
+    renderDeptDetail: function(deptId) {
+        var dept = state.departments.find(function(d) { return d.id === deptId; });
+        if (!dept) return '<div class="empty-state"><div class="empty-icon">❌</div><div class="empty-text">找不到该部门</div></div>';
+
+        var deptPositions = state.positions.filter(function(p) { return p.departmentId === deptId; });
+        var deptEmployees = state.employees.filter(function(e) { return e.departmentId === deptId; });
+
+        var posList = '';
+        for (var i = 0; i < deptPositions.length; i++) {
+            var pos = deptPositions[i];
+            var emps = state.employees.filter(function(e) { return e.positionId === pos.id || e.position_id === pos.id; });
+            posList += '<div class="position-mini" onclick="window.orgSelectedType=\'position\';window.orgSelectedId=' + pos.id + ';switchModule(\'org\')"><span class="pos-icon">📋</span><span class="pos-name">' + pos.name + '</span><span class="pos-count">' + emps.length + '/' + (pos.headcount || 0) + '</span></div>';
+        }
+
+        var empList = '';
+        for (var j = 0; j < deptEmployees.length; j++) {
+            var emp = deptEmployees[j];
+            var p = state.positions.find(function(p) { return p.id === emp.positionId || p.id === emp.position_id; });
+            var avatarColor = '#' + Math.floor(Math.random()*16777215).toString(16).padStart(6, '0');
+            empList += '<div class="employee-card" onclick="window.orgSelectedType=\'employee\';window.orgSelectedId=' + emp.id + ';switchModule(\'org\')"><div class="emp-avatar" style="background:' + avatarColor + '">' + (emp.name ? emp.name.charAt(0) : '?') + '</div><div class="emp-info"><div class="emp-name">' + emp.name + '</div><div class="emp-position">' + (p ? p.name : '-') + '</div></div><span class="emp-status ' + (emp.status === 1 ? 'active' : 'inactive') + '">' + (emp.status === 1 ? '在职' : '离职') + '</span></div>';
+        }
+
+        return `
+            <div class="detail-container">
+                <div class="detail-header">
+                    <button class="btn btn-secondary" onclick="switchModule('org')">← 返回看板</button>
+                    <button class="btn btn-primary" id="editDeptBtn">✏️ 编辑部门</button>
+                </div>
+                <div class="detail-content">
+                    <div class="detail-section">
+                        <h2>${dept.name}</h2>
+                        <div class="detail-grid">
+                            <div class="detail-item">
+                                <span class="detail-label">部门编码</span>
+                                <span class="detail-value" id="deptCode">${dept.code || '-'}</span>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-label">状态</span>
+                                <span class="detail-value">${dept.status === 1 ? '启用' : '禁用'}</span>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-label">所属上级</span>
+                                <span class="detail-value">${this.getParentDeptName(dept.parentId) || '-'}</span>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-label">创建时间</span>
+                                <span class="detail-value">${dept.createdAt || '-'}</span>
+                            </div>
+                            <div class="detail-item full">
+                                <span class="detail-label">描述</span>
+                                <span class="detail-value" id="deptDescription">${dept.description || '-'}</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="detail-section">
+                        <h3>岗位列表 (${deptPositions.length})</h3>
+                        ${posList || '<div class="empty-state"><div class="empty-icon">📋</div><div class="empty-text">暂无岗位</div></div>'}
+                    </div>
+                    <div class="detail-section">
+                        <h3>员工列表 (${deptEmployees.length})</h3>
+                        ${empList || '<div class="empty-state"><div class="empty-icon">👤</div><div class="empty-text">暂无员工</div></div>'}
                     </div>
                 </div>
+            </div>
+        `;
+    },
 
-                <div class="card" style="padding: 20px;">
-                    ${selectedDept ? `
-                        <div class="card-header">
-                            <span>${selectedDept.name} - 岗位列表</span>
-                            <button class="btn btn-sm btn-default" id="addPositionBtn">+ 新增岗位</button>
-                        </div>
-                        <div style="margin-bottom: 16px; display: flex; gap: 12px;">
-                            <div style="flex: 1; padding: 12px; background: rgba(24,144,255,0.05); border-radius: 8px;">
-                                <div style="color: #8ba9c4; font-size: 12px;">部门经理</div>
-                                <div style="font-weight: 600; color: #1a3a5c; margin-top: 4px;">${selectedDept.manager || '-'}</div>
-                            </div>
-                            <div style="flex: 1; padding: 12px; background: rgba(24,144,255,0.05); border-radius: 8px;">
-                                <div style="color: #8ba9c4; font-size: 12px;">员工数量</div>
-                                <div style="font-weight: 600; color: #1a3a5c; margin-top: 4px;">${selectedDept.employeeCount || 0}人</div>
-                            </div>
-                            <div style="flex: 1; padding: 12px; background: rgba(24,144,255,0.05); border-radius: 8px;">
-                                <div style="color: #8ba9c4; font-size: 12px;">岗位数量</div>
-                                <div style="font-weight: 600; color: #1a3a5c; margin-top: 4px;">${deptPositions.length}个</div>
-                            </div>
-                        </div>
+    getParentDeptName: function(parentId) {
+        if (!parentId) return null;
+        var parent = state.departments.find(function(d) { return d.id === parentId; });
+        return parent ? parent.name : null;
+    },
 
-                        <div class="table-container">
-                            <table class="data-table">
-                                <thead>
-                                    <tr>
-                                        <th>岗位名称</th>
-                                        <th>职级</th>
-                                        <th>编制</th>
-                                        <th>在职</th>
-                                        <th>空缺</th>
-                                        <th>操作</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    ${deptPositions.length > 0 ? deptPositions.map(pos => {
-                                        const isKeyPosition = state.keyPositions.some(kp => kp.positionId === pos.id);
-                                        return `
-                                        <tr style="${isKeyPosition ? 'background: rgba(24,144,255,0.05);' : ''}">
-                                            <td>
-                                                <strong>${pos.name}</strong>
-                                                ${isKeyPosition ? '<span class="status-tag active" style="margin-left:8px; font-size:11px;">关键岗位</span>' : ''}
-                                            </td>
-                                            <td>${pos.level || '-'}</td>
-                                            <td>${pos.headcount || 0}</td>
-                                            <td>${pos.current || 0}</td>
-                                            <td>${pos.vacant > 0 ? `<span style="color: #f5222d;">${pos.vacant}</span>` : '0'}</td>
-                                            <td>
-                                                <div class="action-btns">
-                                                    <button class="action-btn" data-action="editPos" data-id="${pos.id}">编辑</button>
-                                                    <button class="action-btn" data-action="deletePos" data-id="${pos.id}" style="color: #f5222d;">删除</button>
-                                                </div>
-                                            </td>
-                                        </tr>
-                                        `;
-                                    }).join('') : `
-                                        <tr>
-                                            <td colspan="6" style="text-align: center; padding: 40px; color: #8ba9c4;">暂无岗位，请点击上方按钮添加</td>
-                                        </tr>
-                                    `}
-                                </tbody>
-                            </table>
-                        </div>
+    bindDeptDetailEvents: function(deptId) {
+        var self = this;
+        var editBtn = document.getElementById('editDeptBtn');
+        if (editBtn) {
+            editBtn.addEventListener('click', function() {
+                self.showDeptEditModal(deptId);
+            });
+        }
+    },
 
-                        <div style="margin-top: 16px; display: flex; gap: 8px; justify-content: flex-end;">
-                            <button class="btn btn-default btn-sm" id="editDeptBtn">编辑部门</button>
-                            <button class="btn btn-danger btn-sm" id="deleteDeptBtn">删除部门</button>
+    showDeptEditModal: function(deptId) {
+        var dept = state.departments.find(function(d) { return d.id === deptId; });
+        if (!dept) return;
+
+        var parentOptions = '<option value="">无上级部门</option>';
+        for (var i = 0; i < state.departments.length; i++) {
+            var d = state.departments[i];
+            if (d.id !== deptId) {
+                parentOptions += '<option value="' + d.id + '" ' + (dept.parentId === d.id ? 'selected' : '') + '>' + d.name + '</option>';
+            }
+        }
+
+        var modalHtml = `
+            <div class="modal-overlay" id="deptEditModal">
+                <div class="modal-container">
+                    <div class="modal-header">
+                        <h2>✏️ 编辑部门</h2>
+                        <button class="modal-close" onclick="closeDeptEditModal()">×</button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label>部门名称 *</label>
+                                <input type="text" id="editDeptName" value="${dept.name || ''}" class="form-input" required>
+                            </div>
+                            <div class="form-group">
+                                <label>部门编码</label>
+                                <input type="text" id="editDeptCode" value="${dept.code || ''}" class="form-input">
+                            </div>
+                            <div class="form-group">
+                                <label>所属上级</label>
+                                <select id="editDeptParent" class="form-input">${parentOptions}</select>
+                            </div>
+                            <div class="form-group">
+                                <label>状态</label>
+                                <select id="editDeptStatus" class="form-input">
+                                    <option value="1" ${dept.status === 1 ? 'selected' : ''}>启用</option>
+                                    <option value="0" ${dept.status === 0 ? 'selected' : ''}>禁用</option>
+                                </select>
+                            </div>
+                            <div class="form-group full">
+                                <label>描述</label>
+                                <textarea id="editDeptDesc" class="form-input" rows="3">${dept.description || ''}</textarea>
+                            </div>
                         </div>
-                    ` : `
-                        <div style="text-align: center; padding: 60px 20px;">
-                            <div style="font-size: 48px; margin-bottom: 16px; opacity: 0.5;">🏢</div>
-                            <div style="color: #8ba9c4;">请点击左侧部门查看详情</div>
-                        </div>
-                    `}
+                    </div>
+                    <div class="modal-actions">
+                        <button class="btn-modal btn-modal-secondary" onclick="closeDeptEditModal()">取消</button>
+                        <button class="btn-modal btn-modal-primary" onclick="saveDeptEdit(${deptId})">保存</button>
+                    </div>
                 </div>
             </div>
         `;
 
-        this.bindEvents();
+        var styleHtml = `
+            <style>
+                #deptEditModal {
+                    position: fixed;
+                    top: 0;
+                    left: 0;
+                    width: 100%;
+                    height: 100%;
+                    background: rgba(0,0,0,0.7);
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    z-index: 9999;
+                }
+                .modal-container {
+                    background: white;
+                    border-radius: 16px;
+                    width: 90%;
+                    max-width: 480px;
+                    overflow: hidden;
+                }
+                .modal-header {
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: center;
+                    padding: 20px 24px;
+                    background: linear-gradient(135deg, #1a4a6f, #0b2b3b);
+                    color: white;
+                }
+                .modal-header h2 { margin: 0; }
+                .modal-close {
+                    width: 32px;
+                    height: 32px;
+                    border: none;
+                    border-radius: 50%;
+                    background: rgba(255,255,255,0.2);
+                    color: white;
+                    cursor: pointer;
+                    font-size: 1.25rem;
+                }
+                .modal-body { padding: 24px; }
+                .form-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; }
+                .form-grid .full { grid-column: span 2; }
+                .form-group label { display: block; margin-bottom: 8px; font-weight: 500; color: #1a3a5c; }
+                .form-input {
+                    width: 100%;
+                    padding: 10px 14px;
+                    border: 2px solid #e2e8f0;
+                    border-radius: 10px;
+                    font-size: 0.9rem;
+                    background: #fafcff;
+                }
+                .form-input:focus { outline: none; border-color: #1a4a6f; }
+                .modal-actions {
+                    display: flex;
+                    gap: 12px;
+                    justify-content: flex-end;
+                    padding: 16px 24px;
+                    border-top: 1px solid #e2e8f0;
+                    background: #fafcff;
+                }
+                .btn-modal {
+                    padding: 10px 24px;
+                    border: none;
+                    border-radius: 10px;
+                    cursor: pointer;
+                    font-size: 0.9rem;
+                    font-weight: 600;
+                }
+                .btn-modal-primary {
+                    background: linear-gradient(135deg, #1a4a6f, #0b2b3b);
+                    color: white;
+                }
+                .btn-modal-secondary {
+                    background: #e2e8f0;
+                    color: #1a4a6f;
+                }
+            </style>
+        `;
+
+        document.body.insertAdjacentHTML('beforeend', styleHtml + modalHtml);
+
+        window.closeDeptEditModal = function() {
+            var modal = document.getElementById('deptEditModal');
+            if (modal) modal.remove();
+        };
+
+        window.saveDeptEdit = async function(id) {
+            var name = document.getElementById('editDeptName').value.trim();
+            var code = document.getElementById('editDeptCode').value.trim();
+            var parentIdVal = document.getElementById('editDeptParent').value;
+            var parentId = parentIdVal ? parseInt(parentIdVal) : null;
+            var status = parseInt(document.getElementById('editDeptStatus').value);
+            var description = document.getElementById('editDeptDesc').value.trim();
+
+            if (!name) {
+                alert('请输入部门名称');
+                return;
+            }
+
+            try {
+                var res = await API.updateDepartment(id, { name, code, parent_id: parentId, status, description });
+                if (res.code === 200) {
+                    alert('部门更新成功');
+                    window.closeDeptEditModal();
+                    switchModule('org');
+                } else {
+                    alert(res.message || '更新失败');
+                }
+            } catch (e) {
+                console.error('Update dept error:', e);
+                alert('更新失败');
+            }
+        };
     },
 
-    renderDeptTree(departments, level = 0) {
-        if (!departments || departments.length === 0) {
-            return '<div style="padding: 20px; text-align: center; color: #8ba9c4;">暂无部门数据</div>';
+    showAddDeptModal: function(parentId) {
+        var parentOptions = '<option value="">无上级部门</option>';
+        for (var i = 0; i < state.departments.length; i++) {
+            var d = state.departments[i];
+            parentOptions += '<option value="' + d.id + '" ' + (parentId === d.id ? 'selected' : '') + '>' + d.name + '</option>';
         }
 
-        return departments.map(dept => {
-            const children = state.departments.filter(d => d.parentId === dept.id);
-            const isExpanded = state.expandedIds.includes(dept.id);
-            const isSelected = state.selectedDept?.id === dept.id;
-            const hasChildren = children.length > 0;
-
-            return `
-                <div style="margin-bottom: 4px;">
-                    <div class="dept-item ${isSelected ? 'selected' : ''}"
-                         style="display: flex; align-items: center; gap: 8px; padding: 10px 12px; border-radius: 8px; cursor: pointer; transition: all 0.2s; background: ${isSelected ? 'rgba(24,144,255,0.1)' : 'transparent'};"
-                         data-id="${dept.id}">
-                        ${hasChildren ? `
-                            <span class="toggle-btn" data-id="${dept.id}" style="width: 20px; text-align: center; cursor: pointer; color: #8ba9c4; font-size: 12px;">
-                                ${isExpanded ? '▼' : '▶'}
-                            </span>
-                        ` : `
-                            <span style="width: 20px;"></span>
-                        `}
-                        <span style="font-size: 18px;">🏢</span>
-                        <div style="flex: 1;">
-                            <div style="font-weight: 500; color: #1a3a5c; font-size: 14px;">${dept.name}</div>
-                            <div style="font-size: 11px; color: #8ba9c4; margin-top: 2px;">经理: ${dept.manager || '-'} | ${dept.employeeCount || 0}人</div>
+        var modalHtml = `
+            <div class="modal-overlay" id="deptAddModal">
+                <div class="modal-container">
+                    <div class="modal-header">
+                        <h2>➕ 新增部门</h2>
+                        <button class="modal-close" onclick="closeDeptAddModal()">×</button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label>部门名称 *</label>
+                                <input type="text" id="addDeptName" class="form-input" required placeholder="请输入部门名称">
+                            </div>
+                            <div class="form-group">
+                                <label>部门编码</label>
+                                <input type="text" id="addDeptCode" class="form-input" placeholder="自动生成">
+                            </div>
+                            <div class="form-group">
+                                <label>所属上级</label>
+                                <select id="addDeptParent" class="form-input">${parentOptions}</select>
+                            </div>
+                            <div class="form-group">
+                                <label>状态</label>
+                                <select id="addDeptStatus" class="form-input">
+                                    <option value="1" selected>启用</option>
+                                    <option value="0">禁用</option>
+                                </select>
+                            </div>
+                            <div class="form-group full">
+                                <label>描述</label>
+                                <textarea id="addDeptDesc" class="form-input" rows="3" placeholder="请输入部门描述"></textarea>
+                            </div>
                         </div>
                     </div>
-                    ${hasChildren && isExpanded ? `
-                        <div style="margin-left: 28px; border-left: 1px dashed rgba(24,144,255,0.2); padding-left: 8px;">
-                            ${this.renderDeptTree(children, level + 1)}
-                        </div>
-                    ` : ''}
+                    <div class="modal-actions">
+                        <button class="btn-modal btn-modal-secondary" onclick="closeDeptAddModal()">取消</button>
+                        <button class="btn-modal btn-modal-primary" onclick="saveDeptAdd('${parentId || ''}')">保存</button>
+                    </div>
                 </div>
-            `;
-        }).join('');
+            </div>
+        `;
+
+        var styleHtml = `
+            <style>
+                #deptAddModal {
+                    position: fixed;
+                    top: 0;
+                    left: 0;
+                    width: 100%;
+                    height: 100%;
+                    background: rgba(0,0,0,0.7);
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    z-index: 9999;
+                }
+                .modal-container {
+                    background: white;
+                    border-radius: 16px;
+                    width: 90%;
+                    max-width: 480px;
+                    overflow: hidden;
+                }
+                .modal-header {
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: center;
+                    padding: 20px 24px;
+                    background: linear-gradient(135deg, #1a4a6f, #0b2b3b);
+                    color: white;
+                }
+                .modal-header h2 { margin: 0; }
+                .modal-close {
+                    width: 32px;
+                    height: 32px;
+                    border: none;
+                    border-radius: 50%;
+                    background: rgba(255,255,255,0.2);
+                    color: white;
+                    cursor: pointer;
+                    font-size: 1.25rem;
+                }
+                .modal-body { padding: 24px; }
+                .form-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; }
+                .form-grid .full { grid-column: span 2; }
+                .form-group label { display: block; margin-bottom: 8px; font-weight: 500; color: #1a3a5c; }
+                .form-input {
+                    width: 100%;
+                    padding: 10px 14px;
+                    border: 2px solid #e2e8f0;
+                    border-radius: 10px;
+                    font-size: 0.9rem;
+                    background: #fafcff;
+                }
+                .form-input:focus { outline: none; border-color: #1a4a6f; }
+                .modal-actions {
+                    display: flex;
+                    gap: 12px;
+                    justify-content: flex-end;
+                    padding: 16px 24px;
+                    border-top: 1px solid #e2e8f0;
+                    background: #fafcff;
+                }
+                .btn-modal {
+                    padding: 10px 24px;
+                    border: none;
+                    border-radius: 10px;
+                    cursor: pointer;
+                    font-size: 0.9rem;
+                    font-weight: 600;
+                }
+                .btn-modal-primary {
+                    background: linear-gradient(135deg, #1a4a6f, #0b2b3b);
+                    color: white;
+                }
+                .btn-modal-secondary {
+                    background: #e2e8f0;
+                    color: #1a4a6f;
+                }
+            </style>
+        `;
+
+        document.body.insertAdjacentHTML('beforeend', styleHtml + modalHtml);
+
+        window.closeDeptAddModal = function() {
+            var modal = document.getElementById('deptAddModal');
+            if (modal) modal.remove();
+        };
+
+        window.saveDeptAdd = async function(parentIdVal) {
+            var name = document.getElementById('addDeptName').value.trim();
+            var code = document.getElementById('addDeptCode').value.trim();
+            var status = parseInt(document.getElementById('addDeptStatus').value);
+            var description = document.getElementById('addDeptDesc').value.trim();
+            var parentId = parentIdVal ? parseInt(parentIdVal) : null;
+
+            if (!name) {
+                alert('请输入部门名称');
+                return;
+            }
+
+            try {
+                var res = await API.createDepartment({ name, code, parent_id: parentId, status, description });
+                if (res.code === 200) {
+                    alert('部门创建成功');
+                    window.closeDeptAddModal();
+                    switchModule('org');
+                } else {
+                    alert(res.message || '创建失败');
+                }
+            } catch (e) {
+                console.error('Create dept error:', e);
+                alert('创建失败');
+            }
+        };
     },
 
-    bindEvents() {
-        document.getElementById('addDeptBtn')?.addEventListener('click', () => this.openDeptModal());
+    confirmDeleteDept: function(deptId) {
+        var dept = state.departments.find(function(d) { return d.id === deptId; });
+        if (!dept) return;
 
-        document.querySelectorAll('.toggle-btn').forEach(btn => {
-            btn.addEventListener('click', (e) => {
-                e.stopPropagation();
-                const id = parseInt(btn.dataset.id);
-                if (state.expandedIds.includes(id)) {
-                    state.expandedIds = state.expandedIds.filter(i => i !== id);
-                } else {
-                    state.expandedIds.push(id);
-                }
-                this.renderContent(document.getElementById('content'));
-            });
-        });
+        var deptPositions = state.positions.filter(function(p) { return p.departmentId === deptId; });
+        var deptEmployees = state.employees.filter(function(e) { return e.departmentId === deptId; });
 
-        document.querySelectorAll('.dept-item').forEach(item => {
-            item.addEventListener('click', () => {
-                const id = parseInt(item.dataset.id);
-                state.selectedDept = state.departments.find(d => d.id === id);
-                this.renderContent(document.getElementById('content'));
-            });
-        });
-
-        if (state.selectedDept) {
-            document.getElementById('addPositionBtn')?.addEventListener('click', () => this.openPositionModal());
-
-            document.getElementById('editDeptBtn')?.addEventListener('click', () => {
-                this.openDeptModal(state.selectedDept);
-            });
-
-            document.getElementById('deleteDeptBtn')?.addEventListener('click', () => {
-                this.handleDeleteDept(state.selectedDept);
-            });
-
-            document.getElementById('content').addEventListener('click', (e) => {
-                const btn = e.target.closest('.action-btn');
-                if (btn) {
-                    const id = parseInt(btn.dataset.id);
-                    const action = btn.dataset.action;
-                    if (action === 'editPos') {
-                        const pos = state.positions.find(p => p.id === id);
-                        this.openPositionModal(pos);
-                    } else if (action === 'deletePos') {
-                        this.handleDeletePosition(id);
-                    }
-                }
-            });
+        var warning = '';
+        if (deptPositions.length > 0) {
+            warning += '该部门下有 ' + deptPositions.length + ' 个岗位，';
         }
-    },
-
-    openDeptModal(dept = null) {
-        const isEdit = !!dept;
-        const title = isEdit ? '编辑部门' : '新增部门';
-        const parentDepts = state.departments.filter(d => !dept || d.id !== dept.id);
-
-        Modal.open({
-            title,
-            content: `
-                <form id="deptForm">
-                    <div class="form-grid">
-                        <div class="form-field full">
-                            <label>部门名称 <span class="required">*</span></label>
-                            <input type="text" id="deptName" value="${dept?.name || ''}" placeholder="请输入部门名称">
-                        </div>
-                        <div class="form-field full">
-                            <label>上级部门</label>
-                            <select id="deptParent">
-                                <option value="">无（顶级部门）</option>
-                                ${parentDepts.map(d => `
-                                    <option value="${d.id}" ${dept?.parentId === d.id ? 'selected' : ''}>${d.name}</option>
-                                `).join('')}
-                            </select>
-                        </div>
-                        <div class="form-field full">
-                            <label>部门经理</label>
-                            <input type="text" id="deptManager" value="${dept?.manager || ''}" placeholder="请输入部门经理姓名">
-                        </div>
-                    </div>
-                </form>
-            `,
-            footer: `
-                <button class="btn btn-default" id="deptCancelBtn">取消</button>
-                <button class="btn btn-primary" id="deptSaveBtn">保存</button>
-            `
-        });
-
-        document.getElementById('deptCancelBtn')?.addEventListener('click', () => {
-            document.querySelector('.modal-overlay.show')?.remove();
-        });
-
-        document.getElementById('deptSaveBtn')?.addEventListener('click', async () => {
-            const name = document.getElementById('deptName').value.trim();
-            if (!name) {
-                Toast.error('请输入部门名称');
-                return;
-            }
-
-            const data = {
-                name,
-                parentId: document.getElementById('deptParent').value ? parseInt(document.getElementById('deptParent').value) : null,
-                manager: document.getElementById('deptManager').value.trim()
-            };
-
-            try {
-                if (isEdit) {
-                    await API.updateDepartment(dept.id, data);
-                    Toast.success('部门更新成功');
-                } else {
-                    await API.createDepartment(data);
-                    Toast.success('部门创建成功');
-                }
-                document.querySelector('.modal-overlay.show')?.remove();
-                await this.loadData();
-                this.renderContent(document.getElementById('content'));
-                this.notifyEmployeeModule();
-            } catch (error) {
-                Toast.error(error.message || '操作失败');
-            }
-        });
-    },
-
-    async handleDeleteDept(dept) {
-        Modal.confirm(
-            `确定要删除部门【${dept.name}】吗？`,
-            async () => {
-                try {
-                    const res = await API.deleteDepartment(dept.id);
-                    if (res.code === 400) {
-                        Toast.error(res.message);
-                        return;
-                    }
-                    Toast.success('部门删除成功');
-                    state.selectedDept = null;
-                    await this.loadData();
-                    this.renderContent(document.getElementById('content'));
-                    this.notifyEmployeeModule();
-                } catch (error) {
-                    Toast.error('删除失败');
-                }
-            }
-        );
-    },
-
-    openPositionModal(position = null) {
-        const isEdit = !!position;
-        const title = isEdit ? '编辑岗位' : '新增岗位';
-
-        Modal.open({
-            title,
-            content: `
-                <form id="positionForm">
-                    <div class="form-grid">
-                        <div class="form-field full">
-                            <label>岗位名称 <span class="required">*</span></label>
-                            <input type="text" id="posName" value="${position?.name || ''}" placeholder="请输入岗位名称">
-                        </div>
-                        <div class="form-field">
-                            <label>所属部门 <span class="required">*</span></label>
-                            <select id="posDept" ${isEdit ? 'readonly' : ''} style="${isEdit ? 'background: #f5f5f5;' : ''}">
-                                <option value="">请选择部门</option>
-                                ${state.departments.map(d => `
-                                    <option value="${d.id}" ${(isEdit ? position.departmentId : state.selectedDept?.id) === d.id ? 'selected' : ''}>${d.name}</option>
-                                `).join('')}
-                            </select>
-                        </div>
-                        <div class="form-field">
-                            <label>职级</label>
-                            <select id="posLevel">
-                                <option value="P3" ${position?.level === 'P3' ? 'selected' : ''}>P3</option>
-                                <option value="P4" ${position?.level === 'P4' ? 'selected' : ''}>P4</option>
-                                <option value="P5" ${(!position || position.level === 'P5') ? 'selected' : ''}>P5</option>
-                                <option value="P6" ${position?.level === 'P6' ? 'selected' : ''}>P6</option>
-                                <option value="P7" ${position?.level === 'P7' ? 'selected' : ''}>P7</option>
-                            </select>
-                        </div>
-                        <div class="form-field">
-                            <label>编制人数</label>
-                            <input type="number" id="posHeadcount" value="${position?.headcount || 0}" min="0">
-                        </div>
-                    </div>
-                </form>
-            `,
-            footer: `
-                <button class="btn btn-default" id="posCancelBtn">取消</button>
-                <button class="btn btn-primary" id="posSaveBtn">保存</button>
-            `
-        });
-
-        document.getElementById('posCancelBtn')?.addEventListener('click', () => {
-            document.querySelector('.modal-overlay.show')?.remove();
-        });
-
-        document.getElementById('posSaveBtn')?.addEventListener('click', async () => {
-            const name = document.getElementById('posName').value.trim();
-            if (!name) {
-                Toast.error('请输入岗位名称');
-                return;
-            }
-
-            const data = {
-                name,
-                departmentId: parseInt(document.getElementById('posDept').value),
-                level: document.getElementById('posLevel').value,
-                headcount: parseInt(document.getElementById('posHeadcount').value) || 0
-            };
-
-            try {
-                if (isEdit) {
-                    await API.updatePosition(position.id, data);
-                    Toast.success('岗位更新成功');
-                } else {
-                    await API.createPosition(data);
-                    Toast.success('岗位创建成功');
-                }
-                document.querySelector('.modal-overlay.show')?.remove();
-                await this.loadData();
-                this.renderContent(document.getElementById('content'));
-                this.notifyEmployeeModule();
-            } catch (error) {
-                Toast.error(error.message || '操作失败');
-            }
-        });
-    },
-
-    async handleDeletePosition(positionId) {
-        const position = state.positions.find(p => p.id === positionId);
-        const isKeyPosition = state.keyPositions.some(kp => kp.positionId === positionId);
-
-        if (isKeyPosition) {
-            Modal.confirm(
-                `此岗位【${position.name}】已标记为关键岗位，确定要删除吗？`,
-                async () => {
-                    try {
-                        const res = await API.deletePosition(positionId);
-                        if (res.code === 400) {
-                            Toast.error(res.message);
-                            return;
-                        }
-                        Toast.success('岗位删除成功');
-                        await this.loadData();
-                        this.renderContent(document.getElementById('content'));
-                        this.notifyEmployeeModule();
-                    } catch (error) {
-                        Toast.error('删除失败');
-                    }
-                },
-                '关键岗位警告'
-            );
+        if (deptEmployees.length > 0) {
+            warning += '有 ' + deptEmployees.length + ' 名员工，';
+        }
+        
+        if (warning) {
+            warning = '⚠️ ' + warning.slice(0, -1) + '确定要删除吗？';
         } else {
-            Modal.confirm(
-                `确定要删除岗位【${position.name}】吗？`,
-                async () => {
-                    try {
-                        const res = await API.deletePosition(positionId);
-                        if (res.code === 400) {
-                            Toast.error(res.message);
-                            return;
-                        }
-                        Toast.success('岗位删除成功');
-                        await this.loadData();
-                        this.renderContent(document.getElementById('content'));
-                        this.notifyEmployeeModule();
-                    } catch (error) {
-                        Toast.error('删除失败');
-                    }
-                }
-            );
+            warning = '确定要删除部门【' + dept.name + '】吗？';
+        }
+
+        if (confirm(warning)) {
+            this.deleteDept(deptId);
         }
     },
 
-    notifyEmployeeModule() {
-        window.dispatchEvent(new CustomEvent('orgDataChanged'));
+    deleteDept: async function(deptId) {
+        try {
+            var res = await API.deleteDepartment(deptId);
+            if (res.code === 200) {
+                alert('部门删除成功');
+                switchModule('org');
+            } else {
+                alert(res.message || '删除失败');
+            }
+        } catch (e) {
+            console.error('Delete dept error:', e);
+            alert('删除失败');
+        }
     },
 
-    destroy() {}
+    destroy: function() {}
 };
 
 export default orgModule;

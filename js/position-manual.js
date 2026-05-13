@@ -4,25 +4,63 @@ window.currentHrPositionReadOnly = false;
 
 // 打开编辑模式弹窗
 function openPositionModal(positionId) {
+    // 关闭员工详情弹窗（如果打开）
+    const detailDrawer = document.getElementById('detailDrawer');
+    if (detailDrawer) {
+        detailDrawer.classList.remove('show');
+        detailDrawer.style.display = 'none';
+        detailDrawer.style.opacity = '0';
+        detailDrawer.style.visibility = 'hidden';
+    }
+    
     window.currentHrPositionId = positionId;
     window.currentHrPositionReadOnly = false;
     loadHrPositionDesc();
     setPositionModalReadOnly(false);
-    document.getElementById('hrPositionModal').classList.add('show');
+    
+    const modal = document.getElementById('hrPositionModal');
+    modal.classList.add('show');
+    modal.style.setProperty('display', 'flex', 'important');
+    modal.style.setProperty('opacity', '1', 'important');
+    modal.style.setProperty('visibility', 'visible', 'important');
+    modal.style.setProperty('pointer-events', 'auto', 'important');
 }
 
 // 打开只读查看弹窗
 function openReadOnlyPositionModal(positionId) {
+    // 关闭员工详情弹窗（如果打开）
+    const detailDrawer = document.getElementById('detailDrawer');
+    if (detailDrawer) {
+        detailDrawer.classList.remove('show');
+        detailDrawer.style.display = 'none';
+        detailDrawer.style.opacity = '0';
+        detailDrawer.style.visibility = 'hidden';
+    }
+    
     window.currentHrPositionId = positionId;
     window.currentHrPositionReadOnly = true;
     loadHrPositionDesc();
     setPositionModalReadOnly(true);
-    document.getElementById('hrPositionModal').classList.add('show');
+    
+    const modal = document.getElementById('hrPositionModal');
+    modal.classList.add('show');
+    modal.style.setProperty('display', 'flex', 'important');
+    modal.style.setProperty('opacity', '1', 'important');
+    modal.style.setProperty('visibility', 'visible', 'important');
+    modal.style.setProperty('pointer-events', 'auto', 'important');
 }
 
 // 关闭弹窗
 function closePositionModal() {
-    document.getElementById('hrPositionModal').classList.remove('show');
+    const modal = document.getElementById('hrPositionModal');
+    if (modal) {
+        modal.classList.remove('show');
+        modal.classList.remove('readonly');
+        modal.style.setProperty('display', 'none', 'important');
+        modal.style.setProperty('opacity', '0', 'important');
+        modal.style.setProperty('visibility', 'hidden', 'important');
+        modal.style.setProperty('pointer-events', 'none', 'important');
+    }
 }
 
 // 设置表单只读状态
@@ -111,6 +149,7 @@ function getPositionData(positionId) {
                 effectiveDate: '2024-01-01',
                 approver: 'CEO',
                 positionCode: 'HR-DIR-001',
+                headcount: 1,
                 summary: '全面负责人力资源管理工作，制定并执行公司人力资源战略，优化人力资源管理体系，提升组织效能和员工满意度。'
             },
             purpose: '建立和完善公司人力资源管理体系，确保公司人才供给和发展，支持公司战略目标的实现。',
@@ -160,6 +199,7 @@ function getPositionData(positionId) {
                 effectiveDate: '2024-06-01',
                 approver: '人力资源总监',
                 positionCode: 'HR-MGR-001',
+                headcount: 1,
                 summary: '负责人力资源日常管理工作，包括招聘、培训、绩效、员工关系等模块，确保各项人力资源工作有序开展。'
             },
             purpose: '执行人力资源战略，负责日常人力资源管理事务，支持业务部门发展需求。',
@@ -208,6 +248,7 @@ function getPositionData(positionId) {
                 effectiveDate: '2025-01-01',
                 approver: '人力资源经理',
                 positionCode: 'HR-REC-001',
+                headcount: 2,
                 summary: '负责公司招聘工作，发布招聘信息，筛选简历，组织面试，完成招聘任务。'
             },
             purpose: '为公司各部门提供合格的人才支持，确保招聘目标的实现。',
@@ -254,6 +295,7 @@ function getPositionData(positionId) {
                 effectiveDate: '2025-03-01',
                 approver: '人力资源经理',
                 positionCode: 'HR-TRN-001',
+                headcount: 1,
                 summary: '负责公司培训体系建设和培训活动组织实施，提升员工能力和绩效。'
             },
             purpose: '构建完善的培训体系，为员工提供持续学习和发展的机会。',
@@ -300,6 +342,7 @@ function getPositionData(positionId) {
                 effectiveDate: '2025-02-01',
                 approver: '人力资源经理',
                 positionCode: 'HR-PER-001',
+                headcount: 1,
                 summary: '负责公司绩效考核体系的实施和维护，确保绩效考核工作公正、公平、公开。'
             },
             purpose: '建立科学的绩效考核体系，激励员工提升绩效，支持公司目标的实现。',
@@ -350,6 +393,7 @@ function getPositionData(positionId) {
                 effectiveDate: new Date().toISOString().split('T')[0],
                 approver: '审批人',
                 positionCode: 'POS-001',
+                headcount: 0,
                 summary: '请填写该岗位的工作概述。'
             },
             purpose: '请填写该岗位的设置目的。',
@@ -439,6 +483,7 @@ function applyPositionData(data) {
     document.getElementById('hrEffectiveDate').value = info.effectiveDate || '';
     document.getElementById('hrApprover').value = info.approver || '';
     document.getElementById('hrPositionCode').value = info.positionCode || '';
+    document.getElementById('hrHeadcount').value = info.headcount || 0;
     document.getElementById('hrSummary').value = info.summary || '';
     
     // 岗位设置目的
@@ -584,100 +629,144 @@ function importHrMetricFromCSV() {
 
 // 保存岗位说明书
 async function saveHrPositionDesc() {
-    const positionData = collectPositionData();
-    
     try {
-        const res = await fetch('/api/hr/position/save', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-                positionId: window.currentHrPositionId,
-                data: positionData
-            })
-        });
+        const positionData = collectPositionData();
         
-        if (res.ok) {
-            const result = await res.json();
-            if (result.success) {
-                saveToLocalStorage(positionData);
-                showToast('✅ 保存成功');
-                window.currentHrPositionReadOnly = true;
-                setPositionModalReadOnly(true);
+        if (!positionData) {
+            showToast('❌ 数据收集失败');
+            return;
+        }
+        
+        if (!window.currentHrPositionId) {
+            showToast('❌ 岗位ID为空');
+            return;
+        }
+        
+        try {
+            const res = await fetch('/api/hr/position/save', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    positionId: window.currentHrPositionId,
+                    data: positionData
+                })
+            });
+            
+            if (res.ok) {
+                const result = await res.json();
+                if (result.success) {
+                    saveToLocalStorage(positionData);
+                    showToast('✅ 保存成功');
+                    window.currentHrPositionReadOnly = true;
+                    setPositionModalReadOnly(true);
+                    if (window.refreshPositionList) {
+                        window.refreshPositionList();
+                    }
+                } else {
+                    showToast('❌ 保存失败');
+                }
             } else {
-                showToast('❌ 保存失败');
+                throw new Error('Network error');
             }
-        } else {
-            throw new Error('Network error');
+        } catch (e) {
+            saveToLocalStorage(positionData);
+            showToast('✅ 保存成功（本地）');
+            window.currentHrPositionReadOnly = true;
+            setPositionModalReadOnly(true);
+            if (window.refreshPositionList) {
+                window.refreshPositionList();
+            }
         }
     } catch (e) {
-        // 即使没有后端，也保存到本地并显示成功
-        saveToLocalStorage(positionData);
-        showToast('✅ 保存成功（本地）');
-        window.currentHrPositionReadOnly = true;
-        setPositionModalReadOnly(true);
+        console.error('saveHrPositionDesc error:', e);
+        showToast('❌ 保存异常');
     }
 }
 
 // 收集表单数据
 function collectPositionData() {
-    // 收集职责数据
-    const dutyRows = document.querySelectorAll('#hrDutyTableBody tr');
-    const duties = Array.from(dutyRows).map(row => ({
-        module: row.querySelector('td:nth-child(2) textarea').value,
-        category: row.querySelector('td:nth-child(3) textarea').value,
-        workType: row.querySelector('td:nth-child(4) select').value,
-        detail: row.querySelector('td:nth-child(5) textarea').value
-    }));
-    
-    // 收集考核指标数据
-    const metricRows = document.querySelectorAll('#hrMetricTableBody tr');
-    const metrics = Array.from(metricRows).map(row => ({
-        dimension: row.querySelector('td:nth-child(2) textarea').value,
-        metric: row.querySelector('td:nth-child(3) textarea').value,
-        standard: row.querySelector('td:nth-child(4) textarea').value,
-        source: row.querySelector('td:nth-child(5) textarea').value
-    }));
-    
-    return {
-        info: {
-            positionName: document.getElementById('hrPositionName').value,
-            jobTitle: document.getElementById('hrJobTitle').value,
-            level: document.getElementById('hrLevel').value,
-            department: document.getElementById('hrDepartment').value,
-            deptType: document.getElementById('hrDeptType').value,
-            deptNature: document.getElementById('hrDeptNature').value,
-            supervisor: document.getElementById('hrSupervisor').value,
-            crossSupervisor: document.getElementById('hrCrossSupervisor').value,
-            directSubordinates: document.getElementById('hrDirectSubordinates').value,
-            indirectSubordinates: document.getElementById('hrIndirectSubordinates').value,
-            promotionDirection: document.getElementById('hrPromotionDirection').value,
-            rotationPosition: document.getElementById('hrRotationPosition').value,
-            effectiveDate: document.getElementById('hrEffectiveDate').value,
-            approver: document.getElementById('hrApprover').value,
-            positionCode: document.getElementById('hrPositionCode').value,
-            summary: document.getElementById('hrSummary').value
-        },
-        purpose: document.getElementById('hrPurpose').value,
-        duties: duties,
-        qualification: {
-            education: document.getElementById('hrEducation').value,
-            training: document.getElementById('hrTraining').value,
-            experience: document.getElementById('hrExperience').value,
-            skills: document.getElementById('hrSkills').value,
-            otherRequirements: document.getElementById('hrOtherRequirements').value
-        },
-        conditions: {
-            workTime: document.getElementById('hrWorkTime').value,
-            workPlace: document.getElementById('hrWorkPlace').value,
-            workEnv: document.getElementById('hrWorkEnv').value,
-            risk: document.getElementById('hrRisk').value,
-            occupationalHazard: document.getElementById('hrOccupationalHazard').value
-        },
-        metrics: metrics,
-        documents: document.getElementById('hrDocuments').value
-    };
+    try {
+        // 收集职责数据
+        const dutyRows = document.querySelectorAll('#hrDutyTableBody tr');
+        const duties = Array.from(dutyRows).map(row => {
+            const moduleEl = row.querySelector('td:nth-child(2) textarea');
+            const categoryEl = row.querySelector('td:nth-child(3) textarea');
+            const workTypeEl = row.querySelector('td:nth-child(4) select');
+            const detailEl = row.querySelector('td:nth-child(5) textarea');
+            return {
+                module: moduleEl ? moduleEl.value : '',
+                category: categoryEl ? categoryEl.value : '',
+                workType: workTypeEl ? workTypeEl.value : '核心',
+                detail: detailEl ? detailEl.value : ''
+            };
+        });
+        
+        // 收集考核指标数据
+        const metricRows = document.querySelectorAll('#hrMetricTableBody tr');
+        const metrics = Array.from(metricRows).map(row => {
+            const dimensionEl = row.querySelector('td:nth-child(2) textarea');
+            const metricEl = row.querySelector('td:nth-child(3) textarea');
+            const standardEl = row.querySelector('td:nth-child(4) textarea');
+            const sourceEl = row.querySelector('td:nth-child(5) textarea');
+            return {
+                dimension: dimensionEl ? dimensionEl.value : '',
+                metric: metricEl ? metricEl.value : '',
+                standard: standardEl ? standardEl.value : '',
+                source: sourceEl ? sourceEl.value : ''
+            };
+        });
+        
+        // 安全获取表单值
+        const getValue = (id) => {
+            const el = document.getElementById(id);
+            return el ? el.value : '';
+        };
+        
+        return {
+            info: {
+                positionName: getValue('hrPositionName'),
+                jobTitle: getValue('hrJobTitle'),
+                level: getValue('hrLevel'),
+                department: getValue('hrDepartment'),
+                deptType: getValue('hrDeptType'),
+                deptNature: getValue('hrDeptNature'),
+                supervisor: getValue('hrSupervisor'),
+                crossSupervisor: getValue('hrCrossSupervisor'),
+                directSubordinates: getValue('hrDirectSubordinates'),
+                indirectSubordinates: getValue('hrIndirectSubordinates'),
+                promotionDirection: getValue('hrPromotionDirection'),
+                rotationPosition: getValue('hrRotationPosition'),
+                effectiveDate: getValue('hrEffectiveDate'),
+                approver: getValue('hrApprover'),
+                positionCode: getValue('hrPositionCode'),
+                headcount: parseInt(getValue('hrHeadcount')) || 0,
+                summary: getValue('hrSummary')
+            },
+            purpose: getValue('hrPurpose'),
+            duties: duties,
+            qualification: {
+                education: getValue('hrEducation'),
+                training: getValue('hrTraining'),
+                experience: getValue('hrExperience'),
+                skills: getValue('hrSkills'),
+                otherRequirements: getValue('hrOtherRequirements')
+            },
+            conditions: {
+                workTime: getValue('hrWorkTime'),
+                workPlace: getValue('hrWorkPlace'),
+                workEnv: getValue('hrWorkEnv'),
+                risk: getValue('hrRisk'),
+                occupationalHazard: getValue('hrOccupationalHazard')
+            },
+            metrics: metrics,
+            documents: getValue('hrDocuments')
+        };
+    } catch (e) {
+        console.error('collectPositionData error:', e);
+        return null;
+    }
 }
 
 // 保存到localStorage

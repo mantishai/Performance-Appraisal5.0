@@ -16,6 +16,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     
     <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/org.css">
     <link rel="stylesheet" href="css/mobile.css">
     
     <link rel="manifest" href="manifest.json">
@@ -74,9 +75,12 @@
                         <span class="icon">👥</span>
                         <span class="text">人事管理</span>
                     </div>
-                    <div class="nav-item" data-module="org">
+                    <div class="nav-item org-nav-item" data-module="org">
                         <span class="icon">🏢</span>
                         <span class="text">组织架构</span>
+                        <span class="expand-icon">▶</span>
+                    </div>
+                    <div class="org-submenu" id="orgSubmenu">
                     </div>
                     <div class="nav-item" data-module="position">
                         <span class="icon">📋</span>
@@ -421,6 +425,10 @@
                         <span class="info-label">职位代码</span>
                         <input type="text" id="hrPositionCode">
                     </div>
+                    <div class="info-item">
+                        <span class="info-label">编制人数</span>
+                        <input type="number" id="hrHeadcount" min="0">
+                    </div>
                     <div class="info-item info-item-full">
                         <span class="info-label">职位概述</span>
                         <textarea id="hrSummary" rows="3"></textarea>
@@ -686,11 +694,11 @@
         </div>
     </div>
     
-    <script type="module" src="js/app.js?v=15"></script>
-    <script src="js/position-manual.js?v=12"></script>
-    <script type="module" src="js/personal-info.js?v=14"></script>
-    <script type="module" src="js/change-password.js?v=12"></script>
-    <script type="module" src="js/modules/employee-detail.js?v=6"></script>
+    <script type="module" src="js/app.js?v=17"></script>
+    <script src="js/position-manual.js?v=19"></script>
+    <script type="module" src="js/personal-info.js?v=17"></script>
+    <script type="module" src="js/change-password.js?v=15"></script>
+    <script type="module" src="js/modules/employee-detail.js?v=11"></script>
     <script>
         // PWA Service Worker 注册
         if ('serviceWorker' in navigator) {

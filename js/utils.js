@@ -404,7 +404,7 @@ const Modal = {
             onClose && onClose();
         };
 
-        overlay.querySelector('.modal-close:not(.employee-detail-close-btn)')?.addEventListener('click', close);
+        overlay.querySelector('.modal-close:not(#closeDetailDrawerBtn)')?.addEventListener('click', close);
         overlay.querySelector('.modal-fullscreen')?.addEventListener('click', () => {
             modal.classList.toggle('fullscreen');
         });
@@ -957,6 +957,46 @@ const PWA = {
     }
 };
 
+// 事件总线 - 用于模块间通信
+const EventBus = {
+    events: {},
+
+    on(event, callback) {
+        if (!this.events[event]) {
+            this.events[event] = [];
+        }
+        this.events[event].push(callback);
+    },
+
+    off(event, callback) {
+        if (!this.events[event]) return;
+        if (callback) {
+            this.events[event] = this.events[event].filter(cb => cb !== callback);
+        } else {
+            delete this.events[event];
+        }
+    },
+
+    emit(event, data) {
+        if (!this.events[event]) return;
+        this.events[event].forEach(callback => {
+            try {
+                callback(data);
+            } catch (e) {
+                console.error(`[EventBus] Error in event handler for "${event}":`, e);
+            }
+        });
+    },
+
+    once(event, callback) {
+        const onceCallback = (data) => {
+            callback(data);
+            this.off(event, onceCallback);
+        };
+        this.on(event, onceCallback);
+    }
+};
+
 export {
     Toast,
     ProgressBar,
@@ -996,5 +1036,6 @@ export {
     PerformanceMonitor,
     ObjectPool,
     PWA,
-    escapeHtml
+    escapeHtml,
+    EventBus
 };

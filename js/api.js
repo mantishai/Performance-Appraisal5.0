@@ -168,7 +168,19 @@ const API = {
     },
 
     getOrgDepartments() {
-        return this.request('/org/departments');
+        return this.request('/org/departments/tree');
+    },
+    
+    getOrgStatistics() {
+        return this.request('/org/department/statistics');
+    },
+    
+    getOrgEmployees() {
+        return this.request('/org/employees/for-select');
+    },
+    
+    getDepartmentEmployees(deptId, page) {
+        return this.request(`/org/department/${deptId}/employees?page=${page}`);
     },
 
     createDepartment(data) {
@@ -181,6 +193,14 @@ const API = {
 
     deleteDepartment(id) {
         return this.request(`/org/department/${id}`, { method: 'DELETE' });
+    },
+
+    getEmployeesForSelect() {
+        return this.request('/org/employees/for-select');
+    },
+
+    getDepartmentOptions() {
+        return this.request('/org/departments/options');
     },
 
     getPositions() {

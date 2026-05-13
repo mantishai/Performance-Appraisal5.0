@@ -293,16 +293,17 @@ const modulePermissions = {
 const moduleComponents = {};
 
 async function loadModule(moduleName) {
-    if (moduleComponents[moduleName]) {
-        return moduleComponents[moduleName];
-    }
-
     try {
-        const module = await import(`./modules/${moduleName}.js`);
+        if (moduleComponents[moduleName]) {
+            return moduleComponents[moduleName];
+        }
+        
+        var module = await import(`./modules/${moduleName}.js`);
         moduleComponents[moduleName] = module.default;
         return moduleComponents[moduleName];
     } catch (error) {
         console.error(`Failed to load module: ${moduleName}`, error);
+        moduleComponents[moduleName] = null;
         return null;
     }
 }
@@ -514,6 +515,114 @@ function updateSidebarForRole() {
     });
 }
 
+let orgData = {
+    departments: [],
+    positions: [],
+    employees: []
+};
+
+async function loadOrgData() {
+    try {
+        console.log('Loading org data...');
+        const [deptRes, posRes, empRes] = await Promise.all([
+            API.getOrgDepartments(),
+            API.getOrgPositions(),
+            API.getOrgEmployees()
+        ]);
+        
+        console.log('Dept response:', deptRes);
+        console.log('Pos response:', posRes);
+        console.log('Emp response:', empRes);
+        
+        if (deptRes.code === 200) {
+            orgData.departments = deptRes.data || [];
+        }
+        if (posRes.code === 200) {
+            orgData.positions = posRes.data.list || posRes.data || [];
+        }
+        if (empRes.code === 200) {
+            orgData.employees = empRes.data || [];
+        }
+        
+        console.log('Org data loaded:', orgData);
+        renderOrgSubmenu();
+    } catch (error) {
+        console.error('Load org data error:', error);
+    }
+}
+
+function renderOrgSubmenu() {
+    const submenu = document.getElementById('orgSubmenu');
+    if (!submenu) return;
+
+    let html = '';
+    
+    function renderDeptTree(departments, level) {
+        departments.forEach(dept => {
+            const deptPositions = orgData.positions.filter(p => p.departmentId === dept.id);
+            const hasPositions = deptPositions.length > 0;
+            
+            html += `<div class="org-item dept" data-type="department" data-id="${dept.id}" style="padding-left: ${level * 16 + 16}px;">${dept.name}</div>`;
+            
+            if (hasPositions) {
+                deptPositions.forEach(pos => {
+                    const posEmployees = orgData.employees.filter(e => e.positionId === pos.id || e.position_id === pos.id);
+                    
+                    html += `<div class="org-item position" data-type="position" data-id="${pos.id}" style="padding-left: ${level * 16 + 32}px;">${pos.name}</div>`;
+                    
+                    posEmployees.forEach(emp => {
+                        html += `<div class="org-item employee" data-type="employee" data-id="${emp.id}" style="padding-left: ${level * 16 + 48}px;"><span class="emp-bullet">•</span>${emp.name}</div>`;
+                    });
+                });
+            }
+            
+            if (dept.children && dept.children.length > 0) {
+                renderDeptTree(dept.children, level + 1);
+            }
+        });
+    }
+    
+    renderDeptTree(orgData.departments, 0);
+    submenu.innerHTML = html;
+}
+
+function initOrgNav() {
+    const orgNavItem = document.querySelector('.nav-item.org-nav-item');
+    const submenu = document.getElementById('orgSubmenu');
+    
+    if (orgNavItem) {
+        orgNavItem.addEventListener('click', (e) => {
+            e.stopPropagation();
+            orgNavItem.classList.toggle('expanded');
+            submenu.classList.toggle('show');
+            
+            switchModule('org');
+        });
+    }
+    
+    if (submenu) {
+        submenu.addEventListener('click', (e) => {
+            const orgItem = e.target.closest('.org-item');
+            if (orgItem) {
+                const type = orgItem.dataset.type;
+                const id = parseInt(orgItem.dataset.id);
+                
+                window.orgSelectedType = type;
+                window.orgSelectedId = id;
+                
+                switchModule('org');
+            }
+        });
+    }
+    
+    loadOrgData().then(() => {
+        if (orgNavItem && submenu) {
+            orgNavItem.classList.add('expanded');
+            submenu.classList.add('show');
+        }
+    });
+}
+
 let isMobileMode = false;
 
 // 检测是否为移动端
@@ -689,6 +798,7 @@ async function initApp() {
     initSidebar();
     initMobileLayout();
     initFullscreen();
+    initOrgNav();
 
     GlobalSearch.init();
     NotificationCenter.init();

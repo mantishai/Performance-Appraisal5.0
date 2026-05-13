@@ -54,13 +54,13 @@ async function submitChangePassword() {
             return;
         }
         
-        if (newPassword !== confirmPassword) {
-            Toast.error('两次输入的新密码不一致');
+        if (oldPassword === newPassword) {
+            Toast.error('新密码不能与旧密码相同');
             return;
         }
         
-        if (oldPassword === newPassword) {
-            Toast.error('新密码不能与旧密码相同');
+        if (newPassword !== confirmPassword) {
+            Toast.error('两次输入的新密码不一致');
             return;
         }
         
@@ -70,8 +70,9 @@ async function submitChangePassword() {
         if (res.code === 200) {
             Toast.success(res.message);
             closeChangePasswordModal();
-            closePersonalInfoModal();
-            // 提示用户重新登录
+            if (window.closePersonalInfoModal) {
+                window.closePersonalInfoModal();
+            }
             setTimeout(() => {
                 if (confirm('密码修改成功，请重新登录')) {
                     window.location.href = '/login.html';
