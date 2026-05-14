@@ -45,7 +45,11 @@ router.get('/org/positions', async (req, res) => {
         
         let query = `
             SELECT p.*, p.position_name as name, p.dept_id as departmentId,
-                   (SELECT COUNT(*) FROM employee WHERE position_id = p.id) as current
+                   (SELECT COUNT(*) FROM employee WHERE position_id = p.id) as current,
+                   p.is_key_position as isKeyPosition,
+                   p.position_code as code,
+                   p.job_description as duties,
+                   p.requirement as requirements
             FROM \`position\` p
             WHERE 1=1
         `;
@@ -61,11 +65,15 @@ router.get('/org/positions', async (req, res) => {
         const positions = rows.map(row => ({
             id: row.id,
             name: row.position_name,
+            code: row.position_code || '',
             departmentId: row.dept_id,
-            level: row.position_level || 'P5',
+            level: typeof row.position_level === 'string' ? row.position_level : (row.position_level || 1),
             headcount: row.headcount || 0,
             current: row.current || 0,
-            vacant: (row.headcount || 0) - (row.current || 0)
+            vacant: (row.headcount || 0) - (row.current || 0),
+            isKeyPosition: row.is_key_position || 0,
+            duties: row.job_description || '',
+            requirements: row.requirement || ''
         }));
         
         res.json({ code: 200, data: positions, message: 'success' });

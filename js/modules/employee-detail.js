@@ -45,6 +45,9 @@ const employeeDetailModule = {
             return;
         }
         
+        // 修复：员工详情模块只应该管理自己的弹窗，不要去操作其他模块的弹窗
+        /*
+        // 清理旧的弹窗
         const hideModal = (modalId) => {
             const modal = document.getElementById(modalId);
             if (modal) {
@@ -59,6 +62,7 @@ const employeeDetailModule = {
         hideModal('hrPositionModal');
         hideModal('changePasswordModal');
         hideModal('personalInfoModal');
+        */
         
         state.currentEmployee = employee;
         
@@ -360,18 +364,22 @@ const employeeDetailModule = {
     },
 
     close() {
-        const hrPositionModal = document.getElementById('hrPositionModal');
-        if (hrPositionModal) {
-            hrPositionModal.classList.remove('show');
-        }
-        
         const drawer = document.getElementById('detailDrawer');
         if (drawer) {
             drawer.removeEventListener('click', this.handleOverlayClick);
             document.removeEventListener('keydown', this.handleEscKey);
-            drawer.style.setProperty('display', 'none', 'important');
-            drawer.style.setProperty('opacity', '0', 'important');
-            drawer.style.setProperty('visibility', 'hidden', 'important');
+        }
+        
+        // 使用 ModalManager 关闭弹窗
+        if (window.ModalManager) {
+            window.ModalManager.close('detailDrawer');
+        } else {
+            // 降级处理
+            if (drawer) {
+                drawer.style.setProperty('display', 'none', 'important');
+                drawer.style.setProperty('opacity', '0', 'important');
+                drawer.style.setProperty('visibility', 'hidden', 'important');
+            }
         }
     },
 
@@ -387,9 +395,12 @@ const employeeDetailModule = {
             }
         };
         
+        // 修复：员工详情模块只应该管理自己的弹窗，不要去操作其他模块的弹窗
+        /*
         hideModal('hrPositionModal');
         hideModal('changePasswordModal');
         hideModal('personalInfoModal');
+        */
         
         const oldDrawer = document.getElementById('detailDrawer');
         if (oldDrawer) {
@@ -402,14 +413,14 @@ const employeeDetailModule = {
         
         drawer.innerHTML = `
                 <style>
-                    .modal-overlay {
+                    #detailDrawer.modal-overlay {
                         position: fixed !important;
                         top: 0 !important;
                         left: 0 !important;
                         width: 100% !important;
                         height: 100% !important;
                         background: rgba(0, 0, 0, 0.7) !important;
-                        z-index: 2147483647 !important;
+                        z-index: 9999 !important;
                         display: flex !important;
                         align-items: center !important;
                         justify-content: center !important;
@@ -417,7 +428,7 @@ const employeeDetailModule = {
                         opacity: 1 !important;
                         visibility: visible !important;
                     }
-                    .modal-container-large {
+                    #detailDrawer .modal-container-large {
                         background: white !important;
                         border-radius: 16px !important;
                         width: 90% !important;
@@ -528,7 +539,7 @@ const employeeDetailModule = {
             drawer.style.setProperty('width', '100%', 'important');
             drawer.style.setProperty('height', '100%', 'important');
             drawer.style.setProperty('background', 'rgba(0, 0, 0, 0.7)', 'important');
-            drawer.style.setProperty('z-index', '2147483647', 'important');
+            drawer.style.setProperty('z-index', '9999', 'important');
             drawer.style.setProperty('align-items', 'center', 'important');
             drawer.style.setProperty('justify-content', 'center', 'important');
             drawer.style.setProperty('opacity', '1', 'important');
@@ -648,6 +659,8 @@ const employeeDetailModule = {
                         <input type="file" id="photoInput" accept="image/*" style="display: none;">
                     </div>
                     <div class="detail-grid">
+                        <div class="detail-item"><span class="detail-label">归属部门 *</span><select id="modalDepartment" class="detail-input" ${!isEditMode ? 'disabled' : ''}><option value="">请选择部门</option>${state.departments.map(d => `<option value="${d.id}" ${employee.department_id === d.id ? 'selected' : ''}>${d.name || d.dept_name}</option>`).join('')}</select></div>
+                        <div class="detail-item"><span class="detail-label">工作岗位 *</span><select id="modalPosition" class="detail-input" ${!isEditMode ? 'disabled' : ''}><option value="">请选择岗位</option>${state.positions.filter(p => p.departmentId === employee.department_id).map(p => `<option value="${p.id}" ${employee.position_id === p.id ? 'selected' : ''}>${p.name || p.position_name}</option>`).join('')}</select></div>
                         <div class="detail-item"><span class="detail-label">姓名 *</span><input type="text" id="modalName" class="detail-input" value="${escapeHtml(employee.name || '')}" ${!isEditMode ? 'disabled' : ''}></div>
                         <div class="detail-item"><span class="detail-label">性别</span><select id="modalGender" class="detail-input" ${!isEditMode ? 'disabled' : ''}><option value="1" ${employee.genderCode === 1 ? 'selected' : ''}>男</option><option value="2" ${employee.genderCode === 2 ? 'selected' : ''}>女</option></select></div>
                         <div class="detail-item"><span class="detail-label">年龄</span><input type="number" id="modalAge" class="detail-input" value="${employee.age || ''}" ${!isEditMode ? 'disabled' : ''}></div>
@@ -714,8 +727,6 @@ const employeeDetailModule = {
                 <div class="detail-section-title">💼 工作信息</div>
                 <div class="detail-grid">
                     <div class="detail-item"><span class="detail-label">工号</span><input type="text" id="modalEmployeeNo" class="detail-input" value="${employee.employeeNo || ''}" ${!isEditMode ? 'disabled' : ''}></div>
-                    <div class="detail-item"><span class="detail-label">归属部门</span><select id="modalDepartment" class="detail-input" ${!isEditMode ? 'disabled' : ''}><option value="">请选择部门</option>${state.departments.map(d => `<option value="${d.id}" ${employee.department_id === d.id ? 'selected' : ''}>${d.name || d.dept_name}</option>`).join('')}</select></div>
-                    <div class="detail-item"><span class="detail-label">工作岗位</span><select id="modalPosition" class="detail-input" ${!isEditMode ? 'disabled' : ''}><option value="">请选择岗位</option>${state.positions.filter(p => p.departmentId === employee.department_id).map(p => `<option value="${p.id}" ${employee.position_id === p.id ? 'selected' : ''}>${p.name || p.position_name}</option>`).join('')}</select></div>
                     <div class="detail-item"><span class="detail-label">入职时间</span><input type="date" id="modalEntryDate" class="detail-input" value="${formatDate(employee.entryDate)}" ${!isEditMode ? 'disabled' : ''}></div>
                     <div class="detail-item"><span class="detail-label">转正日期</span><input type="date" id="modalRegularDate" class="detail-input" value="${formatDate(employee.regularDate)}" ${!isEditMode ? 'disabled' : ''}></div>
                     <div class="detail-item"><span class="detail-label">试用期到期</span><input type="date" id="modalProbationEndDate" class="detail-input" value="${formatDate(employee.probationEndDate)}" ${!isEditMode ? 'disabled' : ''}></div>

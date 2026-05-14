@@ -1,0 +1,463 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>组织架构模块 - Mock测试</title>
+    <link rel="stylesheet" href="css/org.css">
+    <style>
+        .mock-banner {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 1rem 2rem;
+            text-align: center;
+            font-size: 0.875rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="mock-banner">
+        🔧 这是组织架构模块的UI测试页面，使用Mock数据。后端API修复已完成，但需要Node.js LTS版本才能运行完整功能。
+    </div>
+    
+    <div id="content" class="org-container">
+        <div class="org-dashboard">
+            <div class="dashboard-header">
+                <h1>组织架构</h1>
+                <div class="dashboard-actions">
+                    <button class="btn btn-primary" onclick="alert('新建部门功能')">+ 新建部门</button>
+                    <button class="btn btn-secondary" onclick="alert('新建岗位功能')">+ 新建岗位</button>
+                </div>
+            </div>
+            
+            <div class="stats-cards-grid">
+                <div class="stat-card stat-card-blue">
+                    <div class="stat-icon">🏢</div>
+                    <div class="stat-info">
+                        <div class="stat-value">5</div>
+                        <div class="stat-label">部门总数</div>
+                    </div>
+                </div>
+                <div class="stat-card stat-card-green">
+                    <div class="stat-icon">👤</div>
+                    <div class="stat-info">
+                        <div class="stat-value">28</div>
+                        <div class="stat-label">员工总数</div>
+                    </div>
+                </div>
+                <div class="stat-card stat-card-purple">
+                    <div class="stat-icon">💼</div>
+                    <div class="stat-info">
+                        <div class="stat-value">15</div>
+                        <div class="stat-label">岗位总数</div>
+                    </div>
+                </div>
+                <div class="stat-card stat-card-orange">
+                    <div class="stat-icon">⭐</div>
+                    <div class="stat-info">
+                        <div class="stat-value">3</div>
+                        <div class="stat-label">关键岗位</div>
+                    </div>
+                </div>
+                <div class="stat-card stat-card-cyan">
+                    <div class="stat-icon">📊</div>
+                    <div class="stat-info">
+                        <div class="stat-value">87%</div>
+                        <div class="stat-label">编制达成率</div>
+                        <div class="stat-progress">
+                            <div class="stat-progress-bar" style="width: 87%"></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="stat-card stat-card-red">
+                    <div class="stat-icon">🔍</div>
+                    <div class="stat-info">
+                        <div class="stat-value">2</div>
+                        <div class="stat-label">空缺岗位</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="dashboard-main">
+                <div class="main-sidebar">
+                    <div class="search-box">
+                        <input type="text" placeholder="搜索部门、岗位或员工..." />
+                        <span class="search-icon">🔍</span>
+                    </div>
+                    <div class="tree-container">
+                        <div class="dept-card" data-dept-id="1">
+                            <div class="dept-card-header">
+                                <div class="dept-card-left">
+                                    <span class="dept-icon">🏢</span>
+                                    <div class="dept-info">
+                                        <div class="dept-name">技术部</div>
+                                        <div class="dept-meta">
+                                            <span class="dept-count">员工 12人</span>
+                                            <span class="dept-divider">|</span>
+                                            <span class="dept-count">岗位 5个</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="dept-card-right">
+                                    <span class="status-tag status-enabled">启用</span>
+                                    <div class="dept-fill-rate">
+                                        <div class="fill-rate-bar">
+                                            <div class="fill-rate-fill" style="width: 92%"></div>
+                                        </div>
+                                        <span class="fill-rate-text">92%</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="dept-positions">
+                                <div class="position-mini-card" data-pos-id="1">
+                                    <div class="pos-mini-header">
+                                        <span class="pos-icon">💼</span>
+                                        <span class="pos-name">前端开发工程师</span>
+                                        <span class="status-tag status-recruiting">招聘中</span>
+                                    </div>
+                                    <div class="pos-mini-body">
+                                        <div class="pos-fill-rate">
+                                            <div class="mini-fill-bar">
+                                                <div class="mini-fill-fill" style="width: 67%"></div>
+                                            </div>
+                                            <span>2/3</span>
+                                        </div>
+                                        <div class="pos-employees">
+                                            <span class="emp-chip">张</span>
+                                            <span class="emp-chip">李</span>
+                                            <span class="emp-more">+1</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="position-mini-card" data-pos-id="2">
+                                    <div class="pos-mini-header">
+                                        <span class="pos-icon">💼</span>
+                                        <span class="pos-name">后端开发工程师</span>
+                                        <span class="status-tag status-full">已满编</span>
+                                    </div>
+                                    <div class="pos-mini-body">
+                                        <div class="pos-fill-rate">
+                                            <div class="mini-fill-bar">
+                                                <div class="mini-fill-fill" style="width: 100%"></div>
+                                            </div>
+                                            <span>4/4</span>
+                                        </div>
+                                        <div class="pos-employees">
+                                            <span class="emp-chip">王</span>
+                                            <span class="emp-chip">刘</span>
+                                            <span class="emp-chip">陈</span>
+                                            <span class="emp-chip">周</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="dept-card" data-dept-id="2" style="padding-left: 12px;">
+                            <div class="dept-card-header">
+                                <div class="dept-card-left">
+                                    <span class="dept-icon">🏢</span>
+                                    <div class="dept-info">
+                                        <div class="dept-name">人力资源部</div>
+                                        <div class="dept-meta">
+                                            <span class="dept-count">员工 5人</span>
+                                            <span class="dept-divider">|</span>
+                                            <span class="dept-count">岗位 3个</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="dept-card-right">
+                                    <span class="status-tag status-enabled">启用</span>
+                                    <div class="dept-fill-rate">
+                                        <div class="fill-rate-bar">
+                                            <div class="fill-rate-fill" style="width: 100%"></div>
+                                        </div>
+                                        <span class="fill-rate-text">100%</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="dept-positions">
+                                <div class="position-mini-card" data-pos-id="3">
+                                    <div class="pos-mini-header">
+                                        <span class="pos-icon">💼</span>
+                                        <span class="pos-name">HR经理</span>
+                                        <span class="status-tag status-full">已满编</span>
+                                    </div>
+                                    <div class="pos-mini-body">
+                                        <div class="pos-fill-rate">
+                                            <div class="mini-fill-bar">
+                                                <div class="mini-fill-fill" style="width: 100%"></div>
+                                            </div>
+                                            <span>1/1</span>
+                                        </div>
+                                        <div class="pos-employees">
+                                            <span class="emp-chip">赵</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="dept-card" data-dept-id="3" style="padding-left: 12px;">
+                            <div class="dept-card-header">
+                                <div class="dept-card-left">
+                                    <span class="dept-icon">🏢</span>
+                                    <div class="dept-info">
+                                        <div class="dept-name">市场部</div>
+                                        <div class="dept-meta">
+                                            <span class="dept-count">员工 8人</span>
+                                            <span class="dept-divider">|</span>
+                                            <span class="dept-count">岗位 4个</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="dept-card-right">
+                                    <span class="status-tag status-enabled">启用</span>
+                                    <div class="dept-fill-rate">
+                                        <div class="fill-rate-bar">
+                                            <div class="fill-rate-fill" style="width: 80%"></div>
+                                        </div>
+                                        <span class="fill-rate-text">80%</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="dept-positions">
+                                <div class="position-mini-card" data-pos-id="4">
+                                    <div class="pos-mini-header">
+                                        <span class="pos-icon">💼</span>
+                                        <span class="pos-name">市场总监</span>
+                                        <span class="status-tag status-vacant">空缺</span>
+                                    </div>
+                                    <div class="pos-mini-body">
+                                        <div class="pos-fill-rate">
+                                            <div class="mini-fill-bar">
+                                                <div class="mini-fill-fill" style="width: 0%"></div>
+                                            </div>
+                                            <span>0/1</span>
+                                        </div>
+                                        <div class="pos-employees">
+                                            <span class="emp-more">待招聘</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="main-content">
+                    <div class="positions-section">
+                        <div class="section-header">
+                            <h2>岗位列表</h2>
+                            <div class="filter-tabs">
+                                <button class="filter-tab active" data-filter="all">全部</button>
+                                <button class="filter-tab" data-filter="vacant">空缺</button>
+                                <button class="filter-tab" data-filter="recruiting">招聘中</button>
+                                <button class="filter-tab" data-filter="full">已满编</button>
+                            </div>
+                        </div>
+                        <div class="positions-grid">
+                            <div class="position-card" data-pos-id="1">
+                                <div class="pos-card-header">
+                                    <div class="pos-card-left">
+                                        <span class="pos-icon-lg">💼</span>
+                                        <div class="pos-card-info">
+                                            <div class="pos-card-name">前端开发工程师 <span class="key-badge">⭐</span></div>
+                                            <div class="pos-card-dept">技术部</div>
+                                        </div>
+                                    </div>
+                                    <span class="status-tag status-recruiting">招聘中</span>
+                                </div>
+                                <div class="pos-card-body">
+                                    <div class="pos-stats-row">
+                                        <div class="pos-stat-item">
+                                            <div class="pos-stat-value">2</div>
+                                            <div class="pos-stat-label">在职人数</div>
+                                        </div>
+                                        <div class="pos-stat-item">
+                                            <div class="pos-stat-value">3</div>
+                                            <div class="pos-stat-label">编制人数</div>
+                                        </div>
+                                        <div class="pos-stat-item">
+                                            <div class="pos-stat-value fill-rate-value" style="color: #f59e0b">67%</div>
+                                            <div class="pos-stat-label">达成率</div>
+                                        </div>
+                                    </div>
+                                    <div class="pos-progress">
+                                        <div class="pos-progress-bar">
+                                            <div class="pos-progress-fill" style="width: 67%; background: #f59e0b"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="pos-card-footer">
+                                    <div class="pos-emp-list">
+                                        <div class="emp-mini-card status-active">
+                                            <span class="emp-mini-avatar">张</span>
+                                            <span class="emp-mini-name">张伟</span>
+                                        </div>
+                                        <div class="emp-mini-card status-active">
+                                            <span class="emp-mini-avatar">李</span>
+                                            <span class="emp-mini-name">李明</span>
+                                        </div>
+                                    </div>
+                                    <div class="pos-card-actions">
+                                        <button class="action-btn edit-btn" title="编辑"><svg viewBox="0 0 24 24"><path d="M12 20h9l-4-4H3v-4l4-4h9l4 4v9l-4 4zm-1-7.5l1.5-1.5 3 3-1.5 1.5-3-3z"/></svg></button>
+                                        <button class="action-btn delete-btn" title="删除"><svg viewBox="0 0 24 24"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg></button>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="position-card" data-pos-id="2">
+                                <div class="pos-card-header">
+                                    <div class="pos-card-left">
+                                        <span class="pos-icon-lg">💼</span>
+                                        <div class="pos-card-info">
+                                            <div class="pos-card-name">后端开发工程师</div>
+                                            <div class="pos-card-dept">技术部</div>
+                                        </div>
+                                    </div>
+                                    <span class="status-tag status-full">已满编</span>
+                                </div>
+                                <div class="pos-card-body">
+                                    <div class="pos-stats-row">
+                                        <div class="pos-stat-item">
+                                            <div class="pos-stat-value">4</div>
+                                            <div class="pos-stat-label">在职人数</div>
+                                        </div>
+                                        <div class="pos-stat-item">
+                                            <div class="pos-stat-value">4</div>
+                                            <div class="pos-stat-label">编制人数</div>
+                                        </div>
+                                        <div class="pos-stat-item">
+                                            <div class="pos-stat-value fill-rate-value" style="color: #10b981">100%</div>
+                                            <div class="pos-stat-label">达成率</div>
+                                        </div>
+                                    </div>
+                                    <div class="pos-progress">
+                                        <div class="pos-progress-bar">
+                                            <div class="pos-progress-fill" style="width: 100%; background: #10b981"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="pos-card-footer">
+                                    <div class="pos-emp-list">
+                                        <div class="emp-mini-card status-active">
+                                            <span class="emp-mini-avatar">王</span>
+                                            <span class="emp-mini-name">王芳</span>
+                                        </div>
+                                        <div class="emp-mini-card status-active">
+                                            <span class="emp-mini-avatar">刘</span>
+                                            <span class="emp-mini-name">刘强</span>
+                                        </div>
+                                        <div class="emp-mini-card status-active">
+                                            <span class="emp-mini-avatar">陈</span>
+                                            <span class="emp-mini-name">陈静</span>
+                                        </div>
+                                        <div class="emp-mini-card status-active">
+                                            <span class="emp-mini-avatar">周</span>
+                                            <span class="emp-mini-name">周杰</span>
+                                        </div>
+                                    </div>
+                                    <div class="pos-card-actions">
+                                        <button class="action-btn edit-btn" title="编辑"><svg viewBox="0 0 24 24"><path d="M12 20h9l-4-4H3v-4l4-4h9l4 4v9l-4 4zm-1-7.5l1.5-1.5 3 3-1.5 1.5-3-3z"/></svg></button>
+                                        <button class="action-btn delete-btn" title="删除"><svg viewBox="0 0 24 24"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg></button>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="position-card" data-pos-id="3">
+                                <div class="pos-card-header">
+                                    <div class="pos-card-left">
+                                        <span class="pos-icon-lg">💼</span>
+                                        <div class="pos-card-info">
+                                            <div class="pos-card-name">HR经理 <span class="key-badge">⭐</span></div>
+                                            <div class="pos-card-dept">人力资源部</div>
+                                        </div>
+                                    </div>
+                                    <span class="status-tag status-full">已满编</span>
+                                </div>
+                                <div class="pos-card-body">
+                                    <div class="pos-stats-row">
+                                        <div class="pos-stat-item">
+                                            <div class="pos-stat-value">1</div>
+                                            <div class="pos-stat-label">在职人数</div>
+                                        </div>
+                                        <div class="pos-stat-item">
+                                            <div class="pos-stat-value">1</div>
+                                            <div class="pos-stat-label">编制人数</div>
+                                        </div>
+                                        <div class="pos-stat-item">
+                                            <div class="pos-stat-value fill-rate-value" style="color: #10b981">100%</div>
+                                            <div class="pos-stat-label">达成率</div>
+                                        </div>
+                                    </div>
+                                    <div class="pos-progress">
+                                        <div class="pos-progress-bar">
+                                            <div class="pos-progress-fill" style="width: 100%; background: #10b981"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="pos-card-footer">
+                                    <div class="pos-emp-list">
+                                        <div class="emp-mini-card status-active">
+                                            <span class="emp-mini-avatar">赵</span>
+                                            <span class="emp-mini-name">赵敏</span>
+                                        </div>
+                                    </div>
+                                    <div class="pos-card-actions">
+                                        <button class="action-btn edit-btn" title="编辑"><svg viewBox="0 0 24 24"><path d="M12 20h9l-4-4H3v-4l4-4h9l4 4v9l-4 4zm-1-7.5l1.5-1.5 3 3-1.5 1.5-3-3z"/></svg></button>
+                                        <button class="action-btn delete-btn" title="删除"><svg viewBox="0 0 24 24"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg></button>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="position-card" data-pos-id="4">
+                                <div class="pos-card-header">
+                                    <div class="pos-card-left">
+                                        <span class="pos-icon-lg">💼</span>
+                                        <div class="pos-card-info">
+                                            <div class="pos-card-name">市场总监 <span class="key-badge">⭐</span></div>
+                                            <div class="pos-card-dept">市场部</div>
+                                        </div>
+                                    </div>
+                                    <span class="status-tag status-vacant">空缺</span>
+                                </div>
+                                <div class="pos-card-body">
+                                    <div class="pos-stats-row">
+                                        <div class="pos-stat-item">
+                                            <div class="pos-stat-value">0</div>
+                                            <div class="pos-stat-label">在职人数</div>
+                                        </div>
+                                        <div class="pos-stat-item">
+                                            <div class="pos-stat-value">1</div>
+                                            <div class="pos-stat-label">编制人数</div>
+                                        </div>
+                                        <div class="pos-stat-item">
+                                            <div class="pos-stat-value fill-rate-value" style="color: #ef4444">0%</div>
+                                            <div class="pos-stat-label">达成率</div>
+                                        </div>
+                                    </div>
+                                    <div class="pos-progress">
+                                        <div class="pos-progress-bar">
+                                            <div class="pos-progress-fill" style="width: 0%; background: #ef4444"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="pos-card-footer">
+                                    <div class="pos-emp-list">
+                                        <div class="emp-more-card">待招聘</div>
+                                    </div>
+                                    <div class="pos-card-actions">
+                                        <button class="action-btn edit-btn" title="编辑"><svg viewBox="0 0 24 24"><path d="M12 20h9l-4-4H3v-4l4-4h9l4 4v9l-4 4zm-1-7.5l1.5-1.5 3 3-1.5 1.5-3-3z"/></svg></button>
+                                        <button class="action-btn delete-btn" title="删除"><svg viewBox="0 0 24 24"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg></button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

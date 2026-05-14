@@ -291,15 +291,20 @@ router.delete('/org/department/:id', async (req, res) => {
     try {
         const { id } = req.params;
         
-        const [childRows] = await pool.execute('SELECT id FROM department WHERE parent_id = ?', [id]);
-        if (childRows.length > 0) {
-            return res.json({ code: 400, message: '该部门下有子部门，无法删除' });
-        }
-        
         const [empRows] = await pool.execute('SELECT id FROM employee WHERE department_id = ?', [id]);
         if (empRows.length > 0) {
             return res.json({ code: 400, message: '该部门下有员工，无法删除' });
         }
+        
+        const [deptRow] = await pool.execute('SELECT parent_id FROM department WHERE id = ?', [id]);
+        const parentId = deptRow.length > 0 ? deptRow[0].parent_id : 0;
+        
+        const [childRows] = await pool.execute('SELECT id FROM department WHERE parent_id = ?', [id]);
+        if (childRows.length > 0) {
+            await pool.execute('UPDATE department SET parent_id = ? WHERE parent_id = ?', [parentId, id]);
+        }
+        
+        await pool.execute('UPDATE position SET dept_id = ? WHERE dept_id = ?', [parentId, id]);
         
         const [result] = await pool.execute('DELETE FROM department WHERE id = ?', [id]);
         

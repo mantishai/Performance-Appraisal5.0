@@ -1,4 +1,4 @@
-const API_BASE_URL = '/api';
+const API_BASE_URL = 'http://localhost:8080/api';
 
 const ATTENDANCE_CONFIG = {
     WORK_START: '09:00',
@@ -912,6 +912,37 @@ const API = {
 
     getCoverageReport() {
         return this.request('/talent/coverage-report');
+    },
+
+    // 岗位说明书 API
+    getPositionDescriptionList() {
+        return this.request('/position-description/list');
+    },
+
+    getAllPositionDescriptions() {
+        return this.request('/position-description/all');
+    },
+
+    getPositionDescription(id) {
+        return this.request(`/position-description/${id}`);
+    },
+
+    createPositionDescription(data) {
+        return this.request('/position-description', {
+            method: 'POST',
+            body: JSON.stringify(data)
+        });
+    },
+
+    updatePositionDescription(id, data) {
+        return this.request(`/position-description/${id}`, {
+            method: 'PUT',
+            body: JSON.stringify(data)
+        });
+    },
+
+    deletePositionDescription(id) {
+        return this.request(`/position-description/${id}`, { method: 'DELETE' });
     }
 };
 

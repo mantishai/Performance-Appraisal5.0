@@ -670,6 +670,25 @@
     img {
         pointer-events: none;
     }
+    
+    /* 岗位统计卡片响应式 */
+    .position-stats-bar {
+        grid-template-columns: repeat(3, 1fr);
+        gap: 8px;
+        padding: 12px;
+    }
+    
+    .stat-card-mini {
+        padding: 8px 6px;
+    }
+    
+    .stat-card-mini .stat-label {
+        font-size: 11px;
+    }
+    
+    .stat-card-mini .stat-value {
+        font-size: 16px;
+    }
 }
 
 /* ===== 横屏模式优化 ===== */

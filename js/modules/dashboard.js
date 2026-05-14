@@ -2,6 +2,69 @@ import { Toast, Skeleton, EventBus } from '../utils.js';
 import API from '../api.js';
 import { openPersonalInfoModal } from '../personal-info.js';
 
+// 全局弹窗管理
+const ModalManager = {
+    openModals: [],
+    
+    // 打开指定弹窗
+    open(modalId) {
+        const modal = document.getElementById(modalId);
+        if (modal) {
+            modal.classList.add('show');
+            modal.style.setProperty('display', 'flex', 'important');
+            modal.style.setProperty('visibility', 'visible', 'important');
+            modal.style.setProperty('opacity', '1', 'important');
+            modal.style.setProperty('pointer-events', 'auto', 'important');
+            if (!this.openModals.includes(modalId)) {
+                this.openModals.push(modalId);
+            }
+        }
+    },
+    
+    // 关闭指定弹窗（只操作对应的弹窗，不动其他弹窗）
+    close(modalId) {
+        const modal = document.getElementById(modalId);
+        if (modal) {
+            modal.classList.remove('show');
+            modal.style.setProperty('display', 'none', 'important');
+            modal.style.setProperty('visibility', 'hidden', 'important');
+            modal.style.setProperty('opacity', '0', 'important');
+            modal.style.setProperty('pointer-events', 'none', 'important');
+            this.openModals = this.openModals.filter(id => id !== modalId);
+        }
+    },
+    
+    // 关闭所有弹窗
+    closeAll(exceptModalId = null) {
+        // 关闭所有其他弹窗
+        const allModals = document.querySelectorAll('.modal-overlay, .modal, [id*="Modal"], [id*="modal"], [id*="Drawer"], [id*="drawer"]');
+        allModals.forEach(modal => {
+            if (modal.id && modal.id !== exceptModalId) {
+                this.close(modal.id);
+            }
+        });
+        
+        // 清理 openModals 数组（保留 exceptModalId）
+        if (exceptModalId) {
+            this.openModals = [exceptModalId];
+        } else {
+            this.openModals = [];
+        }
+    },
+    
+    register(modalId) {
+        if (!this.openModals.includes(modalId)) {
+            this.openModals.push(modalId);
+        }
+    },
+    
+    unregister(modalId) {
+        this.openModals = this.openModals.filter(id => id !== modalId);
+    }
+};
+
+window.ModalManager = ModalManager;
+
 let charts = {};
 let refreshInterval = null;
 
@@ -150,17 +213,13 @@ const dashboardModule = {
                         <p class="welcome-subtitle">欢迎使用人力资源管理系统，祝您工作愉快！</p>
                     </div>
                     <div class="welcome-actions">
-                        <button class="btn btn-primary" id="refreshBtn">
-                            <span>🔄</span>
-                            <span>刷新数据</span>
-                        </button>
-                        <button class="btn btn-secondary" id="personalInfoBtn">
+                        <button class="btn btn-primary" id="employeeDetailBtn">
                             <span>👤</span>
-                            <span>个人信息</span>
+                            <span>员工详情</span>
                         </button>
                         <button class="btn btn-secondary" id="positionManualBtn">
                             <span>📋</span>
-                            <span>岗位说明书</span>
+                            <span>岗位职责说明书</span>
                         </button>
                     </div>
                 </div>
@@ -460,23 +519,18 @@ const dashboardModule = {
     },
 
     bindEvents() {
-        document.getElementById('refreshBtn')?.addEventListener('click', async () => {
-            Toast.info('正在刷新数据...');
-            await this.loadData();
-            const container = document.getElementById('content');
-            if (container) {
-                this.renderContent(container);
-                this.initCharts();
-            }
-            Toast.success('数据刷新成功！');
+        // 员工详情按钮
+        document.getElementById('employeeDetailBtn')?.addEventListener('click', async (e) => {
+            e.stopPropagation();
+            e.preventDefault();
+            await this.openEmployeeDetail();
         });
 
-        document.getElementById('positionManualBtn')?.addEventListener('click', async () => {
-            await openPositionManual();
-        });
-
-        document.getElementById('personalInfoBtn')?.addEventListener('click', async () => {
-            await openPersonalInfoModal();
+        // 岗位说明书按钮
+        document.getElementById('positionManualBtn')?.addEventListener('click', async (e) => {
+            e.stopPropagation();
+            e.preventDefault();
+            await this.openPositionManual();
         });
 
         document.querySelectorAll('.quick-link, .stat-card[data-module]').forEach(el => {
@@ -694,6 +748,104 @@ const dashboardModule = {
         charts = {};
         // 清理事件监听器
         EventBus.off('employee:updated');
+    },
+
+    // 查找当前登录用户的员工信息
+    async findCurrentEmployee() {
+        try {
+            const empRes = await API.getEmployees();
+            if (empRes.code === 200) {
+                const employee = empRes.data.find(emp => 
+                    (state.currentUser?.employee_no && (emp.employee_no === state.currentUser.employee_no || emp.employeeNo === state.currentUser.employee_no)) ||
+                    (state.currentUser?.id && emp.id === state.currentUser.id) ||
+                    (state.currentUser?.name && emp.name === state.currentUser.name)
+                );
+                return employee;
+            }
+        } catch (error) {
+            console.error('查找当前员工失败:', error);
+        }
+        return null;
+    },
+
+    // 打开员工详情弹窗
+    async openEmployeeDetail() {
+        try {
+            // 关闭所有弹窗
+            if (window.ModalManager) {
+                window.ModalManager.closeAll();
+            }
+            
+            await new Promise(resolve => setTimeout(resolve, 100));
+            
+            const employee = await this.findCurrentEmployee();
+            if (employee && employee.id) {
+                await new Promise(resolve => setTimeout(resolve, 50));
+                
+                import('./employee-detail.js').then(({ default: employeeDetailModule }) => {
+                    employeeDetailModule.setReadOnly(true);
+                    employeeDetailModule.open(employee);
+                });
+            } else {
+                Toast.error('未找到您的员工信息');
+            }
+        } catch (error) {
+            console.error('打开员工详情失败:', error);
+            Toast.error('打开员工详情失败');
+        }
+    },
+
+    // 打开岗位说明书弹窗
+    async openPositionManual() {
+        try {
+            // 关闭所有弹窗
+            if (window.ModalManager) {
+                window.ModalManager.closeAll();
+            }
+            
+            await new Promise(resolve => setTimeout(resolve, 100));
+            
+            const employee = await this.findCurrentEmployee();
+            console.log('👤 当前员工信息:', employee);
+            
+            if (!employee) {
+                Toast.error('未找到您的员工信息');
+                return;
+            }
+            
+            // 同时获取部门和岗位列表
+            const [deptRes, posRes] = await Promise.all([
+                API.getDepartments(),
+                API.getPositions()
+            ]);
+            
+            const departments = deptRes.code === 200 ? (deptRes.data || []) : [];
+            const positions = posRes.code === 200 ? (posRes.data || []) : [];
+            
+            // 获取员工的部门名称和岗位名称
+            const department = departments.find(d => d.id === employee.department_id);
+            const position = positions.find(p => p.id === employee.position_id);
+            
+            // 将员工信息、部门信息、岗位信息存储到全局变量
+            window.currentEmployeeData = {
+                employee,
+                department,
+                position
+            };
+            
+            console.log('📊 存储的员工相关数据:', window.currentEmployeeData);
+            
+            await new Promise(resolve => setTimeout(resolve, 50));
+            
+            if (window.openReadOnlyPositionModal) {
+                window.openReadOnlyPositionModal(employee.position_id);
+            } else {
+                Toast.info('岗位说明书功能加载中...');
+            }
+        } catch (error) {
+            console.error('打开岗位说明书失败:', error);
+            Toast.error('打开岗位说明书失败');
+        }
     }
 };
 
@@ -705,53 +857,5 @@ EventBus.on('employee:updated', async (employee) => {
         state.currentUser = { ...state.currentUser, ...employee };
     }
 });
-
-// 打开岗位说明书
-async function openPositionManual() {
-    // 获取当前用户的岗位信息
-    let positionId = null;
-    let positionName = state.currentUser?.position;
-    
-    // 如果用户信息中没有岗位，尝试从员工列表获取
-    if (!positionId && state.currentUser?.employee_no) {
-        try {
-            const empRes = await API.getEmployees();
-            if (empRes.code === 200) {
-                const employee = empRes.data.find(emp => 
-                    emp.employee_no === state.currentUser.employee_no || 
-                    emp.employeeNo === state.currentUser.employee_no ||
-                    (state.currentUser.id && emp.id === state.currentUser.id)
-                );
-                if (employee) {
-                    positionName = employee.position || employee.position_name || positionName;
-                    // 如果有岗位ID，优先使用岗位ID
-                    if (employee.position_id) {
-                        positionId = `pos_${employee.position_id}`;
-                    }
-                }
-            }
-        } catch (e) {
-            console.error('Failed to get employee position:', e);
-        }
-    }
-    
-    // 如果没有岗位ID，尝试用岗位名称匹配
-    if (!positionId && positionName) {
-        positionId = window.getPositionIdByName ? window.getPositionIdByName(positionName) : null;
-    }
-    
-    // 默认使用 hr1 作为备用
-    if (!positionId) {
-        positionId = 'hr1';
-        positionName = positionName || '人力资源经理';
-    }
-    
-    // 打开岗位说明书
-    if (window.openReadOnlyPositionModal) {
-        window.openReadOnlyPositionModal(positionId);
-    } else {
-        Toast.info('岗位说明书功能加载中...');
-    }
-}
 
 export default dashboardModule;

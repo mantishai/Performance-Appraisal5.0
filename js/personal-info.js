@@ -1,9 +1,40 @@
 import API from './api.js';
 import { Toast } from './utils.js';
 
+// 防重复点击标志
+let personalInfoLoading = false;
+
 // 打开个人信息弹窗（直接使用员工详情模块的弹窗，只读模式）
 async function openPersonalInfoModal() {
+    if (personalInfoLoading) {
+        Toast.info('正在加载，请稍候...');
+        return;
+    }
+    personalInfoLoading = true;
+    
     try {
+        // 使用全局关闭所有弹窗
+        if (window.ModalManager) {
+            window.ModalManager.closeAll();
+        } else {
+            // 兼容旧版本
+            const modals = document.querySelectorAll('.modal-overlay, .modal, .drawer');
+            modals.forEach(modal => {
+                modal.classList.remove('show');
+                modal.style.display = 'none';
+                modal.style.opacity = '0';
+                modal.style.visibility = 'hidden';
+            });
+            
+            // 专门关闭岗位说明书弹窗
+            if (window.closePositionModal) {
+                window.closePositionModal();
+            }
+        }
+        
+        // 等待一小段时间让DOM更新
+        await new Promise(resolve => setTimeout(resolve, 80));
+        
         // 先获取当前用户信息
         const userRes = await API.getCurrentUser();
         if (userRes.code !== 200) {
@@ -50,6 +81,8 @@ async function openPersonalInfoModal() {
         console.error('加载个人信息失败:', error);
         Toast.error('加载个人信息失败');
         return;
+    } finally {
+        personalInfoLoading = false;
     }
 }
 

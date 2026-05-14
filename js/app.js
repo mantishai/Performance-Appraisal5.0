@@ -596,6 +596,10 @@ function initOrgNav() {
             orgNavItem.classList.toggle('expanded');
             submenu.classList.toggle('show');
             
+            // 点击主导航时，清除选中状态，显示组织架构看板
+            window.orgSelectedType = null;
+            window.orgSelectedId = null;
+            
             switchModule('org');
         });
     }

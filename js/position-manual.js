@@ -4,62 +4,43 @@ window.currentHrPositionReadOnly = false;
 
 // 打开编辑模式弹窗
 function openPositionModal(positionId) {
-    // 关闭员工详情弹窗（如果打开）
-    const detailDrawer = document.getElementById('detailDrawer');
-    if (detailDrawer) {
-        detailDrawer.classList.remove('show');
-        detailDrawer.style.display = 'none';
-        detailDrawer.style.opacity = '0';
-        detailDrawer.style.visibility = 'hidden';
-    }
-    
     window.currentHrPositionId = positionId;
     window.currentHrPositionReadOnly = false;
     loadHrPositionDesc();
     setPositionModalReadOnly(false);
     
-    const modal = document.getElementById('hrPositionModal');
-    modal.classList.add('show');
-    modal.style.setProperty('display', 'flex', 'important');
-    modal.style.setProperty('opacity', '1', 'important');
-    modal.style.setProperty('visibility', 'visible', 'important');
-    modal.style.setProperty('pointer-events', 'auto', 'important');
+    if (window.ModalManager) {
+        window.ModalManager.open('hrPositionModal');
+    } else {
+        const modal = document.getElementById('hrPositionModal');
+        modal.classList.add('show');
+    }
 }
 
 // 打开只读查看弹窗
 function openReadOnlyPositionModal(positionId) {
-    // 关闭员工详情弹窗（如果打开）
-    const detailDrawer = document.getElementById('detailDrawer');
-    if (detailDrawer) {
-        detailDrawer.classList.remove('show');
-        detailDrawer.style.display = 'none';
-        detailDrawer.style.opacity = '0';
-        detailDrawer.style.visibility = 'hidden';
-    }
-    
     window.currentHrPositionId = positionId;
     window.currentHrPositionReadOnly = true;
     loadHrPositionDesc();
     setPositionModalReadOnly(true);
     
-    const modal = document.getElementById('hrPositionModal');
-    modal.classList.add('show');
-    modal.style.setProperty('display', 'flex', 'important');
-    modal.style.setProperty('opacity', '1', 'important');
-    modal.style.setProperty('visibility', 'visible', 'important');
-    modal.style.setProperty('pointer-events', 'auto', 'important');
+    if (window.ModalManager) {
+        window.ModalManager.open('hrPositionModal');
+    } else {
+        const modal = document.getElementById('hrPositionModal');
+        modal.classList.add('show');
+    }
 }
 
-// 关闭弹窗
+// 关闭岗位说明书弹窗
 function closePositionModal() {
-    const modal = document.getElementById('hrPositionModal');
-    if (modal) {
-        modal.classList.remove('show');
-        modal.classList.remove('readonly');
-        modal.style.setProperty('display', 'none', 'important');
-        modal.style.setProperty('opacity', '0', 'important');
-        modal.style.setProperty('visibility', 'hidden', 'important');
-        modal.style.setProperty('pointer-events', 'none', 'important');
+    if (window.ModalManager) {
+        window.ModalManager.close('hrPositionModal');
+    } else {
+        const modal = document.getElementById('hrPositionModal');
+        if (modal) {
+            modal.classList.remove('show');
+        }
     }
 }
 
@@ -129,362 +110,242 @@ function togglePositionEdit() {
     }
 }
 
-// 获取岗位数据
-function getPositionData(positionId) {
-    const mockData = {
-        'hr1': {
-            info: {
-                positionName: '人力资源总监',
-                jobTitle: '总监',
-                level: 'M4',
-                department: '人力资源部',
-                deptType: '职能部门',
-                deptNature: '管理部门',
-                supervisor: 'CEO',
-                crossSupervisor: '',
-                directSubordinates: '5',
-                indirectSubordinates: '25',
-                promotionDirection: '高管层',
-                rotationPosition: '',
-                effectiveDate: '2024-01-01',
-                approver: 'CEO',
-                positionCode: 'HR-DIR-001',
-                headcount: 1,
-                summary: '全面负责人力资源管理工作，制定并执行公司人力资源战略，优化人力资源管理体系，提升组织效能和员工满意度。'
-            },
-            purpose: '建立和完善公司人力资源管理体系，确保公司人才供给和发展，支持公司战略目标的实现。',
-            duties: [
-                { module: '战略规划', category: '人力资源战略', workType: '核心', detail: '制定公司人力资源战略规划，确保与公司整体战略一致' },
-                { module: '组织管理', category: '组织架构', workType: '核心', detail: '设计和优化组织架构，提升组织效率' },
-                { module: '人才管理', category: '人才招聘', workType: '重点', detail: '领导人才招聘工作，建立人才储备体系' },
-                { module: '绩效管理', category: '绩效体系', workType: '核心', detail: '建立和完善绩效考核体系，推动绩效文化' },
-                { module: '薪酬福利', category: '薪酬体系', workType: '重点', detail: '设计和管理薪酬福利体系，确保外部竞争力和内部公平性' }
-            ],
-            qualification: {
-                education: '本科及以上学历，人力资源管理、工商管理等相关专业',
-                training: '人力资源管理培训、领导力培训、战略规划培训',
-                experience: '10年以上人力资源管理经验，5年以上管理岗位经验，具备战略思维和领导力',
-                skills: '精通人力资源各模块管理，熟悉劳动法律法规，优秀的沟通协调能力和团队管理能力',
-                otherRequirements: '具备良好的职业道德和保密意识，能够承受较大工作压力'
-            },
-            conditions: {
-                workTime: '周一至周五，9:00-18:00',
-                workPlace: '公司总部',
-                workEnv: '办公室环境',
-                risk: '低',
-                occupationalHazard: '无'
-            },
-            metrics: [
-                { dimension: '人才管理', metric: '核心人才保有率', standard: '≥95%', source: 'HR系统' },
-                { dimension: '招聘效能', metric: '招聘周期', standard: '≤30天', source: '招聘系统' },
-                { dimension: '绩效体系', metric: '绩效完成率', standard: '≥90%', source: '绩效系统' },
-                { dimension: '员工满意度', metric: '满意度得分', standard: '≥85分', source: '调研系统' }
-            ],
-            documents: '负责审批人力资源相关制度文件，签发招聘计划、培训计划、薪酬调整方案等重要文件。'
-        },
-        'hr2': {
-            info: {
-                positionName: '人力资源经理',
-                jobTitle: '经理',
-                level: 'M2',
-                department: '人力资源部',
-                deptType: '职能部门',
-                deptNature: '管理部门',
-                supervisor: '人力资源总监',
-                crossSupervisor: '',
-                directSubordinates: '3',
-                indirectSubordinates: '0',
-                promotionDirection: '人力资源总监',
-                rotationPosition: '',
-                effectiveDate: '2024-06-01',
-                approver: '人力资源总监',
-                positionCode: 'HR-MGR-001',
-                headcount: 1,
-                summary: '负责人力资源日常管理工作，包括招聘、培训、绩效、员工关系等模块，确保各项人力资源工作有序开展。'
-            },
-            purpose: '执行人力资源战略，负责日常人力资源管理事务，支持业务部门发展需求。',
-            duties: [
-                { module: '招聘管理', category: '招聘执行', workType: '核心', detail: '组织实施招聘工作，筛选候选人，协调面试安排' },
-                { module: '培训发展', category: '培训计划', workType: '重点', detail: '制定年度培训计划，组织实施各类培训活动' },
-                { module: '绩效管理', category: '绩效执行', workType: '核心', detail: '组织绩效考核工作，跟进绩效结果应用' },
-                { module: '员工关系', category: '员工关怀', workType: '基础', detail: '处理员工咨询和投诉，组织员工活动' },
-                { module: '人事事务', category: '日常管理', workType: '基础', detail: '办理员工入职、离职、调岗等手续' }
-            ],
-            qualification: {
-                education: '本科及以上学历，人力资源管理、心理学等相关专业',
-                training: '人力资源管理培训、劳动法培训、绩效管理培训',
-                experience: '5年以上人力资源管理经验，熟悉人力资源各模块工作',
-                skills: '良好的沟通能力、组织协调能力、问题解决能力',
-                otherRequirements: '具备团队合作精神，工作细致认真'
-            },
-            conditions: {
-                workTime: '周一至周五，9:00-18:00',
-                workPlace: '公司总部',
-                workEnv: '办公室环境',
-                risk: '低',
-                occupationalHazard: '无'
-            },
-            metrics: [
-                { dimension: '招聘效率', metric: '招聘完成率', standard: '≥95%', source: '招聘系统' },
-                { dimension: '培训效果', metric: '培训完成率', standard: '≥90%', source: '培训系统' },
-                { dimension: '员工满意度', metric: '员工投诉处理及时率', standard: '100%', source: 'HR系统' }
-            ],
-            documents: '负责起草人力资源相关文件，处理员工档案管理工作。'
-        },
-        'hr3': {
-            info: {
-                positionName: '招聘专员',
-                jobTitle: '专员',
-                level: 'P3',
-                department: '人力资源部',
-                deptType: '职能部门',
-                deptNature: '业务部门',
-                supervisor: '人力资源经理',
-                crossSupervisor: '',
-                directSubordinates: '0',
-                indirectSubordinates: '0',
-                promotionDirection: '人力资源主管',
-                rotationPosition: '培训专员',
-                effectiveDate: '2025-01-01',
-                approver: '人力资源经理',
-                positionCode: 'HR-REC-001',
-                headcount: 2,
-                summary: '负责公司招聘工作，发布招聘信息，筛选简历，组织面试，完成招聘任务。'
-            },
-            purpose: '为公司各部门提供合格的人才支持，确保招聘目标的实现。',
-            duties: [
-                { module: '招聘执行', category: '职位发布', workType: '核心', detail: '发布招聘信息，维护招聘渠道' },
-                { module: '简历筛选', category: '候选人筛选', workType: '核心', detail: '筛选简历，进行初步面试' },
-                { module: '面试协调', category: '面试安排', workType: '重点', detail: '协调面试时间，安排面试流程' },
-                { module: 'offer管理', category: '录用流程', workType: '重点', detail: '发放录用通知，跟进入职' }
-            ],
-            qualification: {
-                education: '本科及以上学历，人力资源、心理学等相关专业',
-                training: '招聘技巧培训、面试技巧培训',
-                experience: '2年以上招聘工作经验',
-                skills: '良好的沟通能力、判断力、执行力',
-                otherRequirements: '具备团队合作精神，工作积极主动'
-            },
-            conditions: {
-                workTime: '周一至周五，9:00-18:00',
-                workPlace: '公司总部',
-                workEnv: '办公室环境',
-                risk: '低',
-                occupationalHazard: '无'
-            },
-            metrics: [
-                { dimension: '招聘效率', metric: '简历筛选及时率', standard: '≥95%', source: '招聘系统' },
-                { dimension: '招聘质量', metric: '试用期通过率', standard: '≥85%', source: 'HR系统' }
-            ],
-            documents: '负责招聘相关文档的整理和归档工作。'
-        },
-        'hr4': {
-            info: {
-                positionName: '培训专员',
-                jobTitle: '专员',
-                level: 'P3',
-                department: '人力资源部',
-                deptType: '职能部门',
-                deptNature: '业务部门',
-                supervisor: '人力资源经理',
-                crossSupervisor: '',
-                directSubordinates: '0',
-                indirectSubordinates: '0',
-                promotionDirection: '培训主管',
-                rotationPosition: '招聘专员',
-                effectiveDate: '2025-03-01',
-                approver: '人力资源经理',
-                positionCode: 'HR-TRN-001',
-                headcount: 1,
-                summary: '负责公司培训体系建设和培训活动组织实施，提升员工能力和绩效。'
-            },
-            purpose: '构建完善的培训体系，为员工提供持续学习和发展的机会。',
-            duties: [
-                { module: '培训规划', category: '需求分析', workType: '核心', detail: '开展培训需求调研，制定培训计划' },
-                { module: '培训实施', category: '课程组织', workType: '核心', detail: '组织各类培训课程，协调师资资源' },
-                { module: '培训评估', category: '效果评估', workType: '重点', detail: '评估培训效果，跟踪培训转化' },
-                { module: '知识管理', category: '课件开发', workType: '基础', detail: '开发和维护培训课件' }
-            ],
-            qualification: {
-                education: '本科及以上学历，教育、人力资源等相关专业',
-                training: '培训管理培训、课程设计培训',
-                experience: '2年以上培训工作经验',
-                skills: '良好的组织协调能力、表达能力、学习能力',
-                otherRequirements: '具备创新意识，善于沟通'
-            },
-            conditions: {
-                workTime: '周一至周五，9:00-18:00',
-                workPlace: '公司总部',
-                workEnv: '办公室环境',
-                risk: '低',
-                occupationalHazard: '无'
-            },
-            metrics: [
-                { dimension: '培训覆盖', metric: '员工培训学时', standard: '≥40小时/人/年', source: '培训系统' },
-                { dimension: '培训效果', metric: '培训满意度', standard: '≥85分', source: '调研系统' }
-            ],
-            documents: '负责培训相关文档的管理和归档工作。'
-        },
-        'hr5': {
-            info: {
-                positionName: '绩效专员',
-                jobTitle: '专员',
-                level: 'P3',
-                department: '人力资源部',
-                deptType: '职能部门',
-                deptNature: '业务部门',
-                supervisor: '人力资源经理',
-                crossSupervisor: '',
-                directSubordinates: '0',
-                indirectSubordinates: '0',
-                promotionDirection: '绩效主管',
-                rotationPosition: '薪酬专员',
-                effectiveDate: '2025-02-01',
-                approver: '人力资源经理',
-                positionCode: 'HR-PER-001',
-                headcount: 1,
-                summary: '负责公司绩效考核体系的实施和维护，确保绩效考核工作公正、公平、公开。'
-            },
-            purpose: '建立科学的绩效考核体系，激励员工提升绩效，支持公司目标的实现。',
-            duties: [
-                { module: '绩效体系', category: '制度维护', workType: '核心', detail: '维护绩效考核制度，更新考核标准' },
-                { module: '绩效执行', category: '考核组织', workType: '核心', detail: '组织绩效考核工作，收集考核数据' },
-                { module: '绩效分析', category: '数据统计', workType: '重点', detail: '分析绩效考核结果，提供改进建议' },
-                { module: '绩效沟通', category: '反馈跟进', workType: '重点', detail: '协助绩效面谈，跟进改进计划' }
-            ],
-            qualification: {
-                education: '本科及以上学历，人力资源、统计学等相关专业',
-                training: '绩效管理培训、数据分析培训',
-                experience: '2年以上绩效管理经验',
-                skills: '良好的数据分析能力、沟通能力、保密意识',
-                otherRequirements: '工作细致认真，具备较强的逻辑思维'
-            },
-            conditions: {
-                workTime: '周一至周五，9:00-18:00',
-                workPlace: '公司总部',
-                workEnv: '办公室环境',
-                risk: '低',
-                occupationalHazard: '无'
-            },
-            metrics: [
-                { dimension: '绩效周期', metric: '考核完成及时率', standard: '100%', source: '绩效系统' },
-                { dimension: '考核质量', metric: '考核申诉率', standard: '≤5%', source: 'HR系统' }
-            ],
-            documents: '负责绩效考核相关文档的管理和归档工作。'
-        }
-    };
-    
-    // 如果是 pos_ 开头的ID，返回默认模板
-    if (positionId.startsWith('pos_')) {
-        return {
-            info: {
-                positionName: '岗位名称',
-                jobTitle: '职位',
-                level: 'P5',
-                department: '所属部门',
-                deptType: '职能部门',
-                deptNature: '业务部门',
-                supervisor: '直属上级',
-                crossSupervisor: '',
-                directSubordinates: '0',
-                indirectSubordinates: '0',
-                promotionDirection: '',
-                rotationPosition: '',
-                effectiveDate: new Date().toISOString().split('T')[0],
-                approver: '审批人',
-                positionCode: 'POS-001',
-                headcount: 0,
-                summary: '请填写该岗位的工作概述。'
-            },
-            purpose: '请填写该岗位的设置目的。',
-            duties: [
-                { module: '模块名称', category: '分类', workType: '核心', detail: '请填写职责描述' }
-            ],
-            qualification: {
-                education: '请填写学历要求',
-                training: '请填写培训要求',
-                experience: '请填写工作经验要求',
-                skills: '请填写技能要求',
-                otherRequirements: '请填写其他要求'
-            },
-            conditions: {
-                workTime: '周一至周五，9:00-18:00',
-                workPlace: '公司总部',
-                workEnv: '办公室环境',
-                risk: '低',
-                occupationalHazard: '无'
-            },
-            metrics: [
-                { dimension: '考核维度', metric: '考核指标', standard: '量化标准', source: '数据来源' }
-            ],
-            documents: '请填写台账/文件签发与主持信息。'
-        };
-    }
-    
-    return mockData[positionId] || mockData['hr1'];
-}
-
-// 从服务器/本地加载岗位数据
+// 从服务器加载岗位数据
 async function loadHrPositionDesc() {
     const positionId = window.currentHrPositionId;
-    let data = null;
+    console.log('📋 加载岗位说明书，岗位ID:', positionId);
     
+    // 1. 优先通过 position_id 直接查找岗位说明书
     try {
-        const res = await fetch(`/api/hr/position/${positionId}`);
+        const res = await fetch(`/api/position-description/by-position/${positionId}`);
         if (res.ok) {
             const result = await res.json();
-            if (result.success && result.data) {
-                data = result.data;
+            if (result.code === 200 && result.data) {
+                console.log('✅ 通过 position_id 找到岗位说明书:', result.data);
+                applyPositionDataFromAPI(result.data);
+                return;
             }
         }
     } catch (e) {
-        console.log('API unavailable, using local storage or mock data');
+        console.warn('⚠️ 通过 position_id 查找失败，尝试其他方式:', e);
     }
     
-    if (!data) {
-        const localData = localStorage.getItem('hrPositions');
-        if (localData) {
-            try {
-                const positions = JSON.parse(localData);
-                data = positions[positionId];
-            } catch (e) {
-                console.error('Failed to parse local data:', e);
+    // 2. 从列表中查找匹配 position_id 的岗位说明书
+    let foundDesc = null;
+    try {
+        const listRes = await fetch('/api/position-description/list');
+        if (listRes.ok) {
+            const listResult = await listRes.json();
+            if (listResult.code === 200 && listResult.data && listResult.data.length > 0) {
+                console.log('📋 岗位说明书列表:', listResult.data);
+                
+                // 优先找 position_id 匹配的
+                foundDesc = listResult.data.find(d => d.position_id == positionId);
+                if (foundDesc) {
+                    console.log('✅ 找到匹配 position_id 的岗位说明书:', foundDesc);
+                }
+                
+                // 如果没找到 position_id 匹配的，尝试找 id 匹配的
+                if (!foundDesc) {
+                    foundDesc = listResult.data.find(d => d.id == positionId);
+                    if (foundDesc) {
+                        console.log('✅ 找到匹配 id 的岗位说明书:', foundDesc);
+                    }
+                }
+                
+                // 如果还是没找到，使用第一个
+                if (!foundDesc) {
+                    foundDesc = listResult.data[0];
+                    console.log('⚠️ 未找到匹配的岗位说明书，使用第一个:', foundDesc);
+                }
+                
+                if (foundDesc) {
+                    // 加载完整详情
+                    try {
+                        const res = await fetch(`/api/position-description/${foundDesc.id}`);
+                        if (res.ok) {
+                            const result = await res.json();
+                            if (result.code === 200 && result.data) {
+                                console.log('✅ 加载岗位说明书详情成功:', result.data);
+                                applyPositionDataFromAPI(result.data);
+                                return;
+                            }
+                        }
+                    } catch (e) {
+                        console.error('Failed to load position description detail:', e);
+                    }
+                    
+                    // 如果加载详情失败，使用列表中的基本信息
+                    applyPositionDataFromAPI({
+                        ...foundDesc,
+                        duties: [],
+                        qualification: null,
+                        metrics: []
+                    });
+                    return;
+                }
             }
         }
+    } catch (e) {
+        console.error('Failed to load position description list:', e);
     }
     
-    if (!data) {
-        data = getPositionData(positionId);
+    // 3. 如果列表方式失败，尝试直接用ID加载
+    try {
+        const res = await fetch(`/api/position-description/${positionId}`);
+        if (res.ok) {
+            const result = await res.json();
+            if (result.code === 200 && result.data) {
+                applyPositionDataFromAPI(result.data);
+                return;
+            }
+        }
+    } catch (e) {
+        console.error('Failed to load position description detail:', e);
     }
     
-    applyPositionData(data);
+    // 4. 如果全部失败，使用默认空模板
+    console.warn('❌ 加载岗位说明书失败，使用默认模板');
+    applyPositionDataFromAPI(getDefaultPositionTemplate());
 }
 
-// 应用数据到弹窗表单
-function applyPositionData(data) {
+// 获取默认岗位模板
+function getDefaultPositionTemplate() {
+    // 先尝试从全局获取员工相关数据
+    let employeeData = window.currentEmployeeData;
+    let template = {
+        id: 0,
+        position_id: null,
+        position_code: '',
+        position_name: '',
+        job_title: '',
+        level: '',
+        department: '',
+        dept_type: '',
+        dept_nature: '',
+        supervisor: '',
+        cross_supervisor: '',
+        direct_subordinates: 0,
+        indirect_subordinates: 0,
+        promotion_direction: '',
+        rotation_position: '',
+        effective_date: new Date().toISOString().split('T')[0],
+        approver: '',
+        headcount: 1,
+        summary: '',
+        purpose: '',
+        work_time: '周一至周五，9:00-18:00',
+        work_place: '公司总部',
+        work_env: '办公室环境',
+        risk_level: '低',
+        occupational_hazard: '',
+        documents: '',
+        duties: [],
+        qualification: null,
+        metrics: []
+    };
+    
+    // 如果有员工数据，用它来填充模板
+    if (employeeData) {
+        const { employee, department, position } = employeeData;
+        
+        if (position) {
+            template.position_id = position.id;
+            template.position_name = position.name || position.position_name || '';
+            template.job_title = position.name || position.position_name || '';
+            template.level = position.level || '';
+            template.position_code = position.code || '';
+        }
+        
+        if (department) {
+            template.department = department.name || department.dept_name || '';
+        }
+        
+        console.log('📋 使用员工数据填充的默认模板:', template);
+    }
+    
+    return template;
+}
+
+// 应用从API获取的数据到表单
+async function applyPositionDataFromAPI(data) {
+    // 先尝试从全局获取员工相关数据，如果有的话
+    let employeeData = window.currentEmployeeData;
+    console.log('📋 applyPositionDataFromAPI - 接收到的数据:', data);
+    console.log('👤 applyPositionDataFromAPI - 当前员工数据:', employeeData);
+    
+    // 如果有员工数据，用它来补充岗位说明书信息
+    if (employeeData) {
+        const { employee, department, position } = employeeData;
+        
+        // 如果岗位说明书没有岗位名称，使用员工的岗位名称
+        if (!data.position_name && position) {
+            data.position_name = position.name || position.position_name;
+        }
+        // 如果岗位说明书没有部门，使用员工的部门名称
+        if (!data.department && department) {
+            data.department = department.name || department.dept_name;
+        }
+        // 如果岗位说明书没有position_id，使用员工的岗位ID
+        if (!data.position_id && position) {
+            data.position_id = position.id;
+        }
+        // 如果岗位说明书没有职级，使用岗位的职级
+        if (!data.level && position) {
+            data.level = position.level || '';
+        }
+        console.log('✅ 使用员工数据补充后的岗位说明书:', data);
+    }
+    
     // 更新标题
-    const title = `📋 ${data.info.positionName || '岗位'}职责说明书`;
+    const title = `📋 ${data.position_name || '岗位'}职责说明书`;
     document.getElementById('hrPositionModalTitle').textContent = title;
     
+    // 更新统计卡片
+    document.getElementById('statPositionName').textContent = data.position_name || '-';
+    document.getElementById('statDepartment').textContent = data.department || '-';
+    document.getElementById('statLevel').textContent = data.level || '-';
+    document.getElementById('statHeadcount').textContent = data.headcount || 0;
+    
+    // 从API获取在职人数和空缺人数
+    try {
+        const positionIdForQuery = data.position_id || (employeeData && employeeData.position && employeeData.position.id) || '';
+        const res = await fetch('/api/employees?position=' + positionIdForQuery);
+        if (res.ok) {
+            const result = await res.json();
+            if (result.code === 200) {
+                const onboardCount = result.data.filter(emp => emp.status === 1).length;
+                const headcount = data.headcount || 0;
+                const vacancyCount = Math.max(0, headcount - onboardCount);
+                
+                document.getElementById('statOnboard').textContent = onboardCount;
+                document.getElementById('statVacancy').textContent = vacancyCount;
+            }
+        }
+    } catch (e) {
+        console.error('Failed to get employee count:', e);
+        document.getElementById('statOnboard').textContent = '-';
+        document.getElementById('statVacancy').textContent = '-';
+    }
+    
     // 基本信息
-    const info = data.info || {};
-    document.getElementById('hrPositionName').value = info.positionName || '';
-    document.getElementById('hrJobTitle').value = info.jobTitle || '';
-    document.getElementById('hrLevel').value = info.level || '';
-    document.getElementById('hrDepartment').value = info.department || '';
-    document.getElementById('hrDeptType').value = info.deptType || '';
-    document.getElementById('hrDeptNature').value = info.deptNature || '';
-    document.getElementById('hrSupervisor').value = info.supervisor || '';
-    document.getElementById('hrCrossSupervisor').value = info.crossSupervisor || '';
-    document.getElementById('hrDirectSubordinates').value = info.directSubordinates || '';
-    document.getElementById('hrIndirectSubordinates').value = info.indirectSubordinates || '';
-    document.getElementById('hrPromotionDirection').value = info.promotionDirection || '';
-    document.getElementById('hrRotationPosition').value = info.rotationPosition || '';
-    document.getElementById('hrEffectiveDate').value = info.effectiveDate || '';
-    document.getElementById('hrApprover').value = info.approver || '';
-    document.getElementById('hrPositionCode').value = info.positionCode || '';
-    document.getElementById('hrHeadcount').value = info.headcount || 0;
-    document.getElementById('hrSummary').value = info.summary || '';
+    document.getElementById('hrPositionName').value = data.position_name || '';
+    document.getElementById('hrJobTitle').value = data.job_title || '';
+    document.getElementById('hrLevel').value = data.level || '';
+    document.getElementById('hrDepartment').value = data.department || '';
+    document.getElementById('hrDeptType').value = data.dept_type || '';
+    document.getElementById('hrDeptNature').value = data.dept_nature || '';
+    document.getElementById('hrSupervisor').value = data.supervisor || '';
+    document.getElementById('hrCrossSupervisor').value = data.cross_supervisor || '';
+    document.getElementById('hrDirectSubordinates').value = data.direct_subordinates || 0;
+    document.getElementById('hrIndirectSubordinates').value = data.indirect_subordinates || 0;
+    document.getElementById('hrPromotionDirection').value = data.promotion_direction || '';
+    document.getElementById('hrRotationPosition').value = data.rotation_position || '';
+    document.getElementById('hrEffectiveDate').value = data.effective_date || '';
+    document.getElementById('hrApprover').value = data.approver || '';
+    document.getElementById('hrPositionCode').value = data.position_code || '';
+    document.getElementById('hrHeadcount').value = data.headcount || 0;
+    document.getElementById('hrSummary').value = data.summary || '';
     
     // 岗位设置目的
     document.getElementById('hrPurpose').value = data.purpose || '';
@@ -501,12 +362,11 @@ function applyPositionData(data) {
     document.getElementById('hrOtherRequirements').value = qualification.otherRequirements || '';
     
     // 工作条件
-    const conditions = data.conditions || {};
-    document.getElementById('hrWorkTime').value = conditions.workTime || '';
-    document.getElementById('hrWorkPlace').value = conditions.workPlace || '';
-    document.getElementById('hrWorkEnv').value = conditions.workEnv || '';
-    document.getElementById('hrRisk').value = conditions.risk || '';
-    document.getElementById('hrOccupationalHazard').value = conditions.occupationalHazard || '';
+    document.getElementById('hrWorkTime').value = data.work_time || '';
+    document.getElementById('hrWorkPlace').value = data.work_place || '';
+    document.getElementById('hrWorkEnv').value = data.work_env || '';
+    document.getElementById('hrRisk').value = data.risk_level || '';
+    document.getElementById('hrOccupationalHazard').value = data.occupational_hazard || '';
     
     // 考核指标
     renderMetricTable(data.metrics || []);
@@ -533,6 +393,11 @@ function renderDutyTable(duties) {
             <td><textarea>${escapeHtml(duty.detail || '')}</textarea></td>
         </tr>
     `).join('');
+    
+    // 如果没有数据，添加一行空行
+    if (duties.length === 0) {
+        addHrDutyRow();
+    }
 }
 
 // 渲染考核指标表格
@@ -547,6 +412,11 @@ function renderMetricTable(metrics) {
             <td><textarea>${escapeHtml(metric.source || '')}</textarea></td>
         </tr>
     `).join('');
+    
+    // 如果没有数据，添加一行空行
+    if (metrics.length === 0) {
+        addHrMetricRow();
+    }
 }
 
 // 添加职责行
@@ -637,27 +507,33 @@ async function saveHrPositionDesc() {
             return;
         }
         
-        if (!window.currentHrPositionId) {
-            showToast('❌ 岗位ID为空');
-            return;
-        }
+        const positionId = window.currentHrPositionId;
         
         try {
-            const res = await fetch('/api/hr/position/save', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({
-                    positionId: window.currentHrPositionId,
-                    data: positionData
-                })
-            });
+            let res;
+            if (positionId && !positionId.startsWith('pos_') && !positionId.startsWith('hr')) {
+                // 更新已有岗位
+                res = await fetch(`/api/position-description/${positionId}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(positionData)
+                });
+            } else {
+                // 创建新岗位
+                res = await fetch('/api/position-description', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(positionData)
+                });
+            }
             
             if (res.ok) {
                 const result = await res.json();
-                if (result.success) {
-                    saveToLocalStorage(positionData);
+                if (result.code === 200) {
                     showToast('✅ 保存成功');
                     window.currentHrPositionReadOnly = true;
                     setPositionModalReadOnly(true);
@@ -665,19 +541,14 @@ async function saveHrPositionDesc() {
                         window.refreshPositionList();
                     }
                 } else {
-                    showToast('❌ 保存失败');
+                    showToast('❌ 保存失败：' + (result.message || '未知错误'));
                 }
             } else {
                 throw new Error('Network error');
             }
         } catch (e) {
-            saveToLocalStorage(positionData);
-            showToast('✅ 保存成功（本地）');
-            window.currentHrPositionReadOnly = true;
-            setPositionModalReadOnly(true);
-            if (window.refreshPositionList) {
-                window.refreshPositionList();
-            }
+            console.error('Failed to save to API:', e);
+            showToast('❌ 保存失败，请检查网络连接');
         }
     } catch (e) {
         console.error('saveHrPositionDesc error:', e);
@@ -725,26 +596,30 @@ function collectPositionData() {
         };
         
         return {
-            info: {
-                positionName: getValue('hrPositionName'),
-                jobTitle: getValue('hrJobTitle'),
-                level: getValue('hrLevel'),
-                department: getValue('hrDepartment'),
-                deptType: getValue('hrDeptType'),
-                deptNature: getValue('hrDeptNature'),
-                supervisor: getValue('hrSupervisor'),
-                crossSupervisor: getValue('hrCrossSupervisor'),
-                directSubordinates: getValue('hrDirectSubordinates'),
-                indirectSubordinates: getValue('hrIndirectSubordinates'),
-                promotionDirection: getValue('hrPromotionDirection'),
-                rotationPosition: getValue('hrRotationPosition'),
-                effectiveDate: getValue('hrEffectiveDate'),
-                approver: getValue('hrApprover'),
-                positionCode: getValue('hrPositionCode'),
-                headcount: parseInt(getValue('hrHeadcount')) || 0,
-                summary: getValue('hrSummary')
-            },
+            position_name: getValue('hrPositionName'),
+            job_title: getValue('hrJobTitle'),
+            level: getValue('hrLevel'),
+            department: getValue('hrDepartment'),
+            dept_type: getValue('hrDeptType'),
+            dept_nature: getValue('hrDeptNature'),
+            supervisor: getValue('hrSupervisor'),
+            cross_supervisor: getValue('hrCrossSupervisor'),
+            direct_subordinates: parseInt(getValue('hrDirectSubordinates')) || 0,
+            indirect_subordinates: parseInt(getValue('hrIndirectSubordinates')) || 0,
+            promotion_direction: getValue('hrPromotionDirection'),
+            rotation_position: getValue('hrRotationPosition'),
+            effective_date: getValue('hrEffectiveDate'),
+            approver: getValue('hrApprover'),
+            position_code: getValue('hrPositionCode'),
+            headcount: parseInt(getValue('hrHeadcount')) || 0,
+            summary: getValue('hrSummary'),
             purpose: getValue('hrPurpose'),
+            work_time: getValue('hrWorkTime'),
+            work_place: getValue('hrWorkPlace'),
+            work_env: getValue('hrWorkEnv'),
+            risk_level: getValue('hrRisk'),
+            occupational_hazard: getValue('hrOccupationalHazard'),
+            documents: getValue('hrDocuments'),
             duties: duties,
             qualification: {
                 education: getValue('hrEducation'),
@@ -753,31 +628,11 @@ function collectPositionData() {
                 skills: getValue('hrSkills'),
                 otherRequirements: getValue('hrOtherRequirements')
             },
-            conditions: {
-                workTime: getValue('hrWorkTime'),
-                workPlace: getValue('hrWorkPlace'),
-                workEnv: getValue('hrWorkEnv'),
-                risk: getValue('hrRisk'),
-                occupationalHazard: getValue('hrOccupationalHazard')
-            },
-            metrics: metrics,
-            documents: getValue('hrDocuments')
+            metrics: metrics
         };
     } catch (e) {
         console.error('collectPositionData error:', e);
         return null;
-    }
-}
-
-// 保存到localStorage
-function saveToLocalStorage(positionData) {
-    try {
-        const existing = localStorage.getItem('hrPositions');
-        const positions = existing ? JSON.parse(existing) : {};
-        positions[window.currentHrPositionId] = positionData;
-        localStorage.setItem('hrPositions', JSON.stringify(positions));
-    } catch (e) {
-        console.error('Failed to save to localStorage:', e);
     }
 }
 
@@ -790,7 +645,7 @@ async function exportPositionToPDF() {
         <html>
         <head>
             <meta charset="UTF-8">
-            <title>${data.info.positionName} - 岗位说明书</title>
+            <title>${data.position_name} - 岗位说明书</title>
             <style>
                 body { font-family: 'Microsoft YaHei', sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; }
                 h1 { text-align: center; color: #1a3a5c; border-bottom: 2px solid #1a4a6f; padding-bottom: 10px; }
@@ -812,26 +667,26 @@ async function exportPositionToPDF() {
             </style>
         </head>
         <body>
-            <h1>📋 ${data.info.positionName} 职责说明书</h1>
+            <h1>📋 ${data.position_name} 职责说明书</h1>
             
             <h2>一、基本信息</h2>
             <div class="info-grid">
-                <div class="info-item"><div class="info-label">职务名称</div><div class="info-value">${escapeHtml(data.info.jobTitle)}</div></div>
-                <div class="info-item"><div class="info-label">职级范围</div><div class="info-value">${escapeHtml(data.info.level)}</div></div>
-                <div class="info-item"><div class="info-label">所属部门</div><div class="info-value">${escapeHtml(data.info.department)}</div></div>
-                <div class="info-item"><div class="info-label">部门类型</div><div class="info-value">${escapeHtml(data.info.deptType)}</div></div>
-                <div class="info-item"><div class="info-label">部门性质</div><div class="info-value">${escapeHtml(data.info.deptNature)}</div></div>
-                <div class="info-item"><div class="info-label">直属主管</div><div class="info-value">${escapeHtml(data.info.supervisor)}</div></div>
-                <div class="info-item"><div class="info-label">直接下属</div><div class="info-value">${escapeHtml(data.info.directSubordinates)}</div></div>
-                <div class="info-item"><div class="info-label">间接下属</div><div class="info-value">${escapeHtml(data.info.indirectSubordinates)}</div></div>
-                <div class="info-item"><div class="info-label">晋升方向</div><div class="info-value">${escapeHtml(data.info.promotionDirection)}</div></div>
-                <div class="info-item"><div class="info-label">生效日期</div><div class="info-value">${escapeHtml(data.info.effectiveDate)}</div></div>
-                <div class="info-item"><div class="info-label">审批人</div><div class="info-value">${escapeHtml(data.info.approver)}</div></div>
-                <div class="info-item"><div class="info-label">职位代码</div><div class="info-value">${escapeHtml(data.info.positionCode)}</div></div>
+                <div class="info-item"><div class="info-label">职务名称</div><div class="info-value">${escapeHtml(data.job_title)}</div></div>
+                <div class="info-item"><div class="info-label">职级范围</div><div class="info-value">${escapeHtml(data.level)}</div></div>
+                <div class="info-item"><div class="info-label">所属部门</div><div class="info-value">${escapeHtml(data.department)}</div></div>
+                <div class="info-item"><div class="info-label">部门类型</div><div class="info-value">${escapeHtml(data.dept_type)}</div></div>
+                <div class="info-item"><div class="info-label">部门性质</div><div class="info-value">${escapeHtml(data.dept_nature)}</div></div>
+                <div class="info-item"><div class="info-label">直属主管</div><div class="info-value">${escapeHtml(data.supervisor)}</div></div>
+                <div class="info-item"><div class="info-label">直接下属</div><div class="info-value">${escapeHtml(data.direct_subordinates)}</div></div>
+                <div class="info-item"><div class="info-label">间接下属</div><div class="info-value">${escapeHtml(data.indirect_subordinates)}</div></div>
+                <div class="info-item"><div class="info-label">晋升方向</div><div class="info-value">${escapeHtml(data.promotion_direction)}</div></div>
+                <div class="info-item"><div class="info-label">生效日期</div><div class="info-value">${escapeHtml(data.effective_date)}</div></div>
+                <div class="info-item"><div class="info-label">审批人</div><div class="info-value">${escapeHtml(data.approver)}</div></div>
+                <div class="info-item"><div class="info-label">职位代码</div><div class="info-value">${escapeHtml(data.position_code)}</div></div>
             </div>
             
             <h2>二、职位概述</h2>
-            <div style="padding: 12px; background: #f8fafc; border-radius: 4px;">${escapeHtml(data.info.summary)}</div>
+            <div style="padding: 12px; background: #f8fafc; border-radius: 4px;">${escapeHtml(data.summary)}</div>
             
             <h2>三、岗位设置目的</h2>
             <div style="padding: 12px; background: #f8fafc; border-radius: 4px;">${escapeHtml(data.purpose)}</div>
@@ -858,11 +713,11 @@ async function exportPositionToPDF() {
             
             <h2>六、工作条件</h2>
             <div class="info-grid">
-                <div class="info-item"><div class="info-label">工作时间</div><div class="info-value">${escapeHtml(data.conditions.workTime)}</div></div>
-                <div class="info-item"><div class="info-label">工作场所</div><div class="info-value">${escapeHtml(data.conditions.workPlace)}</div></div>
-                <div class="info-item"><div class="info-label">工作环境</div><div class="info-value">${escapeHtml(data.conditions.workEnv)}</div></div>
-                <div class="info-item"><div class="info-label">危险性</div><div class="info-value">${escapeHtml(data.conditions.risk)}</div></div>
-                <div class="info-item"><div class="info-label">职业病危害因素</div><div class="info-value">${escapeHtml(data.conditions.occupationalHazard)}</div></div>
+                <div class="info-item"><div class="info-label">工作时间</div><div class="info-value">${escapeHtml(data.work_time)}</div></div>
+                <div class="info-item"><div class="info-label">工作场所</div><div class="info-value">${escapeHtml(data.work_place)}</div></div>
+                <div class="info-item"><div class="info-label">工作环境</div><div class="info-value">${escapeHtml(data.work_env)}</div></div>
+                <div class="info-item"><div class="info-label">危险性</div><div class="info-value">${escapeHtml(data.risk_level)}</div></div>
+                <div class="info-item"><div class="info-label">职业病危害因素</div><div class="info-value">${escapeHtml(data.occupational_hazard)}</div></div>
             </div>
             
             <h2>七、考核指标</h2>
@@ -907,38 +762,29 @@ function showToast(message) {
 }
 
 // 获取岗位ID（根据岗位名称）
-function getPositionIdByName(positionName) {
-    // 先尝试从localStorage获取岗位数据
-    let positionId = null;
-    const localData = localStorage.getItem('hrPositions');
-    if (localData) {
-        try {
-            const positions = JSON.parse(localData);
-            // 根据岗位名称查找
-            for (const [id, data] of Object.entries(positions)) {
-                if (data.info && data.info.positionName === positionName) {
-                    positionId = id;
-                    break;
+async function getPositionIdByName(positionName) {
+    try {
+        // 从API获取岗位说明书列表
+        const res = await fetch('/api/position-description/list');
+        if (res.ok) {
+            const result = await res.json();
+            if (result.code === 200 && result.data) {
+                // 根据岗位名称查找
+                const position = result.data.find(p => 
+                    p.position_name === positionName || 
+                    p.job_title === positionName
+                );
+                if (position) {
+                    return position.id.toString();
                 }
             }
-        } catch (e) {
-            console.error('Failed to parse local hrPositions data:', e);
         }
+    } catch (e) {
+        console.error('Failed to get position ID from API:', e);
     }
     
-    // 如果从localStorage没找到，使用默认映射
-    if (!positionId) {
-        const nameMap = {
-            '人力资源总监': 'hr1',
-            '人力资源经理': 'hr2',
-            '招聘专员': 'hr3',
-            '培训专员': 'hr4',
-            '绩效专员': 'hr5'
-        };
-        positionId = nameMap[positionName] || 'hr1';
-    }
-    
-    return positionId;
+    // 默认返回第一个岗位的ID（如果没找到）
+    return '1';
 }
 
 // 导出到全局
@@ -948,6 +794,7 @@ window.closePositionModal = closePositionModal;
 window.setPositionModalReadOnly = setPositionModalReadOnly;
 window.togglePositionEdit = togglePositionEdit;
 window.loadHrPositionDesc = loadHrPositionDesc;
+window.applyPositionDataFromAPI = applyPositionDataFromAPI;
 window.saveHrPositionDesc = saveHrPositionDesc;
 window.addHrDutyRow = addHrDutyRow;
 window.deleteSelectedHrDuties = deleteSelectedHrDuties;

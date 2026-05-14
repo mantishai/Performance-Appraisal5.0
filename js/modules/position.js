@@ -293,6 +293,68 @@ const positionModule = {
 
                         if (res.code === 200) {
                             Toast.success(isEdit ? '岗位更新成功' : '岗位新增成功');
+                            
+                            // 如果是新增岗位，同时创建岗位说明书
+                            if (!isEdit) {
+                                try {
+                                    const newPositionId = res.data.id;
+                                    const deptName = this.getDepartmentName(selectedDeptId);
+                                    
+                                    const positionDescData = {
+                                        position_id: newPositionId,
+                                        position_name: name,
+                                        job_title: name,
+                                        level: level,
+                                        department: deptName,
+                                        dept_type: '',
+                                        dept_nature: '',
+                                        supervisor: '',
+                                        cross_supervisor: '',
+                                        direct_subordinates: 0,
+                                        indirect_subordinates: 0,
+                                        promotion_direction: '',
+                                        rotation_position: '',
+                                        effective_date: new Date().toISOString().split('T')[0],
+                                        approver: '',
+                                        position_code: position_code,
+                                        headcount: headcount,
+                                        summary: '',
+                                        purpose: '',
+                                        work_time: '周一至周五，9:00-18:00',
+                                        work_place: '公司总部',
+                                        work_env: '办公室环境',
+                                        risk_level: '低',
+                                        occupational_hazard: '',
+                                        documents: '',
+                                        duties: [{
+                                            module: '',
+                                            category: '',
+                                            workType: '核心',
+                                            detail: ''
+                                        }],
+                                        qualification: {
+                                            education: '',
+                                            training: '',
+                                            experience: '',
+                                            skills: '',
+                                            otherRequirements: ''
+                                        },
+                                        metrics: [{
+                                            dimension: '',
+                                            metric: '',
+                                            standard: '',
+                                            source: ''
+                                        }]
+                                    };
+                                    
+                                    // 创建岗位说明书
+                                    await API.createPositionDescription(positionDescData);
+                                } catch (err) {
+                                    console.error('Create position description error:', err);
+                                    // 不影响岗位创建成功的结果
+                                }
+                            }
+                            
                             modalInstance.close();
                             await this.loadData();
                             this.renderContent(document.getElementById('content'));
@@ -354,39 +416,65 @@ const positionModule = {
     async handleAction(id, action) {
         const position = state.positions.find(p => p.id === id);
         if (action === 'viewManual' && position) {
-            // 使用我们的打开函数，而不是直接操作DOM
-            window.currentHrPositionId = `pos_${id}`;
+            // 查找该岗位的岗位说明书ID
+            let positionDescId = null;
+            try {
+                const res = await API.getPositionDescriptionList();
+                if (res.code === 200 && res.data) {
+                    const existingDesc = res.data.find(d => d.position_id === id);
+                    if (existingDesc) {
+                        positionDescId = existingDesc.id;
+                    }
+                }
+            } catch (err) {
+                console.error('Find position description error:', err);
+            }
             
-            // 先调用打开函数
-            window.openReadOnlyPositionModal(`pos_${id}`);
-            
-            // 然后更新岗位信息
-            if (position.name) {
-                const titleEl = document.getElementById('hrPositionModalTitle');
-                if (titleEl) {
-                    titleEl.textContent = `📋 ${position.name}职责说明书`;
-                }
-                const nameInput = document.getElementById('hrPositionName');
-                if (nameInput) {
-                    nameInput.value = position.name;
-                }
-                const deptInput = document.getElementById('hrDepartment');
-                if (deptInput && position.departmentId) {
-                    const deptName = this.getDepartmentName(position.departmentId);
-                    deptInput.value = deptName;
-                }
-                const levelInput = document.getElementById('hrLevel');
-                if (levelInput && position.level) {
-                    levelInput.value = position.level;
-                }
-                const codeInput = document.getElementById('hrPositionCode');
-                if (codeInput && position.position_code) {
-                    codeInput.value = position.position_code;
-                }
-                const headcountInput = document.getElementById('hrHeadcount');
-                if (headcountInput && position.headcount !== undefined) {
-                    headcountInput.value = position.headcount;
-                }
+            // 如果有岗位说明书，使用ID打开；如果没有，创建临时模板
+            if (positionDescId) {
+                window.openReadOnlyPositionModal(positionDescId);
+            } else {
+                // 创建临时默认模板
+                const deptName = this.getDepartmentName(position.departmentId);
+                const defaultData = {
+                    id: 0,
+                    position_code: position.position_code || '',
+                    position_name: position.name,
+                    job_title: position.name,
+                    level: position.level || 'P5',
+                    department: deptName,
+                    dept_type: '',
+                    dept_nature: '',
+                    supervisor: '',
+                    cross_supervisor: '',
+                    direct_subordinates: 0,
+                    indirect_subordinates: 0,
+                    promotion_direction: '',
+                    rotation_position: '',
+                    effective_date: new Date().toISOString().split('T')[0],
+                    approver: '',
+                    headcount: position.headcount || 0,
+                    summary: '',
+                    purpose: '',
+                    work_time: '周一至周五，9:00-18:00',
+                    work_place: '公司总部',
+                    work_env: '办公室环境',
+                    risk_level: '低',
+                    occupational_hazard: '',
+                    documents: '',
+                    duties: [{ module: '', category: '', workType: '核心', detail: '' }],
+                    qualification: { education: '', training: '', experience: '', skills: '', otherRequirements: '' },
+                    metrics: [{ dimension: '', metric: '', standard: '', source: '' }]
+                };
+                
+                // 使用position_id作为临时标识
+                window.currentHrPositionId = position.id;
+                window.openReadOnlyPositionModal(position.id);
+                
+                // 延迟应用默认数据
+                setTimeout(() => {
+                    window.applyPositionDataFromAPI(defaultData);
+                }, 100);
             }
         } else if (action === 'delete' && position) {
             if (confirm(`确定要删除岗位【${position.name}】吗？`)) {

@@ -10,7 +10,9 @@ const pool = createPool({
     database: 'hr_system',
     waitForConnections: true,
     connectionLimit: 10,
-    queueLimit: 0
+    queueLimit: 0,
+    charset: 'utf8mb4',
+    timezone: '+08:00'
 });
 
 export default pool;
